@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import httpx
 
+from app.api.v1.analytics import router as analytics_router
 app = FastAPI(title="KAVACH Backend")
 
 app.add_middleware(
@@ -11,6 +12,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+app.include_router(
+    analytics_router,
+    prefix="/api/v1",
+    tags=["Crime Intelligence"]
 )
 
 class ChatRequest(BaseModel):
