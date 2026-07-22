@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+import requests
 
 from app.analytics.data_store import df
 
@@ -27,5 +28,16 @@ def zone(station: str):
 
 @router.post("/ai-summary/{station}")
 def ai_summary(station: str):
+
     summary = get_zone_summary(df, station)
-    return build_groq_input(summary)
+
+    payload = build_groq_input(summary)
+
+    response = requests.post(
+        "http://localhost:8001/agent/crime/analyze",
+        json={
+            "analytics": payload
+        }
+    )
+
+    return response.json()
