@@ -1,10 +1,14 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import Optional
 import httpx
+import uuid
+from datetime import datetime
 
 from app.api.v1.analytics import router as analytics_router
-app = FastAPI(title="KAVACH Backend")
+
+app = FastAPI(title="Prakalpa Backend")
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,20 +18,168 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+users = {
+    "citizen001": {
+        "password": "citizen123",
+        "role": "citizen",
+        "name": "Rahul Kumar",
+    },
+    "citizen002": {
+        "password": "citizen123",
+        "role": "citizen",
+        "name": "Priya Sharma",
+    },
+    "officer001": {
+        "password": "officer123",
+        "role": "officer",
+        "name": "SI Ravi Kumar",
+        "badge": "KSP-2341",
+    },
+    "officer002": {
+        "password": "officer123",
+        "role": "officer",
+        "name": "SI Anitha Rao",
+        "badge": "KSP-1892",
+    },
+}
+
+complaints = {}
+
 app.include_router(
     analytics_router,
     prefix="/api/v1",
     tags=["Crime Intelligence"]
 )
 
+
+# -------------------------
+# Authentication
+# -------------------------
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class LoginResponse(BaseModel):
+    success: bool
+    role: str
+    name: str
+    username: str
+    badge: Optional[str] = None
+
+
+@app.post("/api/v1/auth/login", response_model=LoginResponse)
+def login(req: LoginRequest):
+    user = users.get(req.username)
+
+    if not user or user["password"] != req.password:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    return {
+        "success": True,
+        "role": user["role"],
+        "name": user["name"],
+        "username": req.username,
+        "badge": user.get("badge"),
+    }
+
+
+# -------------------------
+# Complaint APIs
+# -------------------------
+
+class ComplaintSubmit(BaseModel):
+    citizen_username: str
+    citizen_name: str
+    mode: str
+
+    incident_type: Optional[str] = None
+    incident_date: Optional[str] = None
+    incident_time: Optional[str] = None
+    incident_location: Optional[str] = None
+    incident_description: Optional[str] = None
+    accused_description: Optional[str] = None
+    witnesses: Optional[str] = None
+    evidence: Optional[str] = None
+    contact_number: Optional[str] = None
+    address: Optional[str] = None
+
+    chat_session_id: Optional[str] = None
+    chat_collected_data: Optional[dict] = None
+
+
+@app.post("/api/v1/complaints/submit")
+def submit_complaint(complaint: ComplaintSubmit):
+    complaint_id = f"CMP-{str(uuid.uuid4())[:8].upper()}"
+
+    complaints[complaint_id] = {
+        **complaint.dict(),
+        "complaint_id": complaint_id,
+        "status": "PENDING",
+        "submitted_at": datetime.now().isoformat(),
+        "assigned_officer": None,
+        "fir_number": None,
+    }
+
+    return {
+        "success": True,
+        "complaint_id": complaint_id,
+    }
+
+
+@app.get("/api/v1/complaints/all")
+def get_all_complaints():
+    return list(complaints.values())
+
+
+@app.get("/api/v1/complaints/{complaint_id}")
+def get_complaint(complaint_id: str):
+    complaint = complaints.get(complaint_id)
+
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    return complaint
+
+
+@app.patch("/api/v1/complaints/{complaint_id}/assign")
+def assign_officer(complaint_id: str, body: dict):
+    complaint = complaints.get(complaint_id)
+
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    complaint["assigned_officer"] = body.get("officer_username")
+    complaint["status"] = "UNDER_REVIEW"
+
+    return complaint
+
+
+@app.patch("/api/v1/complaints/{complaint_id}/file-fir")
+def file_fir(complaint_id: str):
+    complaint = complaints.get(complaint_id)
+
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    complaint["status"] = "FIR_FILED"
+    complaint["fir_number"] = (
+        f"FIR-{datetime.now().year}-{str(uuid.uuid4())[:6].upper()}"
+    )
+
+    return complaint
+
+
+# -------------------------
+# FIR AI
+# -------------------------
+
 class ChatRequest(BaseModel):
     session_id: str
     message: str
     language: str = "en"
 
-@app.get("/")
-def root():
-    return {"message": "KAVACH Backend Running"}
 
 @app.post("/api/v1/fir/chat")
 async def fir_chat(request: ChatRequest):
@@ -35,6 +187,7 @@ async def fir_chat(request: ChatRequest):
         response = await client.post(
             "http://127.0.0.1:8001/agent/fir/chat",
             json=request.dict(),
-            timeout=30.0
+            timeout=30.0,
         )
+
     return response.json()
