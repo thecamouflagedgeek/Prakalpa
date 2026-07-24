@@ -24,5 +24,6 @@ class CrimeDataLoader:
         print(f"Dataset Loaded Successfully!")
         print(f"Rows : {len(self.df)}")
         print(f"Columns : {len(self.df.columns)}")
+        print(self.df.columns.tolist())
 
         return self.df

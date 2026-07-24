@@ -13,8 +13,12 @@ class ChatRequest(BaseModel):
     language: str = "en"
 
 
+from typing import Dict, Any
+
 class CrimeRequest(BaseModel):
-    analytics: dict
+    station: str
+    prompt: str
+    analytics: Dict[str, Any]
 
 
 @app.post("/agent/fir/chat")
@@ -33,4 +37,4 @@ def get_session(session_id: str):
 
 @app.post("/agent/crime/analyze")
 def crime_analysis(request: CrimeRequest):
-    return analyze(request.analytics)
+    return analyze(request.model_dump())

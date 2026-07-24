@@ -1,56 +1,66 @@
 """
 groq_input.py
 
-Prepares structured intelligence for the Groq LLM.
+Builds the complete intelligence package that will be
+sent to the Groq LLM.
 """
 
-from typing import Dict
+from app.analytics.forecast import get_forecast
+from app.analytics.patterns import get_patterns
+from app.analytics.anomaly import get_anomalies
+from app.analytics.prompt_builder import build_prompt
 
 
-def build_groq_input(zone_summary: Dict) -> Dict:
+def build_groq_input(df, station_name):
     """
-    Converts analytics output into a structured JSON payload
-    suitable for the Groq LLM.
+    Generates the complete AI input for Groq.
+
+    Returns:
+    {
+        "station": "...",
+        "prompt": "...",
+        "analytics": {...}
+    }
     """
 
-    payload = {
+    # ---------------------------------------
+    # Generate intelligence
+    # ---------------------------------------
 
-        "role": "Karnataka Police Crime Intelligence Officer",
+    forecast = get_forecast(df, station_name)
 
-        "zone": zone_summary["zone"],
+    patterns = get_patterns(df, station_name)
 
-        "district": zone_summary["district"],
+    anomalies = get_anomalies(df, station_name)
 
-        "crime_statistics": {
+    # ---------------------------------------
+    # Build Prompt
+    # ---------------------------------------
 
-            "crime_count": zone_summary["crime_count"],
+    prompt = build_prompt(
+        forecast=forecast,
+        patterns=patterns,
+        anomalies=anomalies
+    )
 
-            "top_crime": zone_summary["top_crime"],
+    # ---------------------------------------
+    # Return package
+    # ---------------------------------------
 
-            "risk_level": zone_summary["risk"],
+    return {
 
-            "risk_score": zone_summary["risk_score"]
+        "station": station_name,
 
-        },
+        "prompt": prompt,
 
-        "patterns": {
+        "analytics": {
 
-            "peak_time": zone_summary["peak_time"],
+            "forecast": forecast,
 
-            "weather": zone_summary["common_weather"],
+            "patterns": patterns,
 
-            "festival": zone_summary["festival"],
+            "anomalies": anomalies
 
-            "linked_story": zone_summary["linked_story"]
-
-        },
-
-        "crime_breakdown":
-        zone_summary["crime_breakdown"],
-
-        "reasoning":
-        zone_summary["reasoning"]
+        }
 
     }
-
-    return payload
