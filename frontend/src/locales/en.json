@@ -1,0 +1,95 @@
+{
+  "translation": {
+    "nav": {
+      "home": "Home",
+      "about": "About Us",
+      "services": "Services",
+      "districts": "Districts",
+      "insights": "Insights",
+      "careers": "Careers",
+      "contact": "Contact Us",
+      "get_in_touch": "Get in Touch",
+      "switch_lang": "ಕನ್ನಡ"
+    },
+    "hero": {
+      "title_line1": "Protecting Today",
+      "title_line2": "Empowering Tomorrow",
+      "desc": "We deliver AI-powered citizen services that strengthen public safety, empower every district, and build lasting trust between the Karnataka State Police and the people it serves.",
+      "our_services": "Our Services",
+      "watch_overview": "Watch Overview"
+    },
+    "stats": {
+      "firs_resolved": "FIRs Resolved",
+      "cases_digitized": "Cases Digitized",
+      "commendations": "Commendations Won",
+      "districts_served": "Districts Served"
+    },
+    "what_we_do": {
+      "tag": "WHAT WE DO",
+      "title_line1": "Solutions that Build",
+      "title_line2": "Real Trust",
+      "desc": "From first report to final resolution, we provide end-to-end digital services tailored to every citizen's needs.",
+      "explore_all": "Explore All Services →",
+      "learn_more": "Learn More"
+    },
+    "services_list": {
+      "s1_title": "Conversational FIR Lodging",
+      "s1_desc": "Report an incident in plain Kannada, English, or Hindi through a simple guided chat.",
+      "s2_title": "IPC/BNS Section Advisory",
+      "s2_desc": "AI reviews the complaint and recommends the correct applicable legal sections.",
+      "s3_title": "Secure Case Management",
+      "s3_desc": "Every case is tracked with tamper-evident records from filing through disposal.",
+      "s4_title": "Crime Analytics & Insights",
+      "s4_desc": "District-level dashboards help the SCRB spot patterns and allocate resources."
+    },
+    "about": {
+      "tag": "ABOUT KAVACH",
+      "title_line1": "Your Trusted Partner for",
+      "title_line2": "Community Safety",
+      "desc": "At KAVACH, we combine AI, legal expertise, and community trust to help citizens across Karnataka report incidents and access justice quickly and transparently.",
+      "point_1": "Citizen-First Approach",
+      "point_2": "Proven Track Record",
+      "point_3": "Commitment to Transparency",
+      "btn_learn_more": "Learn More About KAVACH",
+      "badge_years": "Years of Service",
+      "badge_desc": "Delivering safety and building lasting community partnerships."
+    },
+    "trusted": {
+      "in_coordination_with": "IN COORDINATION WITH",
+      "partner_1": "State Crime Records Bureau",
+      "partner_2": "Cyber Crime Wing",
+      "partner_3": "Women Safety Cell",
+      "partner_4": "Traffic Police",
+      "partner_5": "Seva Sindhu",
+      "partner_6": "e-Beat Book"
+    }
+  },
+  "login": {
+    "side_sub": "KARNATAKA STATE POLICE",
+    "side_headline_1": "Digital policing,",
+    "side_headline_2": "built on trust.",
+    "side_text": "Secure sign-in for citizens filing reports and officers managing cases across every district.",
+    "districts": "Districts",
+    "availability": "Availability",
+    "logo_sub": "Karnataka State Police · SCRB",
+    "citizen_portal": "Citizen Portal",
+    "officer_portal": "Officer Portal",
+    "citizen_subtitle": "Report an incident or track your complaint status.",
+    "officer_subtitle": "Access your case dashboard and manage FIR filings.",
+    "demo_label": "Demo",
+    "citizen_hint": "Username: citizen001 · Password: citizen123",
+    "officer_hint": "Username: officer001 · Password: officer123",
+    "username_label": "Username",
+    "password_label": "Password",
+    "citizen_placeholder": "e.g. citizen001",
+    "officer_placeholder": "e.g. officer001",
+    "password_placeholder": "Enter your password",
+    "signing_in": "Signing in...",
+    "sign_in_as": "Sign in as",
+    "citizen": "Citizen",
+    "officer": "Officer",
+    "error_not_role": "This account is not a {{tab}} account.",
+    "error_invalid": "Invalid username or password.",
+    "footer": "All sessions are encrypted and audit-logged per SCRB protocol."
+  }
+}
