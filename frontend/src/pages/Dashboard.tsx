@@ -1,12 +1,74 @@
-import React from "react";
+/**
+ * Dashboard.tsx
+ *
+ * Crime Intelligence Dashboard — Live data from KAVACH backend.
+ * Features:
+ *   1. Dashboard KPIs (Statewide Overview)
+ *   2. Crime Hotspot Map (Organic Density Heatmap ONLY with flyTo zoom & top-right scale)
+ *   3. Zone Intelligence & Sleek 2-Column Metric Card Grid for Crime Breakdown
+ *   4. Crime Forecast Card (7-Day Predictive Risk)
+ *   5. Pattern Analysis Card (Temporal & Behavioral Patterns)
+ *   6. Anomaly Alerts Card (Statistical Spikes & Drops)
+ *   7. INNOVATIVE AI COPILOT MODAL (Z-Index 99999, Pristine Rounded Modal Shape & Formatted Markdown Cards)
+ */
+
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import "leaflet.heat";
+import {
+  FileText,
+  MapPin,
+  Building2,
+  AlertTriangle,
+  Flame,
+  Sparkles,
+  Flag,
+  Activity,
+  Shield,
+  Clock,
+  Cloud,
+  BarChart3,
+  Brain,
+  ArrowRight,
+  CheckCircle2,
+  TrendingUp,
+  Search,
+  TrendingDown,
+  Layers,
+  X,
+  ArrowLeft,
+} from "lucide-react";
+import {
+  getDashboard,
+  getHotspots,
+  getZone,
+  getAISummary,
+  getForecast,
+  getPatterns,
+  getAnomalies,
+  getPatternSummary,
+  type DashboardData,
+  type Hotspot,
+  type ZoneData,
+  type AIReport,
+  type CrimeForecastResponse,
+  type CrimePatternsResponse,
+  type AnomalyResponse,
+  type PatternSummaryResponse,
+} from "../api/analytics";
 
 /* =========================================================
-   THEME
+   DESIGN TOKENS
 ========================================================= */
 
-const colors = {
+const C = {
   navy: "#061B2B",
   navySoft: "#0B3045",
+  indigo: "#4F46E5",
+  indigoLight: "#EEF2FF",
   green: "#0E9F83",
   greenBright: "#26B99A",
   greenLight: "#DFF7F1",
@@ -21,1693 +83,1471 @@ const colors = {
   white: "#FFFFFF",
 };
 
+const RISK_COLOR: Record<string, string> = {
+  HIGH: C.red,
+  High: C.red,
+  MEDIUM: C.orange,
+  Medium: C.orange,
+  LOW: C.greenBright,
+  Low: C.greenBright,
+};
+
 /* =========================================================
-   MAIN DASHBOARD
+   HEATMAP LAYER
+========================================================= */
+
+interface HeatmapLayerProps {
+  points: [number, number, number][];
+  radius?: number;
+  blur?: number;
+  maxZoom?: number;
+}
+
+const HeatmapLayer: React.FC<HeatmapLayerProps> = ({
+  points,
+  radius = 50,
+  blur = 35,
+  maxZoom = 12,
+}) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map || !points || points.length === 0) return;
+
+    const heatLayer = (L as any).heatLayer(points, {
+      radius,
+      blur,
+      maxZoom,
+      minOpacity: 0.35,
+      gradient: {
+        0.15: "rgba(38, 185, 154, 0.45)",
+        0.45: "rgba(38, 185, 154, 0.85)",
+        0.70: "rgba(231, 164, 72, 0.9)",
+        0.88: "rgba(121, 91, 198, 0.95)",
+        1.00: "rgba(216, 91, 91, 1.0)",
+      },
+    });
+
+    heatLayer.addTo(map);
+
+    return () => {
+      map.removeLayer(heatLayer);
+    };
+  }, [map, points, radius, blur, maxZoom]);
+
+  return null;
+};
+
+/* =========================================================
+   MAP CONTROLLER (FlyTo Zooming)
+========================================================= */
+
+interface MapControllerProps {
+  center: [number, number] | null;
+  zoom: number;
+}
+
+const MapController: React.FC<MapControllerProps> = ({ center, zoom }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (center && map) {
+      map.flyTo(center, zoom, { duration: 1.4, easeLinearity: 0.25 });
+    }
+  }, [center, zoom, map]);
+
+  return null;
+};
+
+/* =========================================================
+   SKELETON COMPONENT
+========================================================= */
+
+const Skeleton: React.FC<{ width?: string; height?: string; radius?: string }> = ({
+  width = "100%",
+  height = "18px",
+  radius = "6px",
+}) => (
+  <div
+    style={{
+      width,
+      height,
+      borderRadius: radius,
+      background: "linear-gradient(90deg, #E8EDEF 25%, #F4F7F8 50%, #E8EDEF 75%)",
+      backgroundSize: "200% 100%",
+      animation: "shimmer 1.4s infinite",
+      boxSizing: "border-box",
+    }}
+  />
+);
+
+/* =========================================================
+   CARD COMPONENT
+========================================================= */
+
+const Card: React.FC<{
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+}> = ({ children, style }) => (
+  <div
+    style={{
+      background: C.white,
+      border: `1px solid ${C.border}`,
+      borderRadius: "16px",
+      boxShadow: "0 6px 20px rgba(18,42,57,0.04)",
+      boxSizing: "border-box",
+      width: "100%",
+      ...style,
+    }}
+  >
+    {children}
+  </div>
+);
+
+/* =========================================================
+   RISK BADGE COMPONENT
+========================================================= */
+
+const RiskBadge: React.FC<{ risk: string }> = ({ risk }) => {
+  const normalized = risk.toUpperCase();
+  const color = RISK_COLOR[normalized] ?? C.muted;
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "6px",
+        padding: "4px 12px",
+        borderRadius: "20px",
+        fontSize: "10px",
+        fontWeight: 800,
+        textTransform: "uppercase",
+        letterSpacing: "0.5px",
+        color,
+        background: `${color}14`,
+        border: `1px solid ${color}30`,
+        boxSizing: "border-box",
+      }}
+    >
+      <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: color }} />
+      {normalized} Risk
+    </span>
+  );
+};
+
+/* =========================================================
+   FORMATTED AI REPORT RENDERER
+========================================================= */
+
+const renderFormattedReport = (text: string) => {
+  if (!text) return null;
+  const rawSections = text.split(/(?=##\s)/g).filter(Boolean);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
+      {rawSections.map((sec, idx) => {
+        const lines = sec.trim().split("\n");
+        const heading = lines[0].replace(/^##\s*/, "").trim();
+        const bodyLines = lines.slice(1).join("\n").trim();
+        const content = bodyLines || lines[0];
+
+        return (
+          <div
+            key={idx}
+            style={{
+              background: C.white,
+              border: `1px solid ${C.border}`,
+              borderRadius: "12px",
+              padding: "16px 18px",
+              boxShadow: "0 4px 14px rgba(6, 27, 43, 0.03)",
+            }}
+          >
+            {heading && (
+              <div
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 800,
+                  color: C.indigo,
+                  marginBottom: "8px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                <Sparkles size={14} color={C.indigo} />
+                {heading}
+              </div>
+            )}
+            <div
+              style={{
+                fontSize: "12px",
+                color: C.text,
+                lineHeight: 1.75,
+                whiteSpace: "pre-wrap",
+                fontFamily: "inherit",
+              }}
+            >
+              {content}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/* =========================================================
+   MAIN DASHBOARD COMPONENT
 ========================================================= */
 
 const Dashboard: React.FC = () => {
-  const startFIRConversation = () => {
-    alert("FIR Conversation Engine is ready to begin.");
+  const navigate = useNavigate();
+
+  // API state
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [dashLoading, setDashLoading] = useState(true);
+  const [dashError, setDashError] = useState<string | null>(null);
+
+  const [hotspots, setHotspots] = useState<Hotspot[]>([]);
+  const [mapLoading, setMapLoading] = useState(true);
+  const [mapError, setMapError] = useState<string | null>(null);
+
+  // Selected Zone State
+  const [selectedZone, setSelectedZone] = useState<ZoneData | null>(null);
+  const [zoneLoading, setZoneLoading] = useState(false);
+  const [zoneError, setZoneError] = useState<string | null>(null);
+
+  // NEW FEATURES API STATES
+  const [forecast, setForecast] = useState<CrimeForecastResponse | null>(null);
+  const [forecastLoading, setForecastLoading] = useState(false);
+
+  const [patterns, setPatterns] = useState<CrimePatternsResponse | null>(null);
+  const [patternsLoading, setPatternsLoading] = useState(false);
+
+  const [anomalies, setAnomalies] = useState<AnomalyResponse | null>(null);
+  const [anomaliesLoading, setAnomaliesLoading] = useState(false);
+
+  const [patternSummary, setPatternSummary] = useState<PatternSummaryResponse | null>(null);
+  const [patternSummaryLoading, setPatternSummaryLoading] = useState(false);
+
+  const [aiReport, setAiReport] = useState<AIReport | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  // Search & Filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [riskFilter, setRiskFilter] = useState<"All" | "High" | "Medium" | "Low">("All");
+
+  // Map Zoom State
+  const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
+  const [mapZoom, setMapZoom] = useState<number>(11);
+
+  // INNOVATIVE AI MODAL STATE
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+
+  // Ref for smooth scrolling
+  const zonePanelRef = useRef<HTMLDivElement>(null);
+
+  // Fetch dashboard KPIs
+  useEffect(() => {
+    setDashLoading(true);
+    getDashboard()
+      .then(setDashboard)
+      .catch(() => setDashError("Failed to load dashboard data. Is the backend running?"))
+      .finally(() => setDashLoading(false));
+  }, []);
+
+  // Fetch hotspots
+  useEffect(() => {
+    setMapLoading(true);
+    getHotspots()
+      .then((data) => {
+        setHotspots(data);
+        if (data && data.length > 0) {
+          handleHotspotClick(data[0].zone, false);
+        }
+      })
+      .catch(() => setMapError("Failed to load hotspot data."))
+      .finally(() => setMapLoading(false));
+  }, []);
+
+  // Handle station click (Triggers ALL Sub-API Calls & Zooms Map)
+  const handleHotspotClick = (zone: string, zoomToStation = true) => {
+    setSelectedZone(null);
+    setForecast(null);
+    setPatterns(null);
+    setAnomalies(null);
+    setPatternSummary(null);
+    setAiReport(null);
+    setZoneLoading(true);
+    setZoneError(null);
+
+    // Zoom Map to Station Location
+    const spot = hotspots.find((h) => h.zone === zone);
+    if (spot && zoomToStation) {
+      setMapCenter([spot.lat, spot.lng]);
+      setMapZoom(11);
+    }
+
+    // 1. Fetch Zone Data
+    getZone(zone)
+      .then(setSelectedZone)
+      .catch(() => setZoneError(`Failed to load zone data for ${zone}.`))
+      .finally(() => setZoneLoading(false));
+
+    // 2. Fetch Forecast
+    setForecastLoading(true);
+    getForecast(zone)
+      .then(setForecast)
+      .finally(() => setForecastLoading(false));
+
+    // 3. Fetch Patterns
+    setPatternsLoading(true);
+    getPatterns(zone)
+      .then(setPatterns)
+      .finally(() => setPatternsLoading(false));
+
+    // 4. Fetch Anomalies
+    setAnomaliesLoading(true);
+    getAnomalies(zone)
+      .then(setAnomalies)
+      .finally(() => setAnomaliesLoading(false));
+
+    // 5. Fetch Explainable Pattern Summary
+    setPatternSummaryLoading(true);
+    getPatternSummary(zone)
+      .then(setPatternSummary)
+      .finally(() => setPatternSummaryLoading(false));
   };
 
-  const openCrimeMap = () => {
-    alert("Crime Intelligence Map will open here.");
+  const handleGenerateAIReport = () => {
+    if (!selectedZone) return;
+    setAiLoading(true);
+    getAISummary(selectedZone.zone)
+      .then(setAiReport)
+      .finally(() => setAiLoading(false));
   };
+
+  // Filtered hotspots list
+  const filteredHotspots = hotspots.filter((h) => {
+    const matchesSearch =
+      h.zone.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      h.district.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRisk = riskFilter === "All" || h.risk.toUpperCase() === riskFilter.toUpperCase();
+    return matchesSearch && matchesRisk;
+  });
+
+  // Heatmap weighted points
+  const maxCrime = hotspots.length > 0 ? Math.max(...hotspots.map((h) => h.crime_count)) : 1;
+  const heatmapPoints: [number, number, number][] = filteredHotspots.map((h) => [
+    h.lat,
+    h.lng,
+    h.crime_count / maxCrime,
+  ]);
+
+  const maxBreakdown =
+    selectedZone && selectedZone.crime_breakdown.length > 0
+      ? Math.max(...selectedZone.crime_breakdown.map((b) => b.count))
+      : 1;
 
   return (
     <div
       style={{
         width: "100%",
         minHeight: "100vh",
-        background:
-          "radial-gradient(circle at 70% 0%, rgba(38,185,154,0.08), transparent 28%), #F4F7F8",
-        color: colors.text,
+        background: `radial-gradient(circle at 70% 0%, rgba(79, 70, 229, 0.05), transparent 30%), ${C.background}`,
+        color: C.text,
         fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
         overflowX: "hidden",
         boxSizing: "border-box",
+        position: "relative",
       }}
     >
-      {/* =====================================================
-          MAIN CONTENT
-      ====================================================== */}
+      {/* CSS Overrides to hide Leaflet attribution clutter & enable smooth animations */}
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        @keyframes pulseGlow {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.45); }
+          50% { box-shadow: 0 0 0 14px rgba(79, 70, 229, 0); }
+        }
+        .leaflet-control-attribution {
+          display: none !important;
+        }
+      `}</style>
 
-      <main
+      {/* =====================================================
+          TOPBAR (Header Nav Bar with Back Button & Status)
+      ====================================================== */}
+      <header
         style={{
-          width: "100%",
-          minHeight: "100vh",
+          minHeight: "68px",
+          background: C.white,
+          borderBottom: `1px solid ${C.border}`,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "0 32px",
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
           boxSizing: "border-box",
+          gap: "12px",
+          flexWrap: "wrap",
+          width: "100%",
         }}
       >
-        {/* =================================================
-            TOPBAR
-        ================================================== */}
-
-        <header
-          style={{
-            minHeight: "78px",
-            background: "rgba(255,255,255,0.88)",
-            backdropFilter: "blur(18px)",
-            borderBottom: `1px solid ${colors.border}`,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "15px",
-            padding: "15px 5%",
-            position: "sticky",
-            top: 0,
-            zIndex: 50,
-            boxSizing: "border-box",
-          }}
-        >
-          <div>
-            <h2
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <button
+            onClick={() => navigate("/officer/dashboard")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "6px 12px",
+              borderRadius: "8px",
+              border: `1px solid ${C.border}`,
+              background: C.background,
+              color: C.navy,
+              fontSize: "11px",
+              fontWeight: 700,
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+          >
+            <ArrowLeft size={14} />
+            <span>Officer Portal</span>
+          </button>
+          <div style={{ height: "24px", width: "1px", background: C.border }} />
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div
               style={{
-                margin: 0,
-                fontSize: "22px",
-                fontWeight: 800,
-                color: colors.navy,
+                width: "36px",
+                height: "36px",
+                borderRadius: "10px",
+                background: C.indigo,
+                color: C.white,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              Good Morning, Officer.
-            </h2>
-
-            <p
-              style={{
-                margin: "5px 0 0",
-                fontSize: "12px",
-                color: colors.muted,
-              }}
-            >
-              Here's an overview of Karnataka's policing ecosystem.
-            </p>
+              <Shield size={18} color={C.white} />
+            </div>
+            <div>
+              <div style={{ fontSize: "14px", fontWeight: 800, color: C.navy, letterSpacing: "-0.2px" }}>
+                KAVACH
+              </div>
+              <div style={{ fontSize: "9px", color: C.muted, fontWeight: 600 }}>
+                Crime Intelligence Platform
+              </div>
+            </div>
           </div>
+        </div>
 
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "14px",
-              flexWrap: "wrap",
+              gap: "6px",
+              padding: "6px 12px",
+              borderRadius: "20px",
+              background: C.greenLight,
+              color: C.green,
+              fontSize: "10px",
+              fontWeight: 700,
             }}
           >
-            <div style={topIconStyle}>⌕</div>
-
-            <div style={topIconStyle}>♧</div>
-
-            <div
+            <span
               style={{
-                height: "42px",
-                width: "1px",
-                background: colors.border,
+                width: "6px",
+                height: "6px",
+                borderRadius: "50%",
+                background: C.greenBright,
+                display: "inline-block",
               }}
             />
-
+            LIVE DATA STREAM
+          </div>
+          <div style={{ height: "28px", width: "1px", background: C.border }} />
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div
               style={{
-                width: "42px",
-                height: "42px",
+                width: "36px",
+                height: "36px",
                 borderRadius: "50%",
-                background: colors.navy,
-                color: colors.white,
+                background: C.navy,
+                color: C.white,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontWeight: 800,
-                fontSize: "12px",
               }}
             >
-              KS
+              <Shield size={16} color={C.white} />
             </div>
-
             <div>
-              <strong
-                style={{
-                  display: "block",
-                  fontSize: "12px",
-                  color: colors.navy,
-                }}
-              >
-                Command Officer
-              </strong>
-
-              <span
-                style={{
-                  fontSize: "10px",
-                  color: colors.muted,
-                }}
-              >
-                Karnataka State Police
-              </span>
+              <strong style={{ display: "block", fontSize: "11px", color: C.navy }}>Command Officer</strong>
+              <span style={{ fontSize: "9px", color: C.muted }}>Karnataka State Police</span>
             </div>
           </div>
-        </header>
+        </div>
+      </header>
 
-        {/* =================================================
-            PAGE CONTENT
-        ================================================== */}
-
-        <section
-          style={{
-            padding: "20px 5% 60px",
-            maxWidth: "1700px",
-            margin: "0 auto",
-            boxSizing: "border-box",
-          }}
-        >
-          {/* =================================================
-              KARNATAKA CRIME INTELLIGENCE HERO
-          ================================================== */}
-
-          <section
+      {/* =====================================================
+          MAIN CONTAINER
+      ====================================================== */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "24px",
+          padding: "24px 32px 60px",
+          width: "100%",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* Error Banner */}
+        {dashError && (
+          <div
             style={{
-              background: colors.white,
-              border: `1px solid ${colors.border}`,
-              borderRadius: "22px",
-              overflow: "hidden",
-              boxShadow: "0 12px 35px rgba(18,42,57,0.06)",
+              padding: "12px 16px",
+              background: `${C.red}10`,
+              border: `1px solid ${C.red}30`,
+              borderRadius: "10px",
+              fontSize: "11px",
+              color: C.red,
+              boxSizing: "border-box",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
             }}
           >
-            {/* HERO HEADER */}
+            <AlertTriangle size={14} />
+            {dashError}
+          </div>
+        )}
 
-            <div
-              style={{
-                padding: "26px 30px 20px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-                flexWrap: "wrap",
-                gap: "15px",
-                borderBottom: `1px solid ${colors.border}`,
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: 800,
-                    color: colors.green,
-                    letterSpacing: "1.2px",
-                    textTransform: "uppercase",
-                    marginBottom: "8px",
-                  }}
-                >
-                  Karnataka State Police • Statewide Overview
-                </div>
-
-                <h1
-                  style={{
-                    margin: 0,
-                    fontSize: "28px",
-                    color: colors.navy,
-                    letterSpacing: "-1px",
-                    fontWeight: 800,
-                  }}
-                >
-                  Understanding crime across Karnataka.
-                </h1>
-
-                <p
-                  style={{
-                    margin: "9px 0 0",
-                    color: colors.muted,
-                    fontSize: "12px",
-                    maxWidth: "650px",
-                    lineHeight: 1.6,
-                  }}
-                >
-                  A clearer view of reported crime patterns, emerging hotspots
-                  and district-level activity to help officers make informed
-                  decisions.
-                </p>
-              </div>
-
+        {/* ===================================================
+            SECTION 1: DASHBOARD KPIs & TOP CONTROL BAR
+        =================================================== */}
+        <Card style={{ padding: "16px 22px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "16px",
+              width: "100%",
+            }}
+          >
+            {/* Search Box & Risk Filter Pills */}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", flex: 1 }}>
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: "8px",
-                  padding: "9px 13px",
-                  borderRadius: "9px",
-                  background: "#F3FAF8",
-                  color: colors.green,
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  whiteSpace: "nowrap",
+                  background: C.background,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: "10px",
+                  padding: "8px 14px",
+                  minWidth: "260px",
                 }}
               >
-                <span
+                <Search size={14} color={C.muted} />
+                <input
+                  type="text"
+                  placeholder="Search station or district..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   style={{
-                    width: "7px",
-                    height: "7px",
-                    borderRadius: "50%",
-                    background: colors.greenBright,
+                    border: "none",
+                    outline: "none",
+                    background: "transparent",
+                    fontSize: "11px",
+                    color: C.text,
+                    width: "100%",
+                    fontFamily: "inherit",
                   }}
                 />
-                LIVE DATA OVERVIEW
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontSize: "10px", color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  Risk Filter:
+                </span>
+                {(["All", "High", "Medium", "Low"] as const).map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => setRiskFilter(r)}
+                    style={{
+                      padding: "5px 12px",
+                      borderRadius: "20px",
+                      border: "none",
+                      background: riskFilter === r ? C.indigo : C.background,
+                      color: riskFilter === r ? C.white : C.muted,
+                      fontSize: "10px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    {r}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* HERO BODY */}
+            {/* Dashboard KPI Badges */}
+            <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <FileText size={14} color={C.blue} />
+                <div>
+                  <span style={{ fontSize: "9px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>FIRs</span>
+                  <div style={{ fontSize: "13px", fontWeight: 800, color: C.navy }}>{dashboard?.total_firs.toLocaleString("en-IN") ?? "—"}</div>
+                </div>
+              </div>
+              <div style={{ height: "24px", width: "1px", background: C.border }} />
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <MapPin size={14} color={C.purple} />
+                <div>
+                  <span style={{ fontSize: "9px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>Districts</span>
+                  <div style={{ fontSize: "13px", fontWeight: 800, color: C.navy }}>{dashboard?.districts ?? "—"}</div>
+                </div>
+              </div>
+              <div style={{ height: "24px", width: "1px", background: C.border }} />
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Building2 size={14} color={C.green} />
+                <div>
+                  <span style={{ fontSize: "9px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>Stations</span>
+                  <div style={{ fontSize: "13px", fontWeight: 800, color: C.navy }}>{dashboard?.stations ?? "—"}</div>
+                </div>
+              </div>
+              <div style={{ height: "24px", width: "1px", background: C.border }} />
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <AlertTriangle size={14} color={C.red} />
+                <div>
+                  <span style={{ fontSize: "9px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>High Risk</span>
+                  <div style={{ fontSize: "13px", fontWeight: 800, color: C.red }}>{dashboard?.high_risk_zones ?? "—"}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* ===================================================
+            SECTION 2: CRIME HOTSPOT MAP (HEATMAP ONLY)
+        =================================================== */}
+        <div style={{ display: "flex", gap: "20px", width: "100%", alignItems: "stretch", flexWrap: "wrap" }}>
+          
+          {/* Left Column: Station List */}
+          <div
+            style={{
+              width: "360px",
+              flexShrink: 0,
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 4px" }}>
+              <div style={{ fontSize: "12px", fontWeight: 800, color: C.navy }}>
+                Karnataka Hotspots <span style={{ color: C.indigo }}>({filteredHotspots.length})</span>
+              </div>
+            </div>
 
             <div
               style={{
-                display: "grid",
-                gridTemplateColumns: "span 1",
-                gridAutoRows: "auto",
-                // Responsive break from single column to split view for wider viewports
-                // Managed through dynamic layout design
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+                maxHeight: "560px",
+                overflowY: "auto",
+                paddingRight: "4px",
               }}
             >
+              {mapLoading ? (
+                [1, 2, 3].map((i) => <Skeleton key={i} height="120px" radius="16px" />)
+              ) : filteredHotspots.length === 0 ? (
+                <Card style={{ padding: "24px", textAlign: "center" }}>
+                  <div style={{ fontSize: "11px", color: C.muted }}>No stations match search filter</div>
+                </Card>
+              ) : (
+                filteredHotspots.map((h) => {
+                  const isSelected = selectedZone?.zone === h.zone;
+                  return (
+                    <div
+                      key={h.zone}
+                      onClick={() => handleHotspotClick(h.zone)}
+                      style={{
+                        background: C.white,
+                        border: isSelected ? `2px solid ${C.indigo}` : `1px solid ${C.border}`,
+                        borderRadius: "16px",
+                        padding: "16px 18px",
+                        cursor: "pointer",
+                        boxShadow: isSelected ? "0 8px 24px rgba(79,70,229,0.12)" : "0 4px 14px rgba(18,42,57,0.03)",
+                        transition: "all 0.2s ease",
+                        boxSizing: "border-box",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: RISK_COLOR[h.risk] ?? C.muted }} />
+                          <span style={{ fontSize: "9px", fontWeight: 800, color: RISK_COLOR[h.risk] ?? C.muted, textTransform: "uppercase" }}>
+                            {h.risk} Risk Zone
+                          </span>
+                        </div>
+                        {isSelected && (
+                          <span style={{ fontSize: "9px", background: C.indigoLight, color: C.indigo, fontWeight: 700, padding: "2px 8px", borderRadius: "10px" }}>
+                            Active
+                          </span>
+                        )}
+                      </div>
+
+                      <div style={{ fontSize: "14px", fontWeight: 800, color: C.navy, marginBottom: "2px" }}>
+                        {h.zone}
+                      </div>
+                      <div style={{ fontSize: "11px", color: C.muted, marginBottom: "10px" }}>
+                        {h.district} District, Karnataka
+                      </div>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleHotspotClick(h.zone);
+                        }}
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          borderRadius: "8px",
+                          border: "none",
+                          background: isSelected ? C.indigo : C.background,
+                          color: isSelected ? C.white : C.navy,
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {isSelected ? "Selected Zone ✓" : "View Station Intelligence"}
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Right Column: Geospatial Density Map */}
+          <div style={{ flex: 1, minWidth: "400px", display: "flex", flexDirection: "column" }}>
+            <Card style={{ height: "600px", overflow: "hidden", position: "relative" }}>
               <div
                 style={{
+                  position: "absolute",
+                  top: "16px",
+                  left: "60px",
+                  zIndex: 1000,
+                  background: "rgba(255, 255, 255, 0.94)",
+                  backdropFilter: "blur(12px)",
+                  padding: "6px 14px",
+                  borderRadius: "10px",
+                  border: `1px solid ${C.border}`,
+                  boxShadow: "0 4px 14px rgba(0,0,0,0.06)",
                   display: "flex",
-                  flexWrap: "wrap",
-                  width: "100%",
+                  alignItems: "center",
+                  gap: "6px",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  color: C.navy,
                 }}
               >
-                {/* MAP */}
+                <Flame size={14} color={C.green} />
+                Geospatial Crime Density Heatmap
+              </div>
 
-                <div
-                  style={{
-                    position: "relative",
-                    padding: "28px",
-                    background: "linear-gradient(145deg, #F9FCFC, #EFF6F5)",
-                    overflow: "hidden",
-                    flex: "1 1 550px",
-                    minHeight: "450px",
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                >
-                  {/* GRID */}
+              {mapError ? (
+                <div style={{ padding: "30px", textAlign: "center", color: C.red, fontSize: "12px" }}>
+                  {mapError}
+                </div>
+              ) : mapLoading ? (
+                <Skeleton height="100%" radius="16px" />
+              ) : (
+                <div style={{ height: "100%", width: "100%", position: "relative" }}>
+                  <MapContainer
+                    center={[15.3173, 75.7139]}
+                    zoom={7}
+                    style={{ height: "100%", width: "100%" }}
+                    scrollWheelZoom
+                  >
+                    <MapController center={mapCenter} zoom={mapZoom} />
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                      url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                    />
+                    <HeatmapLayer points={heatmapPoints} radius={50} blur={35} maxZoom={12} />
+                  </MapContainer>
 
+                  {/* Floating Station Overlay Card */}
+                  {selectedZone && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: "20px",
+                        left: "20px",
+                        zIndex: 1000,
+                        background: C.white,
+                        borderRadius: "16px",
+                        padding: "16px 18px",
+                        border: `1px solid ${C.border}`,
+                        boxShadow: "0 12px 36px rgba(6, 27, 43, 0.16)",
+                        width: "280px",
+                        boxSizing: "border-box",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                        <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: RISK_COLOR[selectedZone.risk] ?? C.muted }} />
+                        <span style={{ fontSize: "9px", fontWeight: 800, color: RISK_COLOR[selectedZone.risk] ?? C.muted, textTransform: "uppercase" }}>
+                          {selectedZone.risk} Risk Station
+                        </span>
+                      </div>
+                      <div style={{ fontSize: "15px", fontWeight: 800, color: C.navy, marginBottom: "2px" }}>
+                        {selectedZone.zone}
+                      </div>
+                      <div style={{ fontSize: "11px", color: C.muted, marginBottom: "10px" }}>
+                        {selectedZone.district} District
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                        <div style={{ background: C.background, padding: "8px 10px", borderRadius: "8px" }}>
+                          <span style={{ fontSize: "8px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>Total FIRs</span>
+                          <div style={{ fontSize: "13px", color: C.navy, fontWeight: 800 }}>{selectedZone.crime_count}</div>
+                        </div>
+                        <div style={{ background: C.background, padding: "8px 10px", borderRadius: "8px" }}>
+                          <span style={{ fontSize: "8px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>Risk Score</span>
+                          <div style={{ fontSize: "13px", color: RISK_COLOR[selectedZone.risk] ?? C.muted, fontWeight: 800 }}>{selectedZone.risk_score}/100</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Top Right Floating Density Scale */}
                   <div
                     style={{
                       position: "absolute",
-                      inset: 0,
-                      opacity: 0.35,
-                      backgroundImage:
-                        "linear-gradient(#DCE9E8 1px, transparent 1px), linear-gradient(90deg, #DCE9E8 1px, transparent 1px)",
-                      backgroundSize: "32px 32px",
-                    }}
-                  />
-
-                  {/* MAP TITLE */}
-
-                  <div
-                    style={{
-                      position: "relative",
-                      zIndex: 3,
-                      marginBottom: "20px",
+                      top: "16px",
+                      right: "16px",
+                      zIndex: 1000,
+                      background: "rgba(255, 255, 255, 0.94)",
+                      backdropFilter: "blur(12px)",
+                      padding: "8px 12px",
+                      borderRadius: "10px",
+                      border: `1px solid ${C.border}`,
+                      boxShadow: "0 4px 14px rgba(6, 27, 43, 0.08)",
+                      width: "170px",
                     }}
                   >
+                    <div style={{ fontSize: "9px", fontWeight: 800, color: C.navy, marginBottom: "4px" }}>
+                      Crime Density Scale
+                    </div>
                     <div
                       style={{
-                        fontSize: "10px",
-                        fontWeight: 800,
-                        color: colors.navy,
-                        letterSpacing: "0.8px",
-                        textTransform: "uppercase",
+                        height: "6px",
+                        borderRadius: "3px",
+                        background: "linear-gradient(to right, rgba(38,185,154,0.7), #E7A448, #795BC6, #D85B5B)",
                       }}
-                    >
-                      Reported Crime Activity
+                    />
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px", fontSize: "8px", color: C.muted, fontWeight: 700 }}>
+                      <span>Low</span>
+                      <span>High</span>
                     </div>
-
-                    <div
-                      style={{
-                        fontSize: "10px",
-                        color: colors.muted,
-                        marginTop: "5px",
-                      }}
-                    >
-                      District-level activity overview
-                    </div>
-                  </div>
-
-                  {/* ACTUAL RESPONSIVE GEOGRAPHICAL MAP OF KARNATAKA (SVG) */}
-
-                  <div
-                    style={{
-                      position: "relative",
-                      width: "100%",
-                      maxWidth: "460px",
-                      margin: "auto",
-                      zIndex: 2,
-                    }}
-                  >
-                    <svg
-                      viewBox="0 0 400 520"
-                      width="100%"
-                      height="100%"
-                      style={{
-                        filter: "drop-shadow(0 15px 25px rgba(26,72,76,0.12))",
-                      }}
-                    >
-                      {/* Actual geographical shape approximations for all 31 districts of Karnataka */}
-                      {/* Bidar */}
-                      <path
-                        d="M210 10 L240 20 L245 45 L225 60 L195 40 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Kalaburagi */}
-                      <path
-                        d="M175 45 L195 40 L225 60 L215 95 L170 90 L160 65 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Yadgir */}
-                      <path
-                        d="M170 90 L215 95 L210 130 L160 125 L155 105 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Vijayapura */}
-                      <path
-                        d="M110 50 L160 65 L155 105 L115 100 L100 75 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Raichur */}
-                      <path
-                        d="M160 125 L210 130 L225 165 L165 170 L145 145 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Bagalkote */}
-                      <path
-                        d="M85 85 L115 100 L145 105 L135 135 L80 125 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Belagavi */}
-                      <path
-                        d="M35 80 L85 85 L80 125 L95 165 L55 180 L25 140 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Dharwad */}
-                      <path
-                        d="M70 155 L95 165 L90 195 L60 190 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Gadag */}
-                      <path
-                        d="M95 165 L135 135 L145 165 L115 195 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Koppal */}
-                      <path
-                        d="M135 135 L165 130 L175 180 L145 185 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Ballari & Vijayanagara */}
-                      <path
-                        d="M175 180 L225 165 L240 215 L180 240 L165 210 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Uttara Kannada */}
-                      <path
-                        d="M25 180 L55 180 L75 235 L40 260 L20 220 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Haveri */}
-                      <path
-                        d="M75 195 L115 195 L110 240 L65 235 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Shivamogga */}
-                      <path
-                        d="M45 255 L75 235 L110 240 L115 285 L80 305 L50 285 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Davanagere */}
-                      <path
-                        d="M110 240 L155 230 L165 270 L135 280 L115 265 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Chitradurga */}
-                      <path
-                        d="M155 230 L180 240 L205 295 L165 305 L165 270 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Chikkamagaluru */}
-                      <path
-                        d="M80 305 L115 285 L145 300 L135 345 L95 340 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Udupi */}
-                      <path
-                        d="M35 265 L50 285 L45 325 L25 315 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Dakshina Kannada */}
-                      <path
-                        d="M45 325 L85 330 L80 375 L45 365 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Hassan */}
-                      <path
-                        d="M95 340 L135 345 L155 390 L115 405 L95 375 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Tumakuru */}
-                      <path
-                        d="M165 305 L205 295 L225 370 L195 385 L180 350 L155 350 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Chikkaballapura */}
-                      <path
-                        d="M225 330 L265 335 L260 370 L225 365 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Kolar */}
-                      <path
-                        d="M260 370 L295 375 L285 415 L250 410 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Bengaluru Rural & Urban */}
-                      <path
-                        d="M225 370 L255 370 L250 410 L220 435 L205 400 Z"
-                        fill="#E1FAF4"
-                        stroke="#26B99A"
-                        strokeWidth="2"
-                      />
-                      {/* Ramanagara */}
-                      <path
-                        d="M195 385 L220 435 L195 450 L180 415 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Mandya */}
-                      <path
-                        d="M155 390 L195 385 L180 415 L175 440 L140 420 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Kodagu */}
-                      <path
-                        d="M80 375 L115 375 L105 420 L75 405 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Mysuru */}
-                      <path
-                        d="M105 420 L140 420 L160 465 L120 475 L105 450 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                      {/* Chamarajanagar */}
-                      <path
-                        d="M140 460 L160 465 L195 450 L210 495 L155 510 Z"
-                        fill="#E8F1F2"
-                        stroke="#B0C7CD"
-                        strokeWidth="1.5"
-                      />
-                    </svg>
-
-                    {/* GEOGRAPHICAL MARKERS POSITIONED PROPERLY ACROSS KARNATAKA MAP */}
-                    <CrimeMarker
-                      top="74%"
-                      left="58%"
-                      label="Bengaluru Urban"
-                      value="High"
-                      level="high"
-                    />
-                    <CrimeMarker
-                      top="84%"
-                      left="34%"
-                      label="Mysuru"
-                      value="Moderate"
-                      level="medium"
-                    />
-                    <CrimeMarker
-                      top="66%"
-                      left="50%"
-                      label="Tumakuru"
-                      value="Moderate"
-                      level="medium"
-                    />
-                    <CrimeMarker
-                      top="80%"
-                      left="44%"
-                      label="Mandya"
-                      value="Low"
-                      level="low"
-                    />
-                    <CrimeMarker
-                      top="70%"
-                      left="18%"
-                      label="Mangaluru"
-                      value="Low"
-                      level="low"
-                    />
-                  </div>
-
-                  {/* LEGEND */}
-
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: "20px",
-                      left: "28px",
-                      zIndex: 4,
-                      display: "flex",
-                      gap: "15px",
-                      background: "rgba(255,255,255,0.9)",
-                      padding: "10px 13px",
-                      borderRadius: "9px",
-                      border: `1px solid ${colors.border}`,
-                      fontSize: "9px",
-                      color: colors.muted,
-                    }}
-                  >
-                    <LegendDot color={colors.red} label="Higher activity" />
-
-                    <LegendDot color={colors.orange} label="Moderate" />
-
-                    <LegendDot
-                      color={colors.greenBright}
-                      label="Lower activity"
-                    />
                   </div>
                 </div>
+              )}
+            </Card>
+          </div>
+        </div>
 
-                {/* STATISTICS */}
+        {/* ===================================================
+            SECTION 3: ZONE INTELLIGENCE & 2-COLUMN CRIME BREAKDOWN GRID
+        =================================================== */}
+        <div ref={zonePanelRef} style={{ display: "flex", flexDirection: "column", gap: "20px", width: "100%", boxSizing: "border-box" }}>
+          {zoneLoading && (
+            <Card style={{ padding: "28px", width: "100%" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <Skeleton height="24px" width="220px" />
+                <Skeleton height="16px" width="160px" />
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "14px", marginTop: "8px" }}>
+                  {[1, 2, 3, 4].map((i) => <Skeleton key={i} height="64px" radius="10px" />)}
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {selectedZone && !zoneLoading && (
+            <>
+              {/* Selected Zone Intelligence Header Card */}
+              <Card style={{ padding: "24px", width: "100%" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
+                  <div>
+                    <div style={{ fontSize: "10px", fontWeight: 800, color: C.green, letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "6px" }}>
+                      Zone Intelligence
+                    </div>
+                    <h2 style={{ margin: 0, fontSize: "22px", color: C.navy, fontWeight: 800, letterSpacing: "-0.5px" }}>{selectedZone.zone}</h2>
+                    <p style={{ margin: "4px 0 0", fontSize: "12px", color: C.muted }}>{selectedZone.district} District</p>
+                  </div>
+                  <RiskBadge risk={selectedZone.risk} />
+                </div>
 
                 <div
                   style={{
-                    padding: "28px",
-                    borderLeft: `1px solid ${colors.border}`,
-                    background: "#FFFFFF",
-                    flex: "1 1 300px",
+                    display: "grid",
+                    gridTemplateColumns: "repeat(4, 1fr)",
+                    gap: "14px",
+                    marginTop: "18px",
+                    width: "100%",
                     boxSizing: "border-box",
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: "10px",
-                      fontWeight: 800,
-                      color: colors.navy,
-                      letterSpacing: "0.8px",
-                      textTransform: "uppercase",
-                      marginBottom: "20px",
-                    }}
-                  >
-                    Crime Overview
+                  {[
+                    { label: "Total FIRs", value: selectedZone.crime_count.toLocaleString("en-IN"), color: C.blue, icon: <FileText size={15} color={C.blue} /> },
+                    { label: "Risk Score", value: `${selectedZone.risk_score}/100`, color: RISK_COLOR[selectedZone.risk] ?? C.muted, icon: <TrendingUp size={15} color={RISK_COLOR[selectedZone.risk] ?? C.muted} /> },
+                    { label: "Peak Time", value: selectedZone.peak_time, color: C.purple, icon: <Clock size={15} color={C.purple} /> },
+                    { label: "Weather", value: selectedZone.common_weather, color: C.orange, icon: <Cloud size={15} color={C.orange} /> },
+                  ].map((s) => (
+                    <div
+                      key={s.label}
+                      style={{
+                        background: C.background,
+                        borderRadius: "12px",
+                        padding: "12px 16px",
+                        boxSizing: "border-box",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ fontSize: "9px", color: C.muted, fontWeight: 700, letterSpacing: "0.6px", textTransform: "uppercase" }}>
+                          {s.label}
+                        </div>
+                        {s.icon}
+                      </div>
+                      <div style={{ fontSize: "15px", color: s.color, fontWeight: 800, marginTop: "4px" }}>
+                        {s.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              {/* SLEEK 2-COLUMN CRIME BREAKDOWN GRID */}
+              <Card style={{ padding: "24px", width: "100%" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 800, color: C.navy, letterSpacing: "0.8px", textTransform: "uppercase", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <BarChart3 size={15} color={C.indigo} />
+                    Crime Breakdown — {selectedZone.zone}
+                  </div>
+                  <span style={{ fontSize: "10px", color: C.muted, fontWeight: 700 }}>
+                    {selectedZone.crime_breakdown.reduce((sum, b) => sum + b.count, 0)} Total Incidents
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(2, 1fr)",
+                    gap: "12px",
+                    width: "100%",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  {selectedZone.crime_breakdown.map((b, i) => {
+                    const totalIncidents = selectedZone.crime_breakdown.reduce((sum, item) => sum + item.count, 0);
+                    const percent = Math.round((b.count / (totalIncidents || 1)) * 100);
+                    const barColor = i === 0 ? C.red : i < 3 ? C.orange : C.indigo;
+                    return (
+                      <div
+                        key={b.crime}
+                        style={{
+                          background: C.background,
+                          border: `1px solid ${C.border}`,
+                          borderRadius: "12px",
+                          padding: "12px 14px",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "8px",
+                          boxSizing: "border-box",
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span
+                              style={{
+                                fontSize: "9px",
+                                fontWeight: 800,
+                                color: barColor,
+                                background: `${barColor}15`,
+                                padding: "2px 6px",
+                                borderRadius: "6px",
+                              }}
+                            >
+                              #{i + 1}
+                            </span>
+                            <span style={{ fontSize: "12px", fontWeight: 700, color: C.navy }}>{b.crime}</span>
+                          </div>
+                          <div style={{ fontSize: "11px", fontWeight: 800, color: C.text }}>
+                            {b.count} <span style={{ fontSize: "10px", color: C.muted, fontWeight: 600 }}>({percent}%)</span>
+                          </div>
+                        </div>
+
+                        {/* Embedded Progress Bar Track */}
+                        <div style={{ height: "6px", borderRadius: "3px", background: C.border, width: "100%", overflow: "hidden" }}>
+                          <div
+                            style={{
+                              height: "100%",
+                              borderRadius: "3px",
+                              background: `linear-gradient(to right, ${barColor}, ${barColor}DD)`,
+                              width: `${(b.count / maxBreakdown) * 100}%`,
+                              transition: "width 0.5s ease",
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            </>
+          )}
+
+          {/* ===================================================
+              SECTION 4: 🔮 CRIME FORECAST
+          =================================================== */}
+          {selectedZone && (
+            <Card style={{ padding: "24px", width: "100%" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "10px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Sparkles size={18} color={C.indigo} />
+                  <div>
+                    <div style={{ fontSize: "13px", fontWeight: 800, color: C.navy }}>Crime Forecast</div>
+                    <span style={{ fontSize: "10px", color: C.muted }}>7-Day Predictive Risk Engine</span>
+                  </div>
+                </div>
+                {forecast && <RiskBadge risk={forecast.forecast_risk} />}
+              </div>
+
+              {forecastLoading ? (
+                <Skeleton height="60px" />
+              ) : forecast ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
+                    <div style={{ background: C.background, padding: "12px", borderRadius: "10px" }}>
+                      <span style={{ fontSize: "9px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>Forecast Risk</span>
+                      <div style={{ fontSize: "15px", color: RISK_COLOR[forecast.forecast_risk] ?? C.navy, fontWeight: 800, marginTop: "2px" }}>
+                        {forecast.forecast_risk}
+                      </div>
+                    </div>
+                    <div style={{ background: C.background, padding: "12px", borderRadius: "10px" }}>
+                      <span style={{ fontSize: "9px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>Confidence</span>
+                      <div style={{ fontSize: "15px", color: C.indigo, fontWeight: 800, marginTop: "2px" }}>
+                        {forecast.confidence}%
+                      </div>
+                    </div>
+                    <div style={{ background: C.background, padding: "12px", borderRadius: "10px" }}>
+                      <span style={{ fontSize: "9px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>Forecast Period</span>
+                      <div style={{ fontSize: "13px", color: C.navy, fontWeight: 700, marginTop: "2px" }}>
+                        {forecast.forecast_period}
+                      </div>
+                    </div>
                   </div>
 
-                  <CrimeStat
-                    title="Total reported cases"
-                    value="18,642"
-                    change="+4.8%"
-                    description="Compared with previous period"
-                    positive={false}
-                  />
+                  <div>
+                    <div style={{ fontSize: "10px", fontWeight: 800, color: C.navy, textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: "8px" }}>
+                      Expected Crimes & Probability
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "8px" }}>
+                      {forecast.expected_crimes.map((ec) => (
+                        <div
+                          key={ec.crime}
+                          style={{
+                            padding: "10px 12px",
+                            background: C.indigoLight,
+                            border: `1px solid ${C.indigo}20`,
+                            borderRadius: "10px",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <span style={{ fontSize: "11px", fontWeight: 700, color: C.navy }}>{ec.crime}</span>
+                          <span style={{ fontSize: "11px", fontWeight: 800, color: C.indigo }}>{ec.probability}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </Card>
+          )}
 
-                  <CrimeStat
-                    title="Cases under investigation"
-                    value="7,291"
-                    change="+2.1%"
-                    description="Active investigations"
-                    positive={false}
-                  />
-
-                  <CrimeStat
-                    title="Cases resolved"
-                    value="68.4%"
-                    change="+6.7%"
-                    description="Resolution rate"
-                    positive={true}
-                  />
-
-                  <CrimeStat
-                    title="Emerging hotspots"
-                    value="14"
-                    change="3 new"
-                    description="Zones requiring attention"
-                    positive={false}
-                  />
-
-                  <button
-                    onClick={openCrimeMap}
-                    style={{
-                      width: "100%",
-                      marginTop: "18px",
-                      padding: "13px",
-                      borderRadius: "9px",
-                      border: "none",
-                      background: colors.navy,
-                      color: colors.white,
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                    }}
-                  >
-                    Open Crime Intelligence Map →
-                  </button>
+          {/* ===================================================
+              SECTION 5: 📊 PATTERN ANALYSIS
+          =================================================== */}
+          {selectedZone && (
+            <Card style={{ padding: "24px", width: "100%" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
+                <Layers size={18} color={C.purple} />
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: 800, color: C.navy }}>Pattern Analysis</div>
+                  <span style={{ fontSize: "10px", color: C.muted }}>Detected Temporal Patterns</span>
                 </div>
               </div>
-            </div>
-          </section>
 
-          {/* =================================================
-              STATUS CARDS
-          ================================================== */}
+              {patternsLoading ? (
+                <Skeleton height="80px" />
+              ) : patterns && patterns.patterns.length > 0 ? (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "12px" }}>
+                  {patterns.patterns.map((p, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        padding: "14px",
+                        background: C.background,
+                        border: `1px solid ${C.border}`,
+                        borderRadius: "12px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "6px",
+                      }}
+                    >
+                      <div style={{ fontSize: "12px", fontWeight: 800, color: C.navy }}>{p.title}</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", fontSize: "10px" }}>
+                        <div>
+                          <span style={{ color: C.muted, display: "block" }}>Crime</span>
+                          <strong style={{ color: C.text }}>{p.crime_type}</strong>
+                        </div>
+                        <div>
+                          <span style={{ color: C.muted, display: "block" }}>Peak Day</span>
+                          <strong style={{ color: C.purple }}>{p.peak_day ?? "Weekend"}</strong>
+                        </div>
+                        <div>
+                          <span style={{ color: C.muted, display: "block" }}>Peak Time</span>
+                          <strong style={{ color: C.navy }}>{p.peak_time}</strong>
+                        </div>
+                        <div>
+                          <span style={{ color: C.muted, display: "block" }}>Confidence</span>
+                          <strong style={{ color: C.green }}>{p.confidence}%</strong>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </Card>
+          )}
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-              gap: "12px",
-              marginTop: "18px",
-            }}
-          >
-            <LiveStatus
-              title="FIR PIPELINE"
-              value="18,642"
-              detail="Cases processed"
-              color={colors.blue}
-            />
-
-            <LiveStatus
-              title="ACTIVE CASES"
-              value="7,291"
-              detail="Under investigation"
-              color={colors.orange}
-            />
-
-            <LiveStatus
-              title="RESOLUTION RATE"
-              value="68.4%"
-              detail="Cases resolved"
-              color={colors.greenBright}
-            />
-
-            <LiveStatus
-              title="HOTSPOT ZONES"
-              value="14"
-              detail="Require attention"
-              color={colors.red}
-            />
-          </div>
-
-          {/* =================================================
-              WORKFLOW
-          ================================================== */}
-
-          <SectionHeading
-            title="How IntelliGrid Works"
-            subtitle="One connected intelligence loop"
-          />
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-              gap: "12px",
-            }}
-          >
-            <WorkflowStep
-              number="01"
-              icon="◉"
-              title="Citizen / Officer"
-              description="A complaint begins through a citizen or police officer."
-            />
-
-            <WorkflowStep
-              number="02"
-              icon="✦"
-              title="Form or Conversation"
-              description="Kannada and English voice or text capture the incident naturally."
-            />
-
-            <WorkflowStep
-              number="03"
-              icon="♙"
-              title="Police Officer"
-              description="The officer receives structured and verified case information."
-            />
-
-            <WorkflowStep
-              number="04"
-              icon="⌁"
-              title="Model-Assisted Review"
-              description="Relevant legal sections and case patterns are surfaced for review."
-            />
-
-            <WorkflowStep
-              number="05"
-              icon="✓"
-              title="Actionable Justice"
-              description="FIRs, insights, predictions and legal documents are generated."
-            />
-          </div>
-
-          {/* =================================================
-              FEATURE MODULES
-          ================================================== */}
-
-          <div>
-            <SectionHeading
-              title="Intelligence Modules"
-              subtitle="Five layers. One unified ecosystem."
-            />
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: "12px",
-              }}
-            >
-              <FeatureCard
-                number="01"
-                icon="✦"
-                title="Conversational FIR Lodging Engine"
-                description="Bilingual Kannada + English voice and text conversations guide citizens and officers through FIR registration."
-                color={colors.green}
-              />
-
-              <FeatureCard
-                number="02"
-                icon="⚖"
-                title="Intelligent IPC / BNS Recommender"
-                description="RAG-powered legal suggestions appear as the FIR is narrated with plain-language explanations."
-                color={colors.blue}
-              />
-
-              <FeatureCard
-                number="03"
-                icon="⌁"
-                title="Crime Hotspot Intelligence Map"
-                description="Historical crime patterns, spatial clusters and forecasting help shift policing from reactive to anticipatory."
-                color={colors.orange}
-              />
-
-              <FeatureCard
-                number="04"
-                icon="▤"
-                title="Legal Document Export Engine"
-                description="Case interactions become court-ready, signed and timestamped legal documents with chain-of-custody data."
-                color={colors.purple}
-              />
-
-              <FeatureCard
-                number="05"
-                icon="◈"
-                title="Explainable Pattern Analysis"
-                description="AI detects anomalies, clusters and MO patterns while showing the reasoning trail behind every insight."
-                color={colors.red}
-              />
-            </div>
-          </div>
-
-          {/* =================================================
-              FIR CONVERSATION SECTION
-          ================================================== */}
-
-          <section
-            style={{
-              marginTop: "22px",
-              background: "#FFFFFF",
-              border: `1px solid ${colors.border}`,
-              borderRadius: "18px",
-              padding: "28px",
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-              gap: "30px",
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  color: colors.green,
-                  fontSize: "10px",
-                  fontWeight: 800,
-                  letterSpacing: "1px",
-                  marginBottom: "10px",
-                }}
-              >
-                CONVERSATIONAL FIR LODGING
+          {/* ===================================================
+              SECTION 6: 🚨 ANOMALY ALERTS
+          =================================================== */}
+          {selectedZone && (
+            <Card style={{ padding: "24px", width: "100%" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
+                <AlertTriangle size={18} color={C.red} />
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: 800, color: C.navy }}>Anomaly Alerts</div>
+                  <span style={{ fontSize: "10px", color: C.muted }}>Statistical Deviations vs Baseline</span>
+                </div>
               </div>
 
-              <h3
-                style={{
-                  fontSize: "24px",
-                  lineHeight: 1.2,
-                  color: colors.navy,
-                  margin: "0 0 12px",
-                }}
-              >
-                A complaint should begin with a conversation.
-              </h3>
+              {anomaliesLoading ? (
+                <Skeleton height="70px" />
+              ) : anomalies && anomalies.anomalies.length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {anomalies.anomalies.map((anom, i) => {
+                    const isSpike = anom.type.toLowerCase() === "spike";
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          padding: "14px 16px",
+                          background: isSpike ? `${C.red}08` : `${C.green}08`,
+                          border: `1px solid ${isSpike ? C.red : C.green}25`,
+                          borderRadius: "12px",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                          gap: "10px",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <div
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "8px",
+                              background: isSpike ? `${C.red}20` : `${C.green}20`,
+                              color: isSpike ? C.red : C.green,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            {isSpike ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: "12px", fontWeight: 800, color: C.navy }}>
+                              {anom.crime} {anom.type}
+                            </div>
+                            <div style={{ fontSize: "10px", color: C.muted, marginTop: "1px" }}>
+                              {anom.reason}
+                            </div>
+                          </div>
+                        </div>
 
-              <p
-                style={{
-                  color: colors.muted,
-                  fontSize: "12px",
-                  lineHeight: 1.7,
-                  maxWidth: "520px",
-                  margin: 0,
-                }}
-              >
-                Instead of asking citizens to navigate complex forms, the system
-                guides them through a natural Kannada or English conversation.
-                Important details are captured, clarified and structured for the
-                officer.
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span style={{ fontSize: "16px", fontWeight: 900, color: isSpike ? C.red : C.green }}>
+                            {anom.change_percent > 0 ? `+${anom.change_percent}%` : `${anom.change_percent}%`}
+                          </span>
+                          <span
+                            style={{
+                              padding: "3px 8px",
+                              borderRadius: "12px",
+                              fontSize: "9px",
+                              fontWeight: 800,
+                              background: isSpike ? C.red : C.green,
+                              color: C.white,
+                            }}
+                          >
+                            {anom.severity}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </Card>
+          )}
+
+          {!selectedZone && !zoneLoading && !zoneError && (
+            <Card style={{ padding: "40px", textAlign: "center", width: "100%" }}>
+              <Activity size={32} color={C.muted} style={{ marginBottom: "12px" }} />
+              <div style={{ fontSize: "15px", fontWeight: 700, color: C.navy, marginBottom: "6px" }}>
+                Select a Hotspot Zone
+              </div>
+              <p style={{ margin: 0, fontSize: "12px", color: C.muted, maxWidth: "340px", lineHeight: 1.6, marginInline: "auto" }}>
+                Click any hotspot station on the left list or map above to load detailed crime forecast, patterns, and anomaly alerts.
               </p>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* =====================================================
+          INNOVATIVE FLOATING AI COPILOT BUTTON (Z-Index 99999 — ALWAYS ON TOP / AAGE)
+      ====================================================== */}
+      <button
+        onClick={() => setIsAiModalOpen(true)}
+        style={{
+          position: "fixed",
+          bottom: "32px",
+          right: "32px",
+          zIndex: 99999,
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          padding: "12px 22px",
+          borderRadius: "30px",
+          border: "none",
+          background: `linear-gradient(135deg, ${C.indigo}, #3730A3)`,
+          color: C.white,
+          fontSize: "12px",
+          fontWeight: 800,
+          cursor: "pointer",
+          boxShadow: "0 14px 35px rgba(79, 70, 229, 0.45)",
+          animation: "pulseGlow 2.5s infinite",
+          letterSpacing: "0.3px",
+        }}
+      >
+        <Sparkles size={18} color={C.white} />
+        <span>AI Intelligence Copilot</span>
+        {patternSummary && (
+          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: C.greenBright }} />
+        )}
+      </button>
+
+      {/* =====================================================
+          INNOVATIVE AI COPILOT MODAL DIALOG (Clean Outer Rounding & Formatted Markdown)
+      ====================================================== */}
+      {isAiModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            zIndex: 100000,
+            background: "rgba(6, 27, 43, 0.65)",
+            backdropFilter: "blur(14px)",
+            WebkitBackdropFilter: "blur(14px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+            boxSizing: "border-box",
+          }}
+          onClick={() => setIsAiModalOpen(false)}
+        >
+          <div
+            style={{
+              background: C.white,
+              borderRadius: "20px",
+              border: `1px solid ${C.border}`,
+              boxShadow: "0 25px 65px -12px rgba(6, 27, 43, 0.45)",
+              width: "100%",
+              maxWidth: "660px",
+              maxHeight: "85vh",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              boxSizing: "border-box",
+              position: "relative",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "24px 28px 18px",
+                borderBottom: `1px solid ${C.border}`,
+                background: C.white,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div
+                  style={{
+                    width: "42px",
+                    height: "42px",
+                    borderRadius: "12px",
+                    background: C.indigoLight,
+                    color: C.indigo,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Brain size={22} color={C.indigo} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "18px", fontWeight: 800, color: C.navy }}>
+                    AI Intelligence Copilot
+                  </h3>
+                  <p style={{ margin: "2px 0 0", fontSize: "11px", color: C.muted }}>
+                    Pattern Narrative & Groq LLM Intelligence for {selectedZone?.zone || "Karnataka State"}
+                  </p>
+                </div>
+              </div>
 
               <button
-                onClick={startFIRConversation}
+                onClick={() => setIsAiModalOpen(false)}
                 style={{
-                  marginTop: "20px",
-                  padding: "12px 18px",
-                  borderRadius: "9px",
-                  border: "none",
-                  background: colors.green,
-                  color: colors.white,
-                  fontWeight: 700,
-                  fontSize: "11px",
+                  width: "34px",
+                  height: "34px",
+                  borderRadius: "50%",
+                  border: `1px solid ${C.border}`,
+                  background: C.background,
+                  color: C.navy,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   cursor: "pointer",
                 }}
               >
-                Start a Sample Conversation →
+                <X size={16} />
               </button>
             </div>
 
+            {/* Inner Scrollable Body (Clean Padding & Preserved Outer Rounded Edges) */}
             <div
               style={{
-                background: "#F7FAFA",
-                borderRadius: "14px",
-                border: `1px solid ${colors.border}`,
-                padding: "20px",
+                flex: 1,
+                overflowY: "auto",
+                padding: "24px 28px",
+                boxSizing: "border-box",
+                display: "flex",
+                flexDirection: "column",
+                gap: "20px",
               }}
             >
-              <div
-                style={{
-                  fontSize: "9px",
-                  color: colors.muted,
-                  fontWeight: 800,
-                  letterSpacing: "1px",
-                  marginBottom: "16px",
-                }}
-              >
-                SAMPLE CONVERSATION
+              {/* Pattern Narrative Box */}
+              <div>
+                <div style={{ fontSize: "10px", fontWeight: 800, color: C.indigo, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "8px" }}>
+                  Explainable Pattern Narrative
+                </div>
+                {patternSummaryLoading ? (
+                  <Skeleton height="60px" />
+                ) : patternSummary ? (
+                  <div
+                    style={{
+                      padding: "16px 18px",
+                      background: C.indigoLight,
+                      border: `1px solid ${C.indigo}25`,
+                      borderRadius: "12px",
+                      fontSize: "12px",
+                      color: C.navy,
+                      lineHeight: 1.7,
+                    }}
+                  >
+                    {patternSummary.summary}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: "11px", color: C.muted }}>Select a station to generate pattern narrative.</div>
+                )}
               </div>
 
-              <ChatBubble
-                sender="Citizen"
-                text="Someone broke into my shop last night."
-                citizen
-              />
-
-              <ChatBubble
-                sender="IntelliGrid"
-                text="I understand. Can you tell me where the shop is located and approximately when you discovered the incident?"
-              />
-
-              <ChatBubble
-                sender="Citizen"
-                text="It is near Jayanagar. I found out around 7 AM."
-                citizen
-              />
-
-              <ChatBubble
-                sender="IntelliGrid"
-                text="Thank you. I have captured the location and timeline. An officer can now review the details."
-              />
-            </div>
-          </section>
-
-          {/* =================================================
-              EXPLAINABLE INTELLIGENCE
-          ================================================== */}
-
-          <section
-            style={{
-              marginTop: "22px",
-              background: colors.navy,
-              color: colors.white,
-              borderRadius: "18px",
-              padding: "28px",
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-              gap: "30px",
-            }}
-          >
-            <div>
-              <div
+              {/* AI Action Trigger Button */}
+              <button
+                onClick={handleGenerateAIReport}
+                disabled={aiLoading || !selectedZone}
                 style={{
-                  color: "#81DFC8",
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  letterSpacing: "1.2px",
-                  marginBottom: "10px",
-                }}
-              >
-                EXPLAINABLE INTELLIGENCE
-              </div>
-
-              <h3
-                style={{
-                  fontSize: "24px",
-                  lineHeight: 1.2,
-                  margin: "0 0 12px",
-                }}
-              >
-                Technology should support judgement,
-                <br />
-                not replace it.
-              </h3>
-
-              <p
-                style={{
-                  color: "#AFC0C9",
+                  width: "100%",
+                  padding: "14px",
+                  borderRadius: "12px",
+                  border: "none",
+                  background: aiLoading ? C.muted : C.navy,
+                  color: C.white,
                   fontSize: "12px",
-                  lineHeight: 1.7,
-                  margin: 0,
-                  maxWidth: "560px",
-                }}
-              >
-                Every recommendation generated by IntelliGrid is designed to
-                remain understandable, reviewable and accountable to the officer
-                making the final decision.
-              </p>
-            </div>
-
-            <div
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "12px",
-                padding: "18px",
-              }}
-            >
-              <div
-                style={{
-                  color: "#82DFCA",
-                  fontSize: "10px",
                   fontWeight: 700,
-                  letterSpacing: "1px",
-                  marginBottom: "15px",
+                  cursor: aiLoading || !selectedZone ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
                 }}
               >
-                EXAMPLE REASONING TRAIL
-              </div>
+                {aiLoading ? "Generating Groq LLM Assessment..." : "Run Full Groq LLM Intelligence Assessment →"}
+              </button>
 
-              <ReasoningStep
-                number="1"
-                text="Incident narrative identifies repeated unauthorized entry."
-              />
-
-              <ReasoningStep
-                number="2"
-                text="Similar facts are retrieved from the verified legal knowledge base."
-              />
-
-              <ReasoningStep
-                number="3"
-                text="Relevant BNS sections are suggested with plain-language justification."
-              />
-
-              <ReasoningStep
-                number="4"
-                text="Officer reviews, validates and makes the final decision."
-              />
+              {/* Formatted Groq AI Full Report Cards */}
+              {aiReport && (
+                <div>
+                  <div style={{ fontSize: "10px", fontWeight: 800, color: C.green, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "4px" }}>
+                    Full AI Intelligence Assessment
+                  </div>
+                  {renderFormattedReport(aiReport.report)}
+                </div>
+              )}
             </div>
-          </section>
-
-          {/* FOOTER */}
-
-          <footer
-            style={{
-              textAlign: "center",
-              color: "#9AA6AB",
-              fontSize: "10px",
-              padding: "30px 0 0",
-            }}
-          >
-            KSP IntelliGrid • Built for accessible, accountable and informed
-            policing
-          </footer>
-        </section>
-      </main>
-    </div>
-  );
-};
-
-/* =========================================================
-   TOP STATUS CARD
-========================================================= */
-
-interface LiveStatusProps {
-  title: string;
-  value: string;
-  detail: string;
-  color: string;
-}
-
-const LiveStatus: React.FC<LiveStatusProps> = ({
-  title,
-  value,
-  detail,
-  color,
-}) => {
-  return (
-    <div
-      style={{
-        background: colors.white,
-        border: `1px solid ${colors.border}`,
-        borderRadius: "16px",
-        padding: "18px 20px",
-        display: "flex",
-        alignItems: "center",
-        gap: "14px",
-        boxShadow: "0 8px 25px rgba(18,42,57,0.04)",
-      }}
-    >
-      <div
-        style={{
-          width: "10px",
-          height: "10px",
-          borderRadius: "50%",
-          background: color,
-          boxShadow: `0 0 0 5px ${color}20`,
-        }}
-      />
-
-      <div>
-        <div
-          style={{
-            fontSize: "9px",
-            letterSpacing: "1px",
-            color: "#9AA6AB",
-            fontWeight: 800,
-          }}
-        >
-          {title}
+          </div>
         </div>
-
-        <strong
-          style={{
-            display: "block",
-            marginTop: "4px",
-            fontSize: "17px",
-            color: colors.navy,
-          }}
-        >
-          {value}
-        </strong>
-
-        <span
-          style={{
-            fontSize: "9px",
-            color: colors.muted,
-          }}
-        >
-          {detail}
-        </span>
-      </div>
+      )}
     </div>
   );
-};
-
-/* =========================================================
-   SECTION HEADING
-========================================================= */
-
-interface SectionHeadingProps {
-  title: string;
-  subtitle: string;
-}
-
-const SectionHeading: React.FC<SectionHeadingProps> = ({ title, subtitle }) => {
-  return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        margin: "32px 0 15px",
-        flexWrap: "wrap",
-        gap: "10px",
-      }}
-    >
-      <h3
-        style={{
-          margin: 0,
-          fontSize: "18px",
-          color: colors.navy,
-        }}
-      >
-        {title}
-      </h3>
-
-      <span
-        style={{
-          color: colors.muted,
-          fontSize: "11px",
-        }}
-      >
-        {subtitle}
-      </span>
-    </div>
-  );
-};
-
-/* =========================================================
-   WORKFLOW STEP
-========================================================= */
-
-interface WorkflowStepProps {
-  number: string;
-  icon: string;
-  title: string;
-  description: string;
-}
-
-const WorkflowStep: React.FC<WorkflowStepProps> = ({
-  number,
-  icon,
-  title,
-  description,
-}) => {
-  return (
-    <div
-      style={{
-        background: "linear-gradient(145deg, #FFFFFF, #F8FBFB)",
-        border: `1px solid ${colors.border}`,
-        borderRadius: "18px",
-        padding: "22px",
-        minHeight: "165px",
-        position: "relative",
-        overflow: "hidden",
-        boxShadow: "0 10px 30px rgba(18,42,57,0.04)",
-      }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          right: "15px",
-          bottom: "-12px",
-          fontSize: "70px",
-          fontWeight: 900,
-          color: "rgba(14,159,131,0.055)",
-        }}
-      >
-        {number}
-      </div>
-
-      <div
-        style={{
-          fontSize: "10px",
-          fontWeight: 800,
-          color: colors.green,
-          marginBottom: "15px",
-          position: "relative",
-          zIndex: 2,
-        }}
-      >
-        {number}
-      </div>
-
-      <div
-        style={{
-          fontSize: "22px",
-          marginBottom: "12px",
-          position: "relative",
-          zIndex: 2,
-        }}
-      >
-        {icon}
-      </div>
-
-      <h4
-        style={{
-          margin: "0 0 6px",
-          fontSize: "12px",
-          color: colors.navy,
-          position: "relative",
-          zIndex: 2,
-        }}
-      >
-        {title}
-      </h4>
-
-      <p
-        style={{
-          margin: 0,
-          fontSize: "10px",
-          color: colors.muted,
-          lineHeight: 1.5,
-          position: "relative",
-          zIndex: 2,
-        }}
-      >
-        {description}
-      </p>
-    </div>
-  );
-};
-
-/* =========================================================
-   FEATURE CARD
-========================================================= */
-
-interface FeatureCardProps {
-  number: string;
-  icon: string;
-  title: string;
-  description: string;
-  color: string;
-}
-
-const FeatureCard: React.FC<FeatureCardProps> = ({
-  number,
-  icon,
-  title,
-  description,
-  color,
-}) => {
-  return (
-    <div
-      style={{
-        background: colors.white,
-        border: `1px solid ${colors.border}`,
-        borderRadius: "16px",
-        padding: "20px",
-        minHeight: "220px",
-        boxShadow: "0 10px 30px rgba(18,42,57,0.04)",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "10px",
-          fontWeight: 800,
-          color: "#A5B1B5",
-          marginBottom: "17px",
-        }}
-      >
-        {number}
-      </div>
-
-      <div
-        style={{
-          width: "42px",
-          height: "42px",
-          borderRadius: "12px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "20px",
-          marginBottom: "16px",
-          background: `${color}18`,
-          color,
-        }}
-      >
-        {icon}
-      </div>
-
-      <h4
-        style={{
-          fontSize: "12px",
-          color: colors.navy,
-          lineHeight: 1.4,
-          margin: "0 0 9px",
-        }}
-      >
-        {title}
-      </h4>
-
-      <p
-        style={{
-          color: colors.muted,
-          fontSize: "10px",
-          lineHeight: 1.6,
-          margin: 0,
-        }}
-      >
-        {description}
-      </p>
-    </div>
-  );
-};
-
-/* =========================================================
-   CRIME MARKER
-========================================================= */
-
-interface CrimeMarkerProps {
-  top: string;
-  left: string;
-  label: string;
-  value: string;
-  level: "high" | "medium" | "low";
-}
-
-const CrimeMarker: React.FC<CrimeMarkerProps> = ({
-  top,
-  left,
-  label,
-  value,
-  level,
-}) => {
-  const markerColors = {
-    high: colors.red,
-    medium: colors.orange,
-    low: colors.greenBright,
-  };
-
-  const markerColor = markerColors[level];
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top,
-        left,
-        zIndex: 5,
-        transform: "translate(-50%, -50%)",
-      }}
-    >
-      <div
-        style={{
-          width: "16px",
-          height: "16px",
-          borderRadius: "50%",
-          background: markerColor,
-          border: "3px solid white",
-          boxShadow: `0 0 0 5px ${markerColor}30`,
-        }}
-      />
-
-      <div
-        style={{
-          position: "absolute",
-          top: "22px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          whiteSpace: "nowrap",
-          background: "rgba(255,255,255,0.96)",
-          border: `1px solid ${colors.border}`,
-          borderRadius: "7px",
-          padding: "4px 8px",
-          boxShadow: "0 5px 15px rgba(18,42,57,0.1)",
-        }}
-      >
-        <strong
-          style={{
-            display: "block",
-            fontSize: "9px",
-            color: colors.navy,
-          }}
-        >
-          {label}
-        </strong>
-
-        <span
-          style={{
-            fontSize: "8px",
-            color: markerColor,
-            fontWeight: 700,
-          }}
-        >
-          {value} activity
-        </span>
-      </div>
-    </div>
-  );
-};
-
-/* =========================================================
-   LEGEND DOT
-========================================================= */
-
-interface LegendDotProps {
-  color: string;
-  label: string;
-}
-
-const LegendDot: React.FC<LegendDotProps> = ({ color, label }) => {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "5px",
-      }}
-    >
-      <span
-        style={{
-          width: "7px",
-          height: "7px",
-          borderRadius: "50%",
-          background: color,
-        }}
-      />
-
-      {label}
-    </div>
-  );
-};
-
-/* =========================================================
-   CRIME STAT
-========================================================= */
-
-interface CrimeStatProps {
-  title: string;
-  value: string;
-  change: string;
-  description: string;
-  positive: boolean;
-}
-
-const CrimeStat: React.FC<CrimeStatProps> = ({
-  title,
-  value,
-  change,
-  description,
-  positive,
-}) => {
-  return (
-    <div
-      style={{
-        padding: "13px 0",
-        borderBottom: `1px solid ${colors.border}`,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <span
-          style={{
-            fontSize: "10px",
-            color: colors.muted,
-          }}
-        >
-          {title}
-        </span>
-
-        <span
-          style={{
-            fontSize: "9px",
-            fontWeight: 700,
-            color: positive ? colors.green : colors.orange,
-          }}
-        >
-          {change}
-        </span>
-      </div>
-
-      <strong
-        style={{
-          display: "block",
-          fontSize: "24px",
-          color: colors.navy,
-          marginTop: "4px",
-        }}
-      >
-        {value}
-      </strong>
-
-      <span
-        style={{
-          fontSize: "9px",
-          color: "#A0ACB1",
-        }}
-      >
-        {description}
-      </span>
-    </div>
-  );
-};
-
-/* =========================================================
-   CHAT BUBBLE
-========================================================= */
-
-interface ChatBubbleProps {
-  sender: string;
-  text: string;
-  citizen?: boolean;
-}
-
-const ChatBubble: React.FC<ChatBubbleProps> = ({
-  sender,
-  text,
-  citizen = false,
-}) => {
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: citizen ? "flex-end" : "flex-start",
-        marginBottom: "12px",
-      }}
-    >
-      <span
-        style={{
-          fontSize: "8px",
-          color: colors.muted,
-          marginBottom: "4px",
-        }}
-      >
-        {sender}
-      </span>
-
-      <div
-        style={{
-          maxWidth: "80%",
-          padding: "9px 11px",
-          borderRadius: citizen ? "10px 10px 2px 10px" : "10px 10px 10px 2px",
-          background: citizen ? colors.greenLight : colors.white,
-          border: `1px solid ${colors.border}`,
-          fontSize: "10px",
-          color: colors.text,
-          lineHeight: 1.5,
-        }}
-      >
-        {text}
-      </div>
-    </div>
-  );
-};
-
-/* =========================================================
-   REASONING STEP
-========================================================= */
-
-interface ReasoningStepProps {
-  number: string;
-  text: string;
-}
-
-const ReasoningStep: React.FC<ReasoningStepProps> = ({ number, text }) => {
-  return (
-    <div
-      style={{
-        display: "flex",
-        gap: "10px",
-        alignItems: "flex-start",
-        marginBottom: "12px",
-      }}
-    >
-      <span
-        style={{
-          width: "21px",
-          height: "21px",
-          borderRadius: "50%",
-          background: "rgba(38,185,154,0.18)",
-          color: "#75DFC7",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          fontSize: "9px",
-          fontWeight: 700,
-          flexShrink: 0,
-        }}
-      >
-        {number}
-      </span>
-
-      <span
-        style={{
-          color: "#C5D3D8",
-          fontSize: "10px",
-          lineHeight: 1.5,
-        }}
-      >
-        {text}
-      </span>
-    </div>
-  );
-};
-
-/* =========================================================
-   TOP ICON STYLE
-========================================================= */
-
-const topIconStyle: React.CSSProperties = {
-  width: "38px",
-  height: "38px",
-  border: `1px solid ${colors.border}`,
-  borderRadius: "50%",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  color: "#77858D",
-  fontSize: "15px",
 };
 
 export default Dashboard;

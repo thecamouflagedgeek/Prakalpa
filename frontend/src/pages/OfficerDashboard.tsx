@@ -133,7 +133,13 @@ export default function OfficerDashboard() {
             <button
               key={item.key}
               type="button"
-              onClick={() => setActiveNav(item.key)}
+              onClick={() => {
+                if (item.key === "districts" || item.key === "analytics") {
+                  navigate("/dash");
+                } else {
+                  setActiveNav(item.key);
+                }
+              }}
               style={S.navItem(item.key === activeNav)}
             >
               <NavIcon
