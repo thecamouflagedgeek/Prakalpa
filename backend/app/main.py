@@ -117,6 +117,9 @@ class ChatRequest(BaseModel):
     message: str
     language: str = "en"
 
+class LegalRecommendationRequest(BaseModel):
+    incident_description: str
+
 @app.post("/api/v1/fir/chat")
 async def fir_chat(request: ChatRequest):
     async with httpx.AsyncClient() as client:
@@ -127,3 +130,35 @@ async def fir_chat(request: ChatRequest):
 async def fir_tts(request: TTSRequest):
     result = synthesize_speech(request.text, request.language)
     return TTSResponse(**result)
+@app.post("/api/v1/legal/recommend")
+async def legal_recommend(request: LegalRecommendationRequest):
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "http://127.0.0.1:8001/agent/legal/recommend",
+                json={
+                    "incident_description": request.incident_description
+                },
+                timeout=30.0
+            )
+
+        response.raise_for_status()
+        return response.json()
+
+    except httpx.ConnectError:
+        raise HTTPException(
+            status_code=503,
+            detail="AI engine is not running"
+        )
+
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=502,
+            detail=f"AI engine returned an error: {str(e)}"
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Legal recommendation failed: {str(e)}"
+        )
