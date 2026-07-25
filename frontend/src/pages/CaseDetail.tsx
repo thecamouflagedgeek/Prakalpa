@@ -10,8 +10,6 @@ interface VoiceMessage {
   timestamp: string;
 }
 
-<<<<<<< HEAD
-=======
 interface LegalClassification {
   schedule_section: string;
   offence: string;
@@ -30,8 +28,6 @@ interface LegalRecommendation {
   retrieval_score?: number;
 }
 
-// Translation dictionary for Case Detail page
->>>>>>> feature/bns-legal-recommender
 const translations = {
   en: {
     dashboard: "Dashboard",
@@ -129,21 +125,43 @@ export default function CaseDetail() {
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [error, setError] = useState("");
 
+  const [legalRecommendations, setLegalRecommendations] = useState<
+    LegalRecommendation[]
+  >([]);
+  const [legalLoading, setLegalLoading] = useState(false);
+  const [legalError, setLegalError] = useState("");
+
   const sessionId = useRef(`officer-${id}-${Date.now()}`);
   const bottomRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
-  const [voiceOpen, setVoiceOpen] = useState(false);
-  const [legalRecommendations, setLegalRecommendations] = useState<
-  LegalRecommendation[]
-  >([]);
-
-  const [legalLoading, setLegalLoading] = useState(false);
-  const [legalError, setLegalError] = useState("");
 
   const t = translations[lang];
 
   const toggleLanguage = () => {
     setLang((prev) => (prev === "en" ? "kn" : "en"));
+  };
+
+  const fetchLegalRecommendations = async (incidentDescription: string) => {
+    if (!incidentDescription?.trim()) return;
+
+    setLegalLoading(true);
+    setLegalError("");
+
+    try {
+      const res = await axios.post(
+        "http://localhost:8000/api/v1/legal/recommend",
+        {
+          incident_description: incidentDescription,
+        },
+      );
+
+      setLegalRecommendations(res.data.recommendations || []);
+    } catch (err) {
+      console.error("Legal recommendation error:", err);
+      setLegalError("Unable to generate legal recommendations.");
+    } finally {
+      setLegalLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -156,8 +174,9 @@ export default function CaseDetail() {
         const response = await axios.get(
           `http://localhost:8000/api/v1/complaints/${id}`,
         );
-
         setComplaint(response.data);
+
+        fetchLegalRecommendations(response.data.incident_description);
 
         if (user?.username) {
           try {
@@ -175,8 +194,7 @@ export default function CaseDetail() {
         setMessages([
           {
             role: "assistant",
-            content:
-              "Case loaded successfully. I have reviewed the citizen's complaint. You can ask me about applicable IPC or BNS sections, evidence requirements, similar cases, or the next procedural steps.",
+            content: `Case ${id} loaded. I have reviewed the citizen's complaint. You can ask me anything about this case — applicable BNS sections, similar past cases, evidence requirements, or next steps.`,
             timestamp: "Just Now",
           },
         ]);
@@ -187,27 +205,6 @@ export default function CaseDetail() {
 
     loadCase();
   }, [id, user?.username]);
-    axios.get(`http://localhost:8000/api/v1/complaints/${id}`).then((r) => {
-      setComplaint(r.data);
-
-      fetchLegalRecommendations(
-        r.data.incident_description
-      );
-
-      // Auto-assign to this officer
-      axios.patch(`http://localhost:8000/api/v1/complaints/${id}/assign`, {
-        officer_username: user?.username,
-      });
-      // Seed first AI message with case context
-      setMessages([
-        {
-          role: "assistant",
-          content: `Case ${id} loaded. I have reviewed the citizen's complaint. You can ask me anything about this case — applicable BNS sections, similar past cases, evidence requirements, or next steps.`,
-          timestamp: "Just Now",
-        },
-      ]);
-    });
-  }, [id]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -215,7 +212,6 @@ export default function CaseDetail() {
 
   const sendQuery = async (text?: string) => {
     const msg = text || input;
-
     if (!msg.trim() || loading) return;
 
     setMessages((previous) => [
@@ -241,9 +237,7 @@ Case Details:
 * Complainant: ${complaint?.complainant_name || "Unknown"}
 * Victim: ${complaint?.victim_name || "Unknown"}
 * Incident Type: ${complaint?.incident_type || "Unknown"}
-* Date: ${complaint?.incident_date || "Unknown"} ${
-      complaint?.incident_time || ""
-    }
+* Date: ${complaint?.incident_date || "Unknown"} ${complaint?.incident_time || ""}
 * Location: ${complaint?.incident_location || "Unknown"}
 * Description: ${complaint?.incident_description || "Not provided"}
 * Accused: ${complaint?.accused_description || "Unknown"}
@@ -253,12 +247,7 @@ Case Details:
 Officer's question:
 ${msg}
 
-<<<<<<< HEAD
-Provide a precise, professional response. If applicable, suggest IPC/BNS sections, evidence requirements, or procedural next steps.
-`;
-=======
 Provide a precise, professional response. If applicable, suggest BNS sections, evidence requirements, or procedural next steps.`;
->>>>>>> feature/bns-legal-recommender
 
     try {
       const response = await axios.post(
@@ -295,29 +284,6 @@ Provide a precise, professional response. If applicable, suggest BNS sections, e
     }
   };
 
-  const fetchLegalRecommendations = async (incidentDescription: string) => {
-  if (!incidentDescription?.trim()) return;
-
-  setLegalLoading(true);
-  setLegalError("");
-
-  try {
-    const res = await axios.post(
-      "http://localhost:8000/api/v1/legal/recommend",
-      {
-        incident_description: incidentDescription,
-      },
-    );
-
-    setLegalRecommendations(res.data.recommendations || []);
-  } catch (error) {
-    console.error("Legal recommendation error:", error);
-    setLegalError("Unable to generate legal recommendations.");
-  } finally {
-    setLegalLoading(false);
-  }
-};
-
   const startVoice = () => {
     const SpeechRecognition =
       (window as any).SpeechRecognition ||
@@ -329,28 +295,18 @@ Provide a precise, professional response. If applicable, suggest BNS sections, e
     }
 
     const recognition = new SpeechRecognition();
-
     recognition.lang = lang === "kn" ? "kn-IN" : "en-IN";
     recognition.continuous = false;
     recognition.interimResults = false;
 
-    recognition.onstart = () => {
-      setListening(true);
-    };
-
+    recognition.onstart = () => setListening(true);
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
       setInput(transcript);
       setListening(false);
     };
-
-    recognition.onerror = () => {
-      setListening(false);
-    };
-
-    recognition.onend = () => {
-      setListening(false);
-    };
+    recognition.onerror = () => setListening(false);
+    recognition.onend = () => setListening(false);
 
     recognition.start();
     recognitionRef.current = recognition;
@@ -365,7 +321,6 @@ Provide a precise, professional response. If applicable, suggest BNS sections, e
       await axios.patch(
         `http://localhost:8000/api/v1/complaints/${id}/file-fir`,
       );
-
       setFiled(true);
     } catch {
       alert(t.filingError);
@@ -375,10 +330,7 @@ Provide a precise, professional response. If applicable, suggest BNS sections, e
   };
 
   const getValue = (value: any) => {
-    if (value === null || value === undefined || value === "") {
-      return t.noData;
-    }
-
+    if (value === null || value === undefined || value === "") return t.noData;
     return String(value);
   };
 
@@ -466,7 +418,6 @@ Provide a precise, professional response. If applicable, suggest BNS sections, e
               <div style={styles.eyebrow}>KAVACH / CASE FILE</div>
               <h1 style={styles.panelTitle}>{t.citizenComplaintDetails}</h1>
             </div>
-
             <div style={styles.caseNumberBadge}>
               #{complaint.complaint_id || id}
             </div>
@@ -478,46 +429,37 @@ Provide a precise, professional response. If applicable, suggest BNS sections, e
               value={getValue(complaint.complainant_name)}
               icon="👤"
             />
-
             <InfoCard
               label={t.victim}
               value={getValue(complaint.victim_name)}
               icon="◉"
             />
-
             <InfoCard
               label={t.citizen}
               value={getValue(complaint.citizen_name)}
               icon="◎"
             />
-
             <InfoCard
               label={t.contact}
               value={getValue(complaint.contact_number)}
               icon="☎"
             />
-
             <InfoCard
               label={t.incidentType}
               value={getValue(complaint.incident_type)}
               icon="!"
             />
-
             <InfoCard
               label={t.dateTime}
-              value={`${getValue(complaint.incident_date)} ${
-                complaint.incident_time || ""
-              }`}
+              value={`${getValue(complaint.incident_date)} ${complaint.incident_time || ""}`}
               icon="◷"
             />
-
             <InfoCard
               label={t.location}
               value={getValue(complaint.incident_location)}
               icon="⌖"
               fullWidth
             />
-
             <InfoCard
               label={t.address}
               value={getValue(complaint.address)}
@@ -541,7 +483,6 @@ Provide a precise, professional response. If applicable, suggest BNS sections, e
               fallback={t.noDesc}
             />
           )}
-
           {complaint.witnesses && (
             <CaseTextSection
               title={t.witnesses}
@@ -549,7 +490,6 @@ Provide a precise, professional response. If applicable, suggest BNS sections, e
               fallback={t.noDesc}
             />
           )}
-
           {complaint.evidence && (
             <CaseTextSection
               title={t.evidence}
@@ -563,7 +503,6 @@ Provide a precise, professional response. If applicable, suggest BNS sections, e
           <div style={styles.aiHeader}>
             <div style={styles.aiHeaderIdentity}>
               <div style={styles.aiAvatarLarge}>K</div>
-
               <div>
                 <div style={styles.eyebrow}>KAVACH INTELLIGENCE</div>
                 <h2 style={styles.aiTitle}>{t.aiCaseAssistant}</h2>
@@ -579,7 +518,6 @@ Provide a precise, professional response. If applicable, suggest BNS sections, e
 
           <div style={styles.quickSection}>
             <div style={styles.quickLabel}>QUICK QUESTIONS</div>
-
             <div style={styles.quickRow}>
               {[
                 t.quickPrompt1,
@@ -622,7 +560,6 @@ Provide a precise, professional response. If applicable, suggest BNS sections, e
                   >
                     {message.content}
                   </div>
-
                   <div
                     style={{
                       ...styles.messageTime,
@@ -642,7 +579,6 @@ Provide a precise, professional response. If applicable, suggest BNS sections, e
             {loading && (
               <div style={styles.messageRow}>
                 <div style={styles.aiAvatar}>K</div>
-
                 <div style={styles.aiBubble}>
                   <div style={styles.typingDots}>
                     {[0, 1, 2].map((dot) => (
@@ -670,9 +606,7 @@ Provide a precise, professional response. If applicable, suggest BNS sections, e
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    sendQuery();
-                  }
+                  if (event.key === "Enter") sendQuery();
                 }}
               />
 
@@ -707,6 +641,116 @@ Provide a precise, professional response. If applicable, suggest BNS sections, e
             )}
           </div>
         </section>
+
+        <aside style={styles.legalSidebar}>
+          <div style={styles.legalHeader}>
+            <div>
+              <div style={styles.legalEyebrow}>KAVACH LEGAL INTELLIGENCE</div>
+              <div style={styles.legalTitle}>Suggested BNS Provisions</div>
+            </div>
+            <div style={styles.aiBadge}>AI</div>
+          </div>
+
+          <div style={styles.legalDisclaimer}>
+            Decision-support only · Officer verification required
+          </div>
+
+          {legalLoading && (
+            <div style={styles.legalLoading}>
+              <div style={styles.legalSpinner} />
+              Analysing FIR against BNS corpus…
+            </div>
+          )}
+
+          {legalError && (
+            <div style={styles.legalError}>
+              {legalError}
+              <button
+                style={styles.retryBtn}
+                onClick={() =>
+                  fetchLegalRecommendations(complaint.incident_description)
+                }
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
+          {!legalLoading &&
+            !legalError &&
+            legalRecommendations.map((rec, index) => {
+              const classifications = rec.classifications || [];
+              const cognizableValues = [
+                ...new Set(classifications.map((c) => c.cognizable)),
+              ];
+              const bailableValues = [
+                ...new Set(classifications.map((c) => c.bailable)),
+              ];
+
+              const cognizable =
+                cognizableValues.length === 1
+                  ? cognizableValues[0]
+                  : "Varies by subsection";
+              const bailable =
+                bailableValues.length === 1
+                  ? bailableValues[0]
+                  : "Varies by subsection";
+
+              return (
+                <div key={`${rec.section}-${index}`} style={styles.legalCard}>
+                  <div style={styles.legalCardTop}>
+                    <div>
+                      <div style={styles.sectionNumber}>
+                        {rec.code} § {rec.section}
+                      </div>
+                      <div style={styles.legalSectionTitle}>{rec.title}</div>
+                    </div>
+                    <span style={styles.rankBadge}>#{index + 1}</span>
+                  </div>
+
+                  <div style={styles.whyLabel}>WHY SUGGESTED</div>
+                  <p style={styles.whyText}>{rec.why_it_applies}</p>
+
+                  <div style={styles.metaGrid}>
+                    <div style={styles.metaItem}>
+                      <span style={styles.metaLabel}>COGNIZABLE</span>
+                      <span style={styles.metaValue}>{cognizable}</span>
+                    </div>
+                    <div style={styles.metaItem}>
+                      <span style={styles.metaLabel}>BAIL</span>
+                      <span style={styles.metaValue}>{bailable}</span>
+                    </div>
+                  </div>
+
+                  {classifications.length > 1 && (
+                    <div style={styles.subsectionNote}>
+                      Classification varies across {classifications.length}{" "}
+                      schedule entries. Officer should verify the applicable
+                      subsection.
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+          {!legalLoading &&
+            !legalError &&
+            legalRecommendations.length === 0 && (
+              <div style={styles.noLegalResults}>
+                No sufficiently relevant BNS provisions identified.
+              </div>
+            )}
+
+          <button
+            style={styles.refreshLegalBtn}
+            disabled={legalLoading}
+            onClick={() =>
+              fetchLegalRecommendations(complaint.incident_description)
+            }
+          >
+            ↻ Reanalyse case
+          </button>
+        </aside>
       </main>
 
       {voiceOpen && complaint && (
@@ -719,202 +763,25 @@ Provide a precise, professional response. If applicable, suggest BNS sections, e
 
       <style>{`
         @keyframes blink {
-          0%, 100% {
-            opacity: .25;
-            transform: scale(.8);
-          }
-          50% {
-            opacity: 1;
-            transform: scale(1.15);
-          }
+          0%, 100% { opacity: .25; transform: scale(.8); }
+          50% { opacity: 1; transform: scale(1.15); }
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes legalSpin { to { transform: rotate(360deg); } }
 
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        * {
-          box-sizing: border-box;
-        }
-
-        button,
-        input {
-          font: inherit;
-        }
-
+        * { box-sizing: border-box; }
+        button, input { font: inherit; }
         button {
-          transition:
-            background .2s ease,
-            border-color .2s ease,
-            color .2s ease,
-            transform .2s ease,
-            box-shadow .2s ease;
+          transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease;
         }
-
-        button:hover:not(:disabled) {
-          transform: translateY(-1px);
-        }
-
+        button:hover:not(:disabled) { transform: translateY(-1px); }
         input:focus {
           border-color: ${TEAL} !important;
           box-shadow: 0 0 0 3px rgba(14, 140, 140, .12);
         }
 
-        @media (max-width: 1050px) {
-          .case-details-responsive {
-            flex-direction: column !important;
-          }
-          {listening && <p style={S.listeningText}>{t.listening}</p>}
-        </div>
-        {/* Legal Intelligence Sidebar */}
-        <div style={S.legalSidebar}>
-          <div style={S.legalHeader}>
-            <div>
-              <div style={S.legalEyebrow}>KAVACH LEGAL INTELLIGENCE</div>
-              <div style={S.legalTitle}>Suggested BNS Provisions</div>
-            </div>
-
-            <div style={S.aiBadge}>AI</div>
-          </div>
-
-          <div style={S.legalDisclaimer}>
-            Decision-support only · Officer verification required
-          </div>
-
-          {legalLoading && (
-            <div style={S.legalLoading}>
-              <div style={S.legalSpinner} />
-              Analysing FIR against BNS corpus…
-            </div>
-          )}
-
-          {legalError && (
-            <div style={S.legalError}>
-              {legalError}
-              <button
-                style={S.retryBtn}
-                onClick={() =>
-                  fetchLegalRecommendations(
-                    complaint.incident_description
-                  )
-                }
-              >
-                Retry
-              </button>
-            </div>
-          )}
-
-          {!legalLoading &&
-            !legalError &&
-            legalRecommendations.map((rec, index) => {
-              const classifications = rec.classifications || [];
-
-              const cognizableValues = [
-                ...new Set(
-                  classifications.map((c) => c.cognizable)
-                ),
-              ];
-
-              const bailableValues = [
-                ...new Set(
-                  classifications.map((c) => c.bailable)
-                ),
-              ];
-
-              const cognizable =
-                cognizableValues.length === 1
-                  ? cognizableValues[0]
-                  : "Varies by subsection";
-
-              const bailable =
-                bailableValues.length === 1
-                  ? bailableValues[0]
-                  : "Varies by subsection";
-
-              return (
-                <div key={`${rec.section}-${index}`} style={S.legalCard}>
-                  <div style={S.legalCardTop}>
-                    <div>
-                      <div style={S.sectionNumber}>
-                        {rec.code} § {rec.section}
-                      </div>
-
-                      <div style={S.legalSectionTitle}>
-                        {rec.title}
-                      </div>
-                    </div>
-
-                    <span style={S.rankBadge}>
-                      #{index + 1}
-                    </span>
-                  </div>
-
-                  <div style={S.whyLabel}>WHY SUGGESTED</div>
-
-                  <p style={S.whyText}>
-                    {rec.why_it_applies}
-                  </p>
-
-                  <div style={S.metaGrid}>
-                    <div style={S.metaItem}>
-                      <span style={S.metaLabel}>
-                        COGNIZABLE
-                      </span>
-                      <span style={S.metaValue}>
-                        {cognizable}
-                      </span>
-                    </div>
-
-                    <div style={S.metaItem}>
-                      <span style={S.metaLabel}>
-                        BAIL
-                      </span>
-                      <span style={S.metaValue}>
-                        {bailable}
-                      </span>
-                    </div>
-                  </div>
-
-                  {classifications.length > 1 && (
-                    <div style={S.subsectionNote}>
-                      Classification varies across{" "}
-                      {classifications.length} schedule entries.
-                      Officer should verify the applicable subsection.
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-
-          {!legalLoading &&
-            !legalError &&
-            legalRecommendations.length === 0 && (
-              <div style={S.noLegalResults}>
-                No sufficiently relevant BNS provisions identified.
-              </div>
-            )}
-
-          <button
-            style={S.refreshLegalBtn}
-            disabled={legalLoading}
-            onClick={() =>
-              fetchLegalRecommendations(
-                complaint.incident_description
-              )
-            }
-          >
-            ↻ Reanalyse case
-          </button>
-        </div>
-      </div>
-
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
-        @keyframes blink { 0%,100%{opacity:.25;transform:scale(.8)} 50%{opacity:1;transform:scale(1.15)} }
-        @keyframes legalSpin {
-          to { transform: rotate(360deg); }
+        @media (max-width: 1300px) {
+          .case-details-responsive { flex-direction: column !important; }
         }
       `}</style>
     </div>
@@ -934,13 +801,9 @@ function InfoCard({
 }) {
   return (
     <div
-      style={{
-        ...styles.infoCard,
-        ...(fullWidth ? styles.infoCardFull : {}),
-      }}
+      style={{ ...styles.infoCard, ...(fullWidth ? styles.infoCardFull : {}) }}
     >
       <div style={styles.infoIcon}>{icon}</div>
-
       <div style={styles.infoContent}>
         <div style={styles.infoLabel}>{label}</div>
         <div style={styles.infoValue}>{value}</div>
@@ -964,7 +827,6 @@ function CaseTextSection({
         <span style={styles.sectionMarker} />
         {title}
       </div>
-
       <p style={styles.textContent}>{value || fallback}</p>
     </div>
   );
@@ -980,9 +842,7 @@ function GlobeIcon({
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="1.8" />
-
       <line x1="2" y1="12" x2="22" y2="12" stroke={color} strokeWidth="1.8" />
-
       <path
         d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
         stroke={color}
@@ -1106,7 +966,6 @@ const styles = {
     gap: "12px",
     flexWrap: "wrap" as const,
   } as React.CSSProperties,
-
   topbarActions: {
     display: "flex",
     alignItems: "center",
@@ -1132,26 +991,22 @@ const styles = {
     color: TEAL,
     lineHeight: 1,
   } as React.CSSProperties,
-
   topbarDivider: {
     width: "1px",
     height: "22px",
     background: BORDER,
   } as React.CSSProperties,
-
   caseIdentity: {
     display: "flex",
     alignItems: "center",
     gap: "7px",
   } as React.CSSProperties,
-
   caseLabel: {
     fontSize: "10px",
     fontWeight: "700",
     letterSpacing: ".1em",
     color: MUTED,
   } as React.CSSProperties,
-
   caseId: {
     fontSize: "14px",
     fontWeight: "700",
@@ -1176,13 +1031,11 @@ const styles = {
     background: "#FFF7E3",
     border: "1px solid #F0D58C",
   } as React.CSSProperties,
-
   statusFiled: {
     color: GREEN,
     background: "#E8F6EF",
     border: "1px solid #A9DFC5",
   } as React.CSSProperties,
-
   statusDot: {
     width: "6px",
     height: "6px",
@@ -1205,9 +1058,7 @@ const styles = {
     boxShadow: "0 4px 12px rgba(21,42,67,.14)",
   } as React.CSSProperties,
 
-  fileIcon: {
-    fontSize: "14px",
-  } as React.CSSProperties,
+  fileIcon: { fontSize: "14px" } as React.CSSProperties,
 
   filedConfirm: {
     padding: "8px 12px",
@@ -1253,7 +1104,7 @@ const styles = {
   body: {
     flex: 1,
     display: "grid",
-    gridTemplateColumns: "minmax(360px, 0.9fr) minmax(500px, 1.5fr)",
+    gridTemplateColumns: "minmax(340px, 0.85fr) minmax(420px, 1.3fr) 300px",
     gap: "20px",
     padding: "24px 28px",
     minHeight: "calc(100vh - 68px)",
@@ -1334,9 +1185,7 @@ const styles = {
     border: `1px solid ${BORDER}`,
   } as React.CSSProperties,
 
-  infoCardFull: {
-    gridColumn: "1 / -1",
-  } as React.CSSProperties,
+  infoCardFull: { gridColumn: "1 / -1" } as React.CSSProperties,
 
   infoIcon: {
     width: "30px",
@@ -1352,10 +1201,7 @@ const styles = {
     flexShrink: 0,
   } as React.CSSProperties,
 
-  infoContent: {
-    minWidth: 0,
-    flex: 1,
-  } as React.CSSProperties,
+  infoContent: { minWidth: 0, flex: 1 } as React.CSSProperties,
 
   infoLabel: {
     fontSize: "9px",
@@ -1380,9 +1226,7 @@ const styles = {
     margin: "22px 0",
   } as React.CSSProperties,
 
-  textSection: {
-    marginBottom: "20px",
-  } as React.CSSProperties,
+  textSection: { marginBottom: "20px" } as React.CSSProperties,
 
   textSectionTitle: {
     display: "flex",
@@ -1463,7 +1307,6 @@ const styles = {
     fontWeight: "750",
     letterSpacing: "-.02em",
   } as React.CSSProperties,
-
   aiSubtitle: {
     margin: "4px 0 0",
     fontSize: "11px",
@@ -1495,7 +1338,6 @@ const styles = {
     padding: "14px 0",
     borderBottom: `1px solid ${BORDER}`,
   } as React.CSSProperties,
-
   quickLabel: {
     fontSize: "9px",
     fontWeight: "700",
@@ -1503,7 +1345,6 @@ const styles = {
     color: MUTED,
     marginBottom: "8px",
   } as React.CSSProperties,
-
   quickRow: {
     display: "flex",
     flexWrap: "wrap" as const,
@@ -1592,12 +1433,7 @@ const styles = {
     color: MUTED,
     marginTop: "4px",
   } as React.CSSProperties,
-
-  typingDots: {
-    display: "flex",
-    gap: "4px",
-  } as React.CSSProperties,
-
+  typingDots: { display: "flex", gap: "4px" } as React.CSSProperties,
   typingDot: {
     width: "6px",
     height: "6px",
@@ -1610,7 +1446,6 @@ const styles = {
     paddingTop: "14px",
     borderTop: `1px solid ${BORDER}`,
   } as React.CSSProperties,
-
   inputRow: {
     display: "flex",
     gap: "8px",
@@ -1673,227 +1508,213 @@ const styles = {
     color: RED,
     fontWeight: "600",
   } as React.CSSProperties,
-
   listeningDot: {
     width: "6px",
     height: "6px",
     borderRadius: "50%",
     background: RED,
   } as React.CSSProperties,
+  disabledBtn: { opacity: 0.6, cursor: "not-allowed" } as React.CSSProperties,
 
-  disabledBtn: {
-    opacity: 0.6,
-    cursor: "not-allowed",
-  } as React.CSSProperties,
+  // ---------- Legal sidebar (matched to teal/navy system) ----------
+
   legalSidebar: {
-  width: "310px",
-  flexShrink: 0,
-  background: card,
-  borderRadius: "10px",
-  border: "1px solid #e7dfc9",
-  padding: "18px",
-  overflowY: "auto",
-  boxShadow: "0 2px 10px rgba(27,35,64,0.05)",
-} as React.CSSProperties,
+    width: "100%",
+    background: CARD,
+    borderRadius: "16px",
+    border: `1px solid ${BORDER}`,
+    padding: "20px",
+    overflowY: "auto",
+    boxShadow: "0 10px 30px rgba(21,42,67,.06)",
+  } as React.CSSProperties,
 
-legalHeader: {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  marginBottom: "10px",
-} as React.CSSProperties,
+  legalHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: "10px",
+  } as React.CSSProperties,
 
-legalEyebrow: {
-  fontFamily: "'IBM Plex Mono', monospace",
-  fontSize: "9px",
-  letterSpacing: "0.12em",
-  color: brass,
-  fontWeight: "700",
-  marginBottom: "4px",
-} as React.CSSProperties,
+  legalEyebrow: {
+    fontSize: "9.5px",
+    letterSpacing: "0.1em",
+    color: TEAL,
+    fontWeight: "700",
+    textTransform: "uppercase" as const,
+    marginBottom: "4px",
+  } as React.CSSProperties,
 
-legalTitle: {
-  fontFamily: "'Source Serif 4', serif",
-  fontSize: "17px",
-  fontWeight: "700",
-  color: navy,
-} as React.CSSProperties,
+  legalTitle: {
+    fontSize: "15px",
+    fontWeight: "750",
+    color: NAVY,
+    letterSpacing: "-.01em",
+  } as React.CSSProperties,
 
-aiBadge: {
-  background: navy,
-  color: paper,
-  padding: "4px 6px",
-  borderRadius: "3px",
-  fontFamily: "'IBM Plex Mono', monospace",
-  fontSize: "9px",
-  fontWeight: "700",
-} as React.CSSProperties,
+  aiBadge: {
+    background: NAVY,
+    color: "#FFFFFF",
+    padding: "4px 7px",
+    borderRadius: "5px",
+    fontSize: "9px",
+    fontWeight: "700",
+  } as React.CSSProperties,
 
-legalDisclaimer: {
-  fontSize: "9.5px",
-  color: inkMuted,
-  background: paper,
-  border: "1px dashed #d8cfb8",
-  padding: "7px 8px",
-  marginBottom: "14px",
-  fontFamily: "'IBM Plex Mono', monospace",
-  lineHeight: "1.5",
-} as React.CSSProperties,
+  legalDisclaimer: {
+    fontSize: "10px",
+    color: MUTED,
+    background: "#F8FAFB",
+    border: `1px dashed ${BORDER}`,
+    borderRadius: "7px",
+    padding: "8px 9px",
+    marginBottom: "14px",
+    lineHeight: "1.5",
+  } as React.CSSProperties,
 
-legalCard: {
-  border: "1px solid #ded5bf",
-  borderLeft: `3px solid ${brass}`,
-  background: "#fffdf9",
-  padding: "13px",
-  marginBottom: "12px",
-  borderRadius: "3px 7px 7px 3px",
-} as React.CSSProperties,
+  legalCard: {
+    border: `1px solid ${BORDER}`,
+    borderLeft: `3px solid ${TEAL}`,
+    background: "#F8FAFB",
+    padding: "13px",
+    marginBottom: "12px",
+    borderRadius: "3px 10px 10px 3px",
+  } as React.CSSProperties,
 
-legalCardTop: {
-  display: "flex",
-  justifyContent: "space-between",
-  gap: "8px",
-  marginBottom: "10px",
-} as React.CSSProperties,
+  legalCardTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "8px",
+    marginBottom: "10px",
+  } as React.CSSProperties,
 
-sectionNumber: {
-  fontFamily: "'IBM Plex Mono', monospace",
-  color: caseRed,
-  fontSize: "12px",
-  fontWeight: "700",
-  marginBottom: "3px",
-} as React.CSSProperties,
+  sectionNumber: {
+    color: TEAL_DARK,
+    fontSize: "12px",
+    fontWeight: "700",
+    marginBottom: "3px",
+  } as React.CSSProperties,
+  legalSectionTitle: {
+    color: NAVY,
+    fontSize: "13px",
+    lineHeight: "1.35",
+    fontWeight: "700",
+  } as React.CSSProperties,
+  rankBadge: {
+    color: TEAL,
+    fontSize: "10px",
+    fontWeight: "700",
+  } as React.CSSProperties,
 
-legalSectionTitle: {
-  fontFamily: "'Source Serif 4', serif",
-  color: navy,
-  fontSize: "13px",
-  lineHeight: "1.35",
-  fontWeight: "700",
-} as React.CSSProperties,
+  whyLabel: {
+    fontSize: "8.5px",
+    letterSpacing: "0.08em",
+    color: MUTED,
+    fontWeight: "700",
+    textTransform: "uppercase" as const,
+  } as React.CSSProperties,
+  whyText: {
+    fontSize: "11.5px",
+    lineHeight: "1.55",
+    color: NAVY_SOFT,
+    margin: "5px 0 11px",
+  } as React.CSSProperties,
 
-rankBadge: {
-  fontFamily: "'IBM Plex Mono', monospace",
-  color: brass,
-  fontSize: "10px",
-  fontWeight: "700",
-} as React.CSSProperties,
+  metaGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "6px",
+  } as React.CSSProperties,
+  metaItem: {
+    background: CARD,
+    border: `1px solid ${BORDER}`,
+    padding: "7px",
+    borderRadius: "6px",
+  } as React.CSSProperties,
+  metaLabel: {
+    display: "block",
+    fontSize: "7.5px",
+    color: MUTED,
+    letterSpacing: "0.06em",
+    marginBottom: "3px",
+    textTransform: "uppercase" as const,
+  } as React.CSSProperties,
+  metaValue: {
+    display: "block",
+    fontSize: "10px",
+    fontWeight: "700",
+    color: NAVY,
+    lineHeight: "1.3",
+  } as React.CSSProperties,
 
-whyLabel: {
-  fontFamily: "'IBM Plex Mono', monospace",
-  fontSize: "8.5px",
-  letterSpacing: "0.08em",
-  color: inkMuted,
-  fontWeight: "700",
-} as React.CSSProperties,
+  subsectionNote: {
+    marginTop: "8px",
+    paddingTop: "7px",
+    borderTop: `1px dotted ${BORDER}`,
+    fontSize: "9.5px",
+    lineHeight: "1.45",
+    color: MUTED,
+  } as React.CSSProperties,
 
-whyText: {
-  fontFamily: "'Source Serif 4', serif",
-  fontSize: "11.5px",
-  lineHeight: "1.55",
-  color: "#33332e",
-  margin: "5px 0 11px",
-} as React.CSSProperties,
+  legalLoading: {
+    padding: "30px 5px",
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "center",
+    gap: "12px",
+    color: MUTED,
+    fontSize: "11px",
+    textAlign: "center" as const,
+  } as React.CSSProperties,
 
-metaGrid: {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "6px",
-} as React.CSSProperties,
+  legalSpinner: {
+    width: "20px",
+    height: "20px",
+    border: `2px solid ${TEAL_TINT}`,
+    borderTop: `2px solid ${TEAL}`,
+    borderRadius: "50%",
+    animation: "legalSpin .8s linear infinite",
+  } as React.CSSProperties,
 
-metaItem: {
-  background: paper,
-  padding: "7px",
-  borderRadius: "3px",
-} as React.CSSProperties,
+  legalError: {
+    padding: "12px",
+    background: "#FBEBEA",
+    color: RED,
+    fontSize: "11px",
+    lineHeight: "1.5",
+    marginBottom: "12px",
+    borderRadius: "8px",
+  } as React.CSSProperties,
 
-metaLabel: {
-  display: "block",
-  fontFamily: "'IBM Plex Mono', monospace",
-  fontSize: "7.5px",
-  color: inkMuted,
-  letterSpacing: "0.06em",
-  marginBottom: "3px",
-} as React.CSSProperties,
+  retryBtn: {
+    display: "block",
+    marginTop: "8px",
+    border: `1px solid ${RED}`,
+    background: "transparent",
+    color: RED,
+    cursor: "pointer",
+    padding: "5px 9px",
+    borderRadius: "5px",
+    fontSize: "11px",
+    fontWeight: "600",
+  } as React.CSSProperties,
 
-metaValue: {
-  display: "block",
-  fontFamily: "'IBM Plex Mono', monospace",
-  fontSize: "9.5px",
-  fontWeight: "700",
-  color: navy,
-  lineHeight: "1.3",
-} as React.CSSProperties,
+  noLegalResults: {
+    padding: "20px 5px",
+    color: MUTED,
+    fontSize: "11px",
+    lineHeight: "1.5",
+  } as React.CSSProperties,
 
-subsectionNote: {
-  marginTop: "8px",
-  paddingTop: "7px",
-  borderTop: "1px dotted #d8cfb8",
-  fontSize: "9px",
-  lineHeight: "1.45",
-  color: inkMuted,
-  fontFamily: "'IBM Plex Mono', monospace",
-} as React.CSSProperties,
-
-legalLoading: {
-  padding: "30px 5px",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  gap: "12px",
-  color: inkMuted,
-  fontFamily: "'IBM Plex Mono', monospace",
-  fontSize: "10px",
-  textAlign: "center",
-} as React.CSSProperties,
-
-legalSpinner: {
-  width: "20px",
-  height: "20px",
-  border: "2px solid #ddd3bd",
-  borderTop: `2px solid ${brass}`,
-  borderRadius: "50%",
-  animation: "legalSpin .8s linear infinite",
-} as React.CSSProperties,
-
-legalError: {
-  padding: "12px",
-  background: "#f7e9e7",
-  color: caseRed,
-  fontSize: "11px",
-  lineHeight: "1.5",
-  marginBottom: "12px",
-} as React.CSSProperties,
-
-retryBtn: {
-  display: "block",
-  marginTop: "8px",
-  border: `1px solid ${caseRed}`,
-  background: "transparent",
-  color: caseRed,
-  cursor: "pointer",
-  padding: "4px 8px",
-  borderRadius: "3px",
-} as React.CSSProperties,
-
-noLegalResults: {
-  padding: "20px 5px",
-  color: inkMuted,
-  fontSize: "11px",
-  lineHeight: "1.5",
-} as React.CSSProperties,
-
-refreshLegalBtn: {
-  width: "100%",
-  background: "transparent",
-  border: `1px solid ${navy}`,
-  color: navy,
-  borderRadius: "4px",
-  padding: "7px",
-  fontFamily: "'IBM Plex Mono', monospace",
-  fontSize: "9.5px",
-  fontWeight: "700",
-  cursor: "pointer",
-  marginTop: "4px",
-} as React.CSSProperties,
+  refreshLegalBtn: {
+    width: "100%",
+    background: "transparent",
+    border: `1px solid ${NAVY}`,
+    color: NAVY,
+    borderRadius: "7px",
+    padding: "9px",
+    fontSize: "11px",
+    fontWeight: "700",
+    cursor: "pointer",
+    marginTop: "4px",
+  } as React.CSSProperties,
 };

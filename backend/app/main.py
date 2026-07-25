@@ -162,3 +162,16 @@ async def legal_recommend(request: LegalRecommendationRequest):
             status_code=500,
             detail=f"Legal recommendation failed: {str(e)}"
         )
+
+class LegalRecommendRequest(BaseModel):
+    incident_description: str
+
+@app.post("/api/v1/legal/recommend")
+async def legal_recommend(request: LegalRecommendRequest):
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "http://127.0.0.1:8001/agent/legal/recommend",
+            json=request.dict(),
+            timeout=30.0,
+        )
+    return response.json()

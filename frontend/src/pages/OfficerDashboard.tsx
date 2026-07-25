@@ -140,7 +140,9 @@ export default function OfficerDashboard() {
                 if (item.key === "districts" || item.key === "analytics") {
                   navigate("/dash");
                 } else if (item.key === "reports") {
-                  navigate("/generate-report"); // Adjust path to match your router setup
+                  navigate("/generate-report");
+                } else if (item.key === "cases") {
+                  navigate("/bns");
                 } else {
                   setActiveNav(item.key);
                 }

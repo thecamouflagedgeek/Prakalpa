@@ -8,6 +8,8 @@ import CaseDetail from "./pages/CaseDetail";
 import FIRLodging from "./pages/FIRLodging";
 import Dashboard from "./pages/Dashboard";
 import GenerateReport from "./pages/GenerateReport";
+import BNSRecommend from "./pages/BNSRecommendation";
+
 export default function App() {
   const { user } = useAuthStore();
 
@@ -41,6 +43,7 @@ export default function App() {
         />
         <Route path="/fir-chat" element={<FIRLodging />} />
         <Route path="/generate-report" element={<GenerateReport />} />
+        <Route path="/bns" element={<BNSRecommend />} />
       </Routes>
     </BrowserRouter>
   );
