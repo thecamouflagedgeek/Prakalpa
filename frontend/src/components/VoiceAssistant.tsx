@@ -44,6 +44,26 @@ export default function VoiceAssistant({ caseId, complaint, onClose }: Props) {
     stopSpeaking,
   } = useVoice();
 
+  // Dynamic quick queries based on selected language
+  const quickQueries = {
+    en: [
+      "What IPC sections apply to this case?",
+      "What evidence should be collected?",
+      "What are the next procedural steps?",
+      "Summarize this case for me",
+      "Are there any red flags in this complaint?",
+      "What is the bail eligibility for this offence?",
+    ],
+    kn: [
+      "ಈ ಪ್ರಕರಣಕ್ಕೆ ಯಾವ ಐಪಿಸಿ ಸೆಕ್ಷನ್‌ಗಳು ಅನ್ವಯಿಸುತ್ತವೆ?",
+      "ಯಾವ ಸಾಕ್ಷ್ಯಾಧಾರಗಳನ್ನು ಸಂಗ್ರಹಿಸಬೇಕು?",
+      "ಮುಂದಿನ ಕಾರ್ಯವಿಧಾನದ ಹಂತಗಳು ಯಾವುವು?",
+      "ಈ ಪ್ರಕರಣವನ್ನು ನನಗೆ ಸಂಕ್ಷೇಪಿಸಿ",
+      "ಈ ದೂರಿನಲ್ಲಿ ಯಾವುದೇ ಪ್ರಮುಖ ಲೋಪಗಳಿವೆಯೇ?",
+      "ಈ ಅಪರಾಧಕ್ಕೆ ಜಾಮೀನು ಅರ್ಹತೆ ಇದೆಯೇ?",
+    ],
+  };
+
   useEffect(() => {
     if (!selectedLang) return;
 
@@ -53,7 +73,7 @@ export default function VoiceAssistant({ caseId, complaint, onClose }: Props) {
           ? `ಪ್ರಕರಣ ${caseId} ಲೋಡ್ ಆಗಿದೆ. ನಾನು ಸಹಾಯ ಮಾಡಲು ಸಿದ್ಧ. ಮೈಕ್ ಒತ್ತಿ ಮಾತನಾಡಿ.`
           : `Case ${caseId} loaded. I am ready to assist. Press the microphone and ask me anything.`;
 
-      speak(welcomeMessage);
+      speak(welcomeMessage, selectedLang);
       setMode("speaking");
 
       setMessages([
@@ -95,123 +115,52 @@ export default function VoiceAssistant({ caseId, complaint, onClose }: Props) {
     onClose();
   };
 
-  const handleMic = () => {
-    if (listening) {
-      stopListening();
-      return;
-    }
+  // Centralized prompt builder for context consistency
+  const buildContextPrompt = (userQuery: string) => {
+    const isKn = selectedLang === "kn";
+    return `
+You are KAVACH AI, an expert, professional police case assistant.
 
-    if (speaking) {
-      stopSpeaking();
-    }
+CRITICAL VOICE RESPONSE RULES:
+- Language: Respond STRICTLY in ${isKn ? "Kannada (ಕನ್ನಡ)" : "English"}.
+- Length: Maximum 2 to 3 concise sentences.
+- Formatting: Absolutely NO markdown, NO bullet points, NO bold text, and NO lists. Plain text only, as it will be spoken directly via Text-to-Speech (TTS).
 
-    startListening(async (text) => {
-      if (!text.trim()) return;
-
-      setMessages((p) => [
-        ...p,
-        {
-          role: "officer",
-          content: text,
-          time: now(),
-        },
-      ]);
-
-      setLoading(true);
-
-      const contextPrompt = `
-You are KAVACH AI, a professional police case assistant.
-
-IMPORTANT:
-Respond in ${selectedLang === "kn" ? "Kannada (ಕನ್ನಡ)" : "English"} only.
-
-Be concise. Your answer will be spoken aloud.
-Maximum 3 sentences.
-Avoid bullet points or markdown.
-
-Case Context:
-- Complaint ID: ${complaint?.complaint_id}
+Case Details:
+- Complaint ID: ${complaint?.complaint_id || caseId}
 - Incident Type: ${complaint?.incident_type || "Unknown"}
-- Date: ${complaint?.incident_date || "Unknown"} ${
-        complaint?.incident_time || ""
-      }
+- Date & Time: ${complaint?.incident_date || "Unknown"} ${complaint?.incident_time || ""}
 - Location: ${complaint?.incident_location || "Unknown"}
 - Description: ${complaint?.incident_description || "Not provided"}
 - Accused: ${complaint?.accused_description || "Unknown"}
 - Witnesses: ${complaint?.witnesses || "None"}
 - Evidence: ${complaint?.evidence || "None"}
 
-Officer's question:
-${text}
+Officer's Query:
+"${userQuery}"
 `;
-
-      try {
-        const res = await axios.post("http://localhost:8000/api/v1/fir/chat", {
-          session_id: sessionId.current,
-          message: contextPrompt,
-          language: selectedLang || "en",
-        });
-
-        const reply = res.data.reply;
-
-        setMessages((p) => [
-          ...p,
-          {
-            role: "ai",
-            content: reply,
-            time: now(),
-          },
-        ]);
-
-        speak(reply);
-      } catch {
-        const err =
-          selectedLang === "kn"
-            ? "ಸಂಪರ್ಕ ದೋಷ ಸಂಭವಿಸಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
-            : "Connection error. Please try again.";
-
-        setMessages((p) => [
-          ...p,
-          {
-            role: "ai",
-            content: err,
-            time: now(),
-          },
-        ]);
-
-        speak(err);
-      } finally {
-        setLoading(false);
-      }
-    });
   };
 
-  const askQuickQuery = async (q: string) => {
+  const executeQuery = async (queryText: string) => {
+    if (!queryText.trim()) return;
+
     setMessages((p) => [
       ...p,
       {
         role: "officer",
-        content: q,
+        content: queryText,
         time: now(),
       },
     ]);
 
     setLoading(true);
 
+    const contextPrompt = buildContextPrompt(queryText);
+
     try {
       const res = await axios.post("http://localhost:8000/api/v1/fir/chat", {
         session_id: sessionId.current,
-        message: `
-Context:
-${JSON.stringify(complaint)}
-
-Question:
-${q}
-
-Answer in ${
-          selectedLang === "kn" ? "Kannada" : "English"
-        } and maximum 2 sentences. No markdown.
-`,
+        message: contextPrompt,
         language: selectedLang || "en",
       });
 
@@ -226,11 +175,11 @@ Answer in ${
         },
       ]);
 
-      speak(reply);
+      speak(reply, selectedLang);
     } catch {
       const err =
         selectedLang === "kn"
-          ? "ಸಂಪರ್ಕ ದೋಷ ಸಂಭವಿಸಿದೆ."
+          ? "ಸಂಪರ್ಕ ದೋಷ ಸಂಭವಿಸಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
           : "Connection error. Please try again.";
 
       setMessages((p) => [
@@ -242,10 +191,31 @@ Answer in ${
         },
       ]);
 
-      speak(err);
+      speak(err, selectedLang);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleMic = () => {
+    if (listening) {
+      stopListening();
+      return;
+    }
+
+    if (speaking) {
+      stopSpeaking();
+    }
+
+    startListening(async (text) => {
+      await executeQuery(text);
+    }, selectedLang || "en");
+  };
+
+  const askQuickQuery = async (q: string) => {
+    if (speaking) stopSpeaking();
+    if (listening) stopListening();
+    await executeQuery(q);
   };
 
   const modeConfig = {
@@ -574,14 +544,7 @@ Answer in ${
                 <div style={S.convTitle}>Quick Queries</div>
 
                 <div style={S.quickGrid}>
-                  {[
-                    "What IPC sections apply to this case?",
-                    "What evidence should be collected?",
-                    "What are the next procedural steps?",
-                    "Summarize this case for me",
-                    "Are there any red flags in this complaint?",
-                    "What is the bail eligibility for this offence?",
-                  ].map((q) => (
+                  {quickQueries[selectedLang || "en"].map((q) => (
                     <button
                       key={q}
                       onClick={() => askQuickQuery(q)}

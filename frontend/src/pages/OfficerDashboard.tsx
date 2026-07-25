@@ -16,10 +16,11 @@ const translations = {
     firFiled: "FIR Filed",
     allCases: "All Cases",
     navDashboard: "Dashboard",
-    navCases: "All Cases",
-    navDistricts: "Districts",
-    navAnalytics: "Analytics",
+    navBNS: "BNS Sections",
+    navCrime: "Crime Hotspot",
+    navExplain: "Explainable AI",
     navSettings: "Settings",
+    navGenerate: "Generate report",
     thId: "Complaint ID",
     thCitizen: "Citizen",
     thType: "Incident Type",
@@ -43,10 +44,11 @@ const translations = {
     firFiled: "ಎಫ್‌ಐಆರ್ ದಾಖಲಾಗಿದೆ",
     allCases: "ಎಲ್ಲಾ ಪ್ರಕರಣಗಳು",
     navDashboard: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
-    navCases: "ಎಲ್ಲಾ ಪ್ರಕರಣಗಳು",
-    navDistricts: "ಜಿಲ್ಲೆಗಳು",
-    navAnalytics: "ವಿಶ್ಲೇಷಣೆ",
+    navBNS: "ಬಿಎನ್‌ಎಸ್ (BNS) ವಿಭಾಗಗಳು",
+    navCrime: "ಅಪರಾಧ ತೀವ್ರತೆಯ ತಾಣ",
+    navExplain: "ವಿವರಿಸಬಹುದಾದ AI",
     navSettings: "ಸಂಯೋಜನೆಗಳು",
+    navGenerate: "ವರದಿಯನ್ನು ರಚಿಸಿ",
     thId: "ದೂರು ಸಂಖ್ಯೆ",
     thCitizen: "ನಾಗರಿಕ",
     thType: "ಘಟನೆಯ ಮಾದರಿ",
@@ -83,9 +85,10 @@ export default function OfficerDashboard() {
 
   const NAV_ITEMS = [
     { key: "dashboard", label: t.navDashboard, icon: "grid" },
-    { key: "cases", label: t.navCases, icon: "case" },
-    { key: "districts", label: t.navDistricts, icon: "map" },
-    { key: "analytics", label: t.navAnalytics, icon: "chart" },
+    { key: "cases", label: t.navBNS, icon: "case" },
+    { key: "districts", label: t.navCrime, icon: "map" },
+    { key: "analytics", label: t.navExplain, icon: "chart" },
+    { key: "reports", label: t.navGenerate, icon: "bolt" },
     { key: "settings", label: t.navSettings, icon: "gear" },
   ];
 
@@ -134,7 +137,11 @@ export default function OfficerDashboard() {
               key={item.key}
               type="button"
               onClick={() => {
-                if (item.key === "districts" || item.key === "analytics") {
+                if (
+                  item.key === "districts" ||
+                  item.key === "analytics" ||
+                  item.key === "reports"
+                ) {
                   navigate("/dash");
                 } else {
                   setActiveNav(item.key);
