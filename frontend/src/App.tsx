@@ -7,6 +7,7 @@ import OfficerDashboard from "./pages/OfficerDashboard";
 import CaseDetail from "./pages/CaseDetail";
 import FIRLodging from "./pages/FIRLodging";
 import Dashboard from "./pages/Dashboard";
+import GenerateReport from "./pages/GenerateReport";
 export default function App() {
   const { user } = useAuthStore();
 
@@ -39,6 +40,7 @@ export default function App() {
           }
         />
         <Route path="/fir-chat" element={<FIRLodging />} />
+        <Route path="/generate-report" element={<GenerateReport />} />
       </Routes>
     </BrowserRouter>
   );

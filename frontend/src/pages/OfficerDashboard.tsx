@@ -137,12 +137,10 @@ export default function OfficerDashboard() {
               key={item.key}
               type="button"
               onClick={() => {
-                if (
-                  item.key === "districts" ||
-                  item.key === "analytics" ||
-                  item.key === "reports"
-                ) {
+                if (item.key === "districts" || item.key === "analytics") {
                   navigate("/dash");
+                } else if (item.key === "reports") {
+                  navigate("/generate-report"); // Adjust path to match your router setup
                 } else {
                   setActiveNav(item.key);
                 }
