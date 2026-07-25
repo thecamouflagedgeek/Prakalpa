@@ -5,6 +5,8 @@ from typing import Optional
 import httpx
 import uuid
 from datetime import datetime
+from app.schemas.fir import TTSRequest, TTSResponse
+from app.schemas.tts import synthesize_speech
 
 from app.api.v1.analytics import router as analytics_router
 
@@ -92,8 +94,9 @@ def login(req: LoginRequest):
 class ComplaintSubmit(BaseModel):
     citizen_username: str
     citizen_name: str
+    complainant_name: str = ""
+    victim_name: str = ""
     mode: str
-
     incident_type: Optional[str] = None
     incident_date: Optional[str] = None
     incident_time: Optional[str] = None
@@ -112,9 +115,10 @@ class ComplaintSubmit(BaseModel):
 @app.post("/api/v1/complaints/submit")
 def submit_complaint(complaint: ComplaintSubmit):
     complaint_id = f"CMP-{str(uuid.uuid4())[:8].upper()}"
-
+    resolved_name = complaint.complainant_name or complaint.citizen_name or "Unknown"
     complaints[complaint_id] = {
         **complaint.dict(),
+        "citizen_name": resolved_name,
         "complaint_id": complaint_id,
         "status": "PENDING",
         "submitted_at": datetime.now().isoformat(),
@@ -180,6 +184,8 @@ class ChatRequest(BaseModel):
     message: str
     language: str = "en"
 
+class LegalRecommendationRequest(BaseModel):
+    incident_description: str
 
 @app.post("/api/v1/fir/chat")
 async def fir_chat(request: ChatRequest):
@@ -191,3 +197,28 @@ async def fir_chat(request: ChatRequest):
         )
 
     return response.json()
+
+
+@app.post("/api/v1/fir/tts", response_model=TTSResponse)
+async def fir_tts(request: TTSRequest):
+    result = synthesize_speech(request.text, request.language)
+    return TTSResponse(**result)
+
+
+@app.post("/api/v1/legal/recommend")
+async def legal_recommend(request: LegalRecommendationRequest):
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "http://127.0.0.1:8001/agent/legal/recommend",
+                json={"incident_description": request.incident_description},
+                timeout=30.0,
+            )
+        response.raise_for_status()
+        return response.json()
+    except httpx.ConnectError:
+        raise HTTPException(status_code=503, detail="AI engine is not running")
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=502, detail=f"AI engine returned an error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Legal recommendation failed: {str(e)}")

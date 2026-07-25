@@ -11,7 +11,10 @@
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.19",
+    "@types/leaflet.heat": "^0.2.5",
     "axios": "^1.18.1",
+    "i18next": "^26.3.6",
+    "i18next-browser-languagedetector": "^8.2.1",
     "jspdf": "^4.2.1",
     "leaflet": "^1.9.4",
     "leaflet.heat": "^0.2.0",
@@ -20,8 +23,10 @@
     "react-dom": "^19.2.7",
     "react-force-graph-2d": "^1.29.1",
     "react-hot-toast": "^2.6.0",
+    "react-i18next": "^17.0.11",
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.18.1",
+    "react-simple-maps": "^4.0.0-beta.6",
     "vis-network": "^10.1.0",
     "zustand": "^5.0.14"
   },

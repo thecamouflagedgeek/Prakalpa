@@ -22,3 +22,12 @@ class FIRChatResponse(BaseModel):
 
 class FIRExportRequest(BaseModel):
     session_id: str
+
+class TTSRequest(BaseModel):
+    text: str
+    language: str = "en"
+
+class TTSResponse(BaseModel):
+    audio_base64: str
+    format: str
+    language: str

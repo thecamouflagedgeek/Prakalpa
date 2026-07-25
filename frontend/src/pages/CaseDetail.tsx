@@ -10,10 +10,111 @@ interface VoiceMessage {
   timestamp: string;
 }
 
+interface LegalClassification {
+  schedule_section: string;
+  offence: string;
+  punishment: string;
+  cognizable: string;
+  bailable: string;
+  triable_by: string;
+}
+
+interface LegalRecommendation {
+  code: string;
+  section: string;
+  title: string;
+  why_it_applies: string;
+  classifications: LegalClassification[];
+  retrieval_score?: number;
+}
+
+const translations = {
+  en: {
+    dashboard: "Dashboard",
+    caseLabel: "CASE",
+    firFiledStatus: "FIR Filed",
+    underReviewStatus: "Under Review",
+    filing: "Filing...",
+    fileFir: "Officially File FIR",
+    filedSuccess: "FIR filed successfully",
+    voiceAssistant: "Voice Assistant",
+    caseFile: "Case File",
+    citizenComplaintDetails: "Complaint Details",
+    complainant: "Complainant",
+    victim: "Victim",
+    citizen: "Registered Citizen",
+    contact: "Contact",
+    address: "Address",
+    incidentType: "Incident Type",
+    dateTime: "Date & Time",
+    location: "Location",
+    incidentDescription: "Incident Description",
+    accusedDescription: "Accused Description",
+    witnesses: "Witnesses",
+    evidence: "Evidence",
+    aiCaseAssistant: "AI Case Assistant",
+    aiChatSub: "Ask questions about this case using voice or text",
+    active: "Active",
+    quickPrompt1: "What BNS sections apply?",
+    quickPrompt2: "What evidence is needed?",
+    quickPrompt3: "What are the next steps?",
+    quickPrompt4: "Are there similar cases?",
+    inputPlaceholder: "Ask anything about this case...",
+    listening: "Listening... speak now",
+    loadingCase: "Loading case file...",
+    noDesc: "No description provided.",
+    noData: "Not provided",
+    switchLang: "ಕನ್ನಡ",
+    loadingError: "Unable to load this case.",
+    filingError: "Unable to file the FIR. Please try again.",
+  },
+  kn: {
+    dashboard: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+    caseLabel: "ಪ್ರಕರಣ",
+    firFiledStatus: "ಎಫ್‌ಐಆರ್ ದಾಖಲಾಗಿದೆ",
+    underReviewStatus: "ಪರಿಶೀಲನೆಯಲ್ಲಿದೆ",
+    filing: "ದಾಖಲಿಸಲಾಗುತ್ತಿದೆ...",
+    fileFir: "ಅಧಿಕೃತ ಎಫ್‌ಐಆರ್ ದಾಖಲಿಸಿ",
+    filedSuccess: "ಎಫ್‌ಐಆರ್ ಯಶಸ್ವಿಯಾಗಿ ದಾಖಲಾಗಿದೆ",
+    voiceAssistant: "ಧ್ವನಿ ಸಹಾಯಕ",
+    caseFile: "ಪ್ರಕರಣದ ಫೈಲ್",
+    citizenComplaintDetails: "ದೂರಿನ ವಿವರಗಳು",
+    complainant: "ದೂರುದಾರರು",
+    victim: "ಸಂತ್ರಸ್ತರು",
+    citizen: "ನೋಂದಾಯಿತ ನಾಗರಿಕ",
+    contact: "ಸಂಪರ್ಕ",
+    address: "ವಿಳಾಸ",
+    incidentType: "ಘಟನೆಯ ಮಾದರಿ",
+    dateTime: "ದಿನಾಂಕ ಮತ್ತು ಸಮಯ",
+    location: "ಸ್ಥಳ",
+    incidentDescription: "ಘಟನೆಯ ವಿವರಣೆ",
+    accusedDescription: "ಆರೋಪಿಯ ವಿವರಣೆ",
+    witnesses: "ಸಾಕ್ಷಿಗಳು",
+    evidence: "ಸಾಕ್ಷ್ಯಾಧಾರ",
+    aiCaseAssistant: "ಎಐ ಪ್ರಕರಣ ಸಹಾಯಕ",
+    aiChatSub: "ಧ್ವನಿ ಅಥವಾ ಪಠ್ಯವನ್ನು ಬಳಸಿ ಈ ಪ್ರಕರಣದ ಬಗ್ಗೆ ಪ್ರಶ್ನೆಗಳನ್ನು ಕೇಳಿ",
+    active: "ಸಕ್ರಿಯವಾಗಿದೆ",
+    quickPrompt1: "ಯಾವ ಐಪಿಸಿ ವಿಭಾಗಗಳು ಅನ್ವಯಿಸುತ್ತವೆ?",
+    quickPrompt2: "ಯಾವ ಸಾಕ್ಷ್ಯಾಧಾರಗಳು ಬೇಕಾಗುತ್ತವೆ?",
+    quickPrompt3: "ಮುಂದಿನ ಕ್ರಮಗಳೇನು?",
+    quickPrompt4: "ಇದೇ ರೀತಿಯ ಪ್ರಕರಣಗಳು ಇವೆಯೇ?",
+    inputPlaceholder: "ಈ ಪ್ರಕರಣದ ಬಗ್ಗೆ ಏನನ್ನಾದರೂ ಕೇಳಿ...",
+    listening: "ಆಲಿಸಲಾಗುತ್ತಿದೆ... ಈಗ ಮಾತನಾಡಿ",
+    loadingCase: "ಪ್ರಕರಣದ ಫೈಲ್ ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
+    noDesc: "ಯಾವುದೇ ವಿವರಣೆ ನೀಡಿಲ್ಲ.",
+    noData: "ನೀಡಲಾಗಿಲ್ಲ",
+    switchLang: "English",
+    loadingError: "ಈ ಪ್ರಕರಣವನ್ನು ಲೋಡ್ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.",
+    filingError: "ಎಫ್‌ಐಆರ್ ದಾಖಲಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  },
+};
+
 export default function CaseDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+
+  const [lang, setLang] = useState<"en" | "kn">("en");
   const [complaint, setComplaint] = useState<any>(null);
   const [messages, setMessages] = useState<VoiceMessage[]>([]);
   const [input, setInput] = useState("");
@@ -21,27 +122,89 @@ export default function CaseDetail() {
   const [filing, setFiling] = useState(false);
   const [filed, setFiled] = useState(false);
   const [listening, setListening] = useState(false);
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  const [error, setError] = useState("");
+
+  const [legalRecommendations, setLegalRecommendations] = useState<
+    LegalRecommendation[]
+  >([]);
+  const [legalLoading, setLegalLoading] = useState(false);
+  const [legalError, setLegalError] = useState("");
+
   const sessionId = useRef(`officer-${id}-${Date.now()}`);
   const bottomRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
-  const [voiceOpen, setVoiceOpen] = useState(false);
-  useEffect(() => {
-    axios.get(`http://localhost:8000/api/v1/complaints/${id}`).then((r) => {
-      setComplaint(r.data);
-      // Auto-assign to this officer
-      axios.patch(`http://localhost:8000/api/v1/complaints/${id}/assign`, {
-        officer_username: user?.username,
-      });
-      // Seed first AI message with case context
-      setMessages([
+
+  const t = translations[lang];
+
+  const toggleLanguage = () => {
+    setLang((prev) => (prev === "en" ? "kn" : "en"));
+  };
+
+  const fetchLegalRecommendations = async (incidentDescription: string) => {
+    if (!incidentDescription?.trim()) return;
+
+    setLegalLoading(true);
+    setLegalError("");
+
+    try {
+      const res = await axios.post(
+        "http://localhost:8000/api/v1/legal/recommend",
         {
-          role: "assistant",
-          content: `Case ${id} loaded. I have reviewed the citizen's complaint. You can ask me anything about this case — applicable IPC/BNS sections, similar past cases, evidence requirements, or next steps.`,
-          timestamp: "Just Now",
+          incident_description: incidentDescription,
         },
-      ]);
-    });
-  }, [id]);
+      );
+
+      setLegalRecommendations(res.data.recommendations || []);
+    } catch (err) {
+      console.error("Legal recommendation error:", err);
+      setLegalError("Unable to generate legal recommendations.");
+    } finally {
+      setLegalLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!id) return;
+
+    const loadCase = async () => {
+      try {
+        setError("");
+
+        const response = await axios.get(
+          `http://localhost:8000/api/v1/complaints/${id}`,
+        );
+        setComplaint(response.data);
+
+        fetchLegalRecommendations(response.data.incident_description);
+
+        if (user?.username) {
+          try {
+            await axios.patch(
+              `http://localhost:8000/api/v1/complaints/${id}/assign`,
+              {
+                officer_username: user.username,
+              },
+            );
+          } catch {
+            console.warn("Case assignment failed.");
+          }
+        }
+
+        setMessages([
+          {
+            role: "assistant",
+            content: `Case ${id} loaded. I have reviewed the citizen's complaint. You can ask me anything about this case — applicable BNS sections, similar past cases, evidence requirements, or next steps.`,
+            timestamp: "Just Now",
+          },
+        ]);
+      } catch {
+        setError(t.loadingError);
+      }
+    };
+
+    loadCase();
+  }, [id, user?.username]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -50,8 +213,9 @@ export default function CaseDetail() {
   const sendQuery = async (text?: string) => {
     const msg = text || input;
     if (!msg.trim() || loading) return;
-    setMessages((p) => [
-      ...p,
+
+    setMessages((previous) => [
+      ...previous,
       {
         role: "user",
         content: msg,
@@ -61,47 +225,57 @@ export default function CaseDetail() {
         }),
       },
     ]);
+
     setInput("");
     setLoading(true);
 
-    // Build context-aware prompt
     const contextPrompt = `
 You are KAVACH AI, assisting a police officer reviewing a complaint.
 
 Case Details:
-- Complaint ID: ${complaint?.complaint_id}
-- Incident Type: ${complaint?.incident_type}
-- Date: ${complaint?.incident_date} ${complaint?.incident_time}
-- Location: ${complaint?.incident_location}
-- Description: ${complaint?.incident_description}
-- Accused: ${complaint?.accused_description || "Unknown"}
-- Witnesses: ${complaint?.witnesses || "None mentioned"}
-- Evidence: ${complaint?.evidence || "None mentioned"}
+* Complaint ID: ${complaint?.complaint_id || id}
+* Complainant: ${complaint?.complainant_name || "Unknown"}
+* Victim: ${complaint?.victim_name || "Unknown"}
+* Incident Type: ${complaint?.incident_type || "Unknown"}
+* Date: ${complaint?.incident_date || "Unknown"} ${complaint?.incident_time || ""}
+* Location: ${complaint?.incident_location || "Unknown"}
+* Description: ${complaint?.incident_description || "Not provided"}
+* Accused: ${complaint?.accused_description || "Unknown"}
+* Witnesses: ${complaint?.witnesses || "None mentioned"}
+* Evidence: ${complaint?.evidence || "None mentioned"}
 
-Officer's question: ${msg}
+Officer's question:
+${msg}
 
-Provide a precise, professional response. If applicable, suggest IPC/BNS sections, evidence requirements, or procedural next steps.`;
+Provide a precise, professional response. If applicable, suggest BNS sections, evidence requirements, or procedural next steps.`;
 
     try {
-      const res = await axios.post("http://localhost:8000/api/v1/fir/chat", {
-        session_id: sessionId.current,
-        message: contextPrompt,
-        language: "en",
-      });
-      setMessages((p) => [
-        ...p,
+      const response = await axios.post(
+        "http://localhost:8000/api/v1/fir/chat",
+        {
+          session_id: sessionId.current,
+          message: contextPrompt,
+          language: lang === "kn" ? "kn" : "en",
+        },
+      );
+
+      setMessages((previous) => [
+        ...previous,
         {
           role: "assistant",
-          content: res.data.reply,
+          content: response.data.reply,
           timestamp: "Just Now",
         },
       ]);
     } catch {
-      setMessages((p) => [
-        ...p,
+      setMessages((previous) => [
+        ...previous,
         {
           role: "assistant",
-          content: "Connection error. Please retry.",
+          content:
+            lang === "kn"
+              ? "ಸಂಪರ್ಕ ದೋಷ ಸಂಭವಿಸಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
+              : "Connection error. Please retry.",
           timestamp: "Just Now",
         },
       ]);
@@ -114,245 +288,305 @@ Provide a precise, professional response. If applicable, suggest IPC/BNS section
     const SpeechRecognition =
       (window as any).SpeechRecognition ||
       (window as any).webkitSpeechRecognition;
+
     if (!SpeechRecognition) {
-      alert("Voice input not supported in this browser. Use Chrome.");
+      alert("Voice input is not supported in this browser. Please use Chrome.");
       return;
     }
+
     const recognition = new SpeechRecognition();
-    recognition.lang = "en-IN";
+    recognition.lang = lang === "kn" ? "kn-IN" : "en-IN";
     recognition.continuous = false;
     recognition.interimResults = false;
+
     recognition.onstart = () => setListening(true);
-    recognition.onresult = (e: any) => {
-      const transcript = e.results[0][0].transcript;
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
       setInput(transcript);
       setListening(false);
     };
     recognition.onerror = () => setListening(false);
     recognition.onend = () => setListening(false);
+
     recognition.start();
     recognitionRef.current = recognition;
   };
 
   const fileFIR = async () => {
+    if (!id || filing || filed) return;
+
     setFiling(true);
+
     try {
       await axios.patch(
         `http://localhost:8000/api/v1/complaints/${id}/file-fir`,
       );
       setFiled(true);
+    } catch {
+      alert(t.filingError);
     } finally {
       setFiling(false);
     }
   };
 
-  const S = styles;
-  if (!complaint) return <div style={S.loading}>Loading case...</div>;
+  const getValue = (value: any) => {
+    if (value === null || value === undefined || value === "") return t.noData;
+    return String(value);
+  };
+
+  if (!complaint) {
+    return (
+      <div style={styles.loading}>
+        <div style={styles.loadingCard}>
+          <div style={styles.loadingSpinner} />
+          <div>{error || t.loadingCase}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div style={S.page}>
-      {/* Top bar */}
-      <div style={S.topbar}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+    <div style={styles.page}>
+      <header style={styles.topbar}>
+        <div style={styles.topbarLeft}>
           <button
             onClick={() => navigate("/officer/dashboard")}
-            style={S.backBtn}
+            style={styles.backBtn}
           >
-            &#8592; Dashboard
+            <span style={styles.backIcon}>←</span>
+            {t.dashboard}
           </button>
-          <span style={S.dividerChar}>/</span>
-          <span style={S.caseId}>{id}</span>
+
+          <div style={styles.topbarDivider} />
+
+          <div style={styles.caseIdentity}>
+            <span style={styles.caseLabel}>{t.caseLabel}</span>
+            <span style={styles.caseId}>{id}</span>
+          </div>
+
           <span
             style={{
-              ...S.statusBadge,
-              ...(filed ? S.statusFiled : S.statusReview),
+              ...styles.statusBadge,
+              ...(filed ? styles.statusFiled : styles.statusReview),
             }}
           >
-            {filed ? "FIR Filed" : "Under Review"}
+            <span style={styles.statusDot} />
+            {filed ? t.firFiledStatus : t.underReviewStatus}
           </span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+
+        <div style={styles.topbarActions}>
           {!filed && (
-            <button onClick={fileFIR} disabled={filing} style={S.fileBtn}>
-              {filing ? "Filing..." : "Officially File FIR"}
+            <button
+              onClick={fileFIR}
+              disabled={filing}
+              style={{
+                ...styles.fileBtn,
+                ...(filing ? styles.disabledBtn : {}),
+              }}
+            >
+              <span style={styles.fileIcon}>✓</span>
+              {filing ? t.filing : t.fileFir}
             </button>
           )}
-          {filed && <span style={S.filedConfirm}>FIR filed successfully</span>}
-          <button
-            onClick={() => setVoiceOpen(true)}
-            style={{
-              padding: "7px 16px",
-              background: "#eeecfd",
-              border: "1px solid #ddd6fe",
-              borderRadius: "7px",
-              color: "#5b52f0",
-              fontSize: "13px",
-              fontWeight: "600",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-              <line x1="12" y1="19" x2="12" y2="23" />
-              <line x1="8" y1="23" x2="16" y2="23" />
-            </svg>
-            Voice Assistant
+
+          {filed && (
+            <span style={styles.filedConfirm}>
+              <span>✓</span>
+              {t.filedSuccess}
+            </span>
+          )}
+
+          <button onClick={toggleLanguage} style={styles.langBtn}>
+            <GlobeIcon size={14} color={TEAL} />
+            {t.switchLang}
+          </button>
+
+          <button onClick={() => setVoiceOpen(true)} style={styles.voiceBtn}>
+            <MicrophoneIcon size={14} />
+            {t.voiceAssistant}
           </button>
         </div>
+      </header>
 
-        {voiceOpen && complaint && (
-          <VoiceAssistant
-            caseId={id!}
-            complaint={complaint}
-            onClose={() => setVoiceOpen(false)}
-          />
-        )}
-      </div>
+      <main style={styles.body}>
+        <section style={styles.casePanel}>
+          <div style={styles.panelAccent} />
 
-      <div style={S.body}>
-        {/* Left: Case Details */}
-        <div style={S.left}>
-          <div style={S.sectionTitle}>Citizen Complaint Details</div>
-
-          {[
-            { label: "Complainant", value: complaint.citizen_name },
-            { label: "Contact", value: complaint.contact_number || "—" },
-            { label: "Address", value: complaint.address || "—" },
-            { label: "Incident Type", value: complaint.incident_type || "—" },
-            {
-              label: "Date & Time",
-              value: `${complaint.incident_date || "—"} ${complaint.incident_time || ""}`,
-            },
-            { label: "Location", value: complaint.incident_location || "—" },
-          ].map((row) => (
-            <div key={row.label} style={S.detailRow}>
-              <span style={S.detailLabel}>{row.label}</span>
-              <span style={S.detailValue}>{row.value}</span>
+          <div style={styles.panelHeader}>
+            <div>
+              <div style={styles.eyebrow}>KAVACH / CASE FILE</div>
+              <h1 style={styles.panelTitle}>{t.citizenComplaintDetails}</h1>
             </div>
-          ))}
+            <div style={styles.caseNumberBadge}>
+              #{complaint.complaint_id || id}
+            </div>
+          </div>
 
-          <div style={S.divider} />
+          <div style={styles.infoGrid}>
+            <InfoCard
+              label={t.complainant}
+              value={getValue(complaint.complainant_name)}
+              icon="👤"
+            />
+            <InfoCard
+              label={t.victim}
+              value={getValue(complaint.victim_name)}
+              icon="◉"
+            />
+            <InfoCard
+              label={t.citizen}
+              value={getValue(complaint.citizen_name)}
+              icon="◎"
+            />
+            <InfoCard
+              label={t.contact}
+              value={getValue(complaint.contact_number)}
+              icon="☎"
+            />
+            <InfoCard
+              label={t.incidentType}
+              value={getValue(complaint.incident_type)}
+              icon="!"
+            />
+            <InfoCard
+              label={t.dateTime}
+              value={`${getValue(complaint.incident_date)} ${complaint.incident_time || ""}`}
+              icon="◷"
+            />
+            <InfoCard
+              label={t.location}
+              value={getValue(complaint.incident_location)}
+              icon="⌖"
+              fullWidth
+            />
+            <InfoCard
+              label={t.address}
+              value={getValue(complaint.address)}
+              icon="⌂"
+              fullWidth
+            />
+          </div>
 
-          <div style={S.sectionTitle}>Incident Description</div>
-          <p style={S.descText}>
-            {complaint.incident_description || "No description provided."}
-          </p>
+          <div style={styles.contentDivider} />
+
+          <CaseTextSection
+            title={t.incidentDescription}
+            value={complaint.incident_description}
+            fallback={t.noDesc}
+          />
 
           {complaint.accused_description && (
-            <>
-              <div style={S.sectionTitle}>Accused Description</div>
-              <p style={S.descText}>{complaint.accused_description}</p>
-            </>
+            <CaseTextSection
+              title={t.accusedDescription}
+              value={complaint.accused_description}
+              fallback={t.noDesc}
+            />
           )}
-
           {complaint.witnesses && (
-            <>
-              <div style={S.sectionTitle}>Witnesses</div>
-              <p style={S.descText}>{complaint.witnesses}</p>
-            </>
+            <CaseTextSection
+              title={t.witnesses}
+              value={complaint.witnesses}
+              fallback={t.noDesc}
+            />
           )}
-
           {complaint.evidence && (
-            <>
-              <div style={S.sectionTitle}>Evidence</div>
-              <p style={S.descText}>{complaint.evidence}</p>
-            </>
+            <CaseTextSection
+              title={t.evidence}
+              value={complaint.evidence}
+              fallback={t.noDesc}
+            />
           )}
-        </div>
+        </section>
 
-        {/* Right: AI Voice Interface */}
-        <div style={S.right}>
-          <div style={S.chatHeader}>
-            <div>
-              <div style={S.sectionTitle}>AI Case Assistant</div>
-              <div style={S.chatSub}>
-                Ask questions about this case using voice or text
+        <section style={styles.aiPanel}>
+          <div style={styles.aiHeader}>
+            <div style={styles.aiHeaderIdentity}>
+              <div style={styles.aiAvatarLarge}>K</div>
+              <div>
+                <div style={styles.eyebrow}>KAVACH INTELLIGENCE</div>
+                <h2 style={styles.aiTitle}>{t.aiCaseAssistant}</h2>
+                <p style={styles.aiSubtitle}>{t.aiChatSub}</p>
               </div>
             </div>
-            <div style={S.aiOnline}>
-              <div style={S.onlineDot} />
-              <span>Active</span>
+
+            <div style={styles.activeBadge}>
+              <span style={styles.activeDot} />
+              {t.active}
             </div>
           </div>
 
-          {/* Quick prompts */}
-          <div style={S.quickRow}>
-            {[
-              "What IPC sections apply?",
-              "What evidence is needed?",
-              "What are the next steps?",
-              "Are there similar cases?",
-            ].map((q) => (
-              <button key={q} onClick={() => sendQuery(q)} style={S.quickBtn}>
-                {q}
-              </button>
-            ))}
+          <div style={styles.quickSection}>
+            <div style={styles.quickLabel}>QUICK QUESTIONS</div>
+            <div style={styles.quickRow}>
+              {[
+                t.quickPrompt1,
+                t.quickPrompt2,
+                t.quickPrompt3,
+                t.quickPrompt4,
+              ].map((question) => (
+                <button
+                  key={question}
+                  onClick={() => sendQuery(question)}
+                  style={styles.quickBtn}
+                >
+                  {question}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Messages */}
-          <div style={S.messages}>
-            {messages.map((m, i) => (
+          <div style={styles.messages}>
+            {messages.map((message, index) => (
               <div
-                key={i}
+                key={index}
                 style={{
-                  display: "flex",
-                  justifyContent: m.role === "user" ? "flex-end" : "flex-start",
-                  gap: "8px",
-                  alignItems: "flex-start",
+                  ...styles.messageRow,
+                  justifyContent:
+                    message.role === "user" ? "flex-end" : "flex-start",
                 }}
               >
-                {m.role === "assistant" && <div style={S.aiAvatar}>K</div>}
+                {message.role === "assistant" && (
+                  <div style={styles.aiAvatar}>K</div>
+                )}
+
                 <div>
-                  <div style={m.role === "user" ? S.userBubble : S.aiBubble}>
-                    {m.content}
+                  <div
+                    style={
+                      message.role === "user"
+                        ? styles.userBubble
+                        : styles.aiBubble
+                    }
+                  >
+                    {message.content}
                   </div>
                   <div
                     style={{
-                      fontSize: "10px",
-                      color: "#9ca3af",
-                      marginTop: "3px",
-                      textAlign: m.role === "user" ? "right" : "left",
+                      ...styles.messageTime,
+                      textAlign: message.role === "user" ? "right" : "left",
                     }}
                   >
-                    {m.timestamp}
+                    {message.timestamp}
                   </div>
                 </div>
-                {m.role === "user" && <div style={S.officerAvatar}>SI</div>}
+
+                {message.role === "user" && (
+                  <div style={styles.officerAvatar}>SI</div>
+                )}
               </div>
             ))}
+
             {loading && (
-              <div
-                style={{
-                  display: "flex",
-                  gap: "8px",
-                  alignItems: "flex-start",
-                }}
-              >
-                <div style={S.aiAvatar}>K</div>
-                <div style={S.aiBubble}>
-                  <div style={{ display: "flex", gap: "4px" }}>
-                    {[0, 1, 2].map((i) => (
-                      <div
-                        key={i}
+              <div style={styles.messageRow}>
+                <div style={styles.aiAvatar}>K</div>
+                <div style={styles.aiBubble}>
+                  <div style={styles.typingDots}>
+                    {[0, 1, 2].map((dot) => (
+                      <span
+                        key={dot}
                         style={{
-                          width: "6px",
-                          height: "6px",
-                          borderRadius: "50%",
-                          background: "#5b52f0",
-                          animation: `blink 1.2s ease-in-out ${i * 0.2}s infinite`,
+                          ...styles.typingDot,
+                          animationDelay: `${dot * 0.2}s`,
                         }}
                       />
                     ))}
@@ -360,352 +594,1127 @@ Provide a precise, professional response. If applicable, suggest IPC/BNS section
                 </div>
               </div>
             )}
+
             <div ref={bottomRef} />
           </div>
 
-          {/* Input */}
-          <div style={S.inputRow}>
-            <input
-              style={S.input}
-              placeholder="Ask anything about this case..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendQuery()}
-            />
-            <button
-              onClick={startVoice}
-              style={{ ...S.iconBtn, ...(listening ? S.iconBtnActive : {}) }}
-              title="Voice input"
-            >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+          <div style={styles.inputArea}>
+            <div style={styles.inputRow}>
+              <input
+                style={styles.input}
+                placeholder={t.inputPlaceholder}
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") sendQuery();
+                }}
+              />
+
+              <button
+                onClick={startVoice}
+                style={{
+                  ...styles.iconBtn,
+                  ...(listening ? styles.iconBtnActive : {}),
+                }}
+                title="Voice input"
               >
-                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                <line x1="12" y1="19" x2="12" y2="23" />
-                <line x1="8" y1="23" x2="16" y2="23" />
-              </svg>
-            </button>
-            <button
-              onClick={() => sendQuery()}
-              disabled={loading}
-              style={S.sendBtn}
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                <MicrophoneIcon size={16} />
+              </button>
+
+              <button
+                onClick={() => sendQuery()}
+                disabled={loading}
+                style={{
+                  ...styles.sendBtn,
+                  ...(loading ? styles.disabledBtn : {}),
+                }}
               >
-                <line x1="22" y1="2" x2="11" y2="13" />
-                <polygon points="22 2 15 22 11 13 2 9 22 2" />
-              </svg>
-            </button>
+                <SendIcon />
+              </button>
+            </div>
+
+            {listening && (
+              <p style={styles.listeningText}>
+                <span style={styles.listeningDot} />
+                {t.listening}
+              </p>
+            )}
           </div>
-          {listening && <p style={S.listeningText}>Listening... speak now</p>}
-        </div>
-      </div>
+        </section>
+
+        <aside style={styles.legalSidebar}>
+          <div style={styles.legalHeader}>
+            <div>
+              <div style={styles.legalEyebrow}>KAVACH LEGAL INTELLIGENCE</div>
+              <div style={styles.legalTitle}>Suggested BNS Provisions</div>
+            </div>
+            <div style={styles.aiBadge}>AI</div>
+          </div>
+
+          <div style={styles.legalDisclaimer}>
+            Decision-support only · Officer verification required
+          </div>
+
+          {legalLoading && (
+            <div style={styles.legalLoading}>
+              <div style={styles.legalSpinner} />
+              Analysing FIR against BNS corpus…
+            </div>
+          )}
+
+          {legalError && (
+            <div style={styles.legalError}>
+              {legalError}
+              <button
+                style={styles.retryBtn}
+                onClick={() =>
+                  fetchLegalRecommendations(complaint.incident_description)
+                }
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
+          {!legalLoading &&
+            !legalError &&
+            legalRecommendations.map((rec, index) => {
+              const classifications = rec.classifications || [];
+              const cognizableValues = [
+                ...new Set(classifications.map((c) => c.cognizable)),
+              ];
+              const bailableValues = [
+                ...new Set(classifications.map((c) => c.bailable)),
+              ];
+
+              const cognizable =
+                cognizableValues.length === 1
+                  ? cognizableValues[0]
+                  : "Varies by subsection";
+              const bailable =
+                bailableValues.length === 1
+                  ? bailableValues[0]
+                  : "Varies by subsection";
+
+              return (
+                <div key={`${rec.section}-${index}`} style={styles.legalCard}>
+                  <div style={styles.legalCardTop}>
+                    <div>
+                      <div style={styles.sectionNumber}>
+                        {rec.code} § {rec.section}
+                      </div>
+                      <div style={styles.legalSectionTitle}>{rec.title}</div>
+                    </div>
+                    <span style={styles.rankBadge}>#{index + 1}</span>
+                  </div>
+
+                  <div style={styles.whyLabel}>WHY SUGGESTED</div>
+                  <p style={styles.whyText}>{rec.why_it_applies}</p>
+
+                  <div style={styles.metaGrid}>
+                    <div style={styles.metaItem}>
+                      <span style={styles.metaLabel}>COGNIZABLE</span>
+                      <span style={styles.metaValue}>{cognizable}</span>
+                    </div>
+                    <div style={styles.metaItem}>
+                      <span style={styles.metaLabel}>BAIL</span>
+                      <span style={styles.metaValue}>{bailable}</span>
+                    </div>
+                  </div>
+
+                  {classifications.length > 1 && (
+                    <div style={styles.subsectionNote}>
+                      Classification varies across {classifications.length}{" "}
+                      schedule entries. Officer should verify the applicable
+                      subsection.
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+          {!legalLoading &&
+            !legalError &&
+            legalRecommendations.length === 0 && (
+              <div style={styles.noLegalResults}>
+                No sufficiently relevant BNS provisions identified.
+              </div>
+            )}
+
+          <button
+            style={styles.refreshLegalBtn}
+            disabled={legalLoading}
+            onClick={() =>
+              fetchLegalRecommendations(complaint.incident_description)
+            }
+          >
+            ↻ Reanalyse case
+          </button>
+        </aside>
+      </main>
+
+      {voiceOpen && complaint && (
+        <VoiceAssistant
+          caseId={id!}
+          complaint={complaint}
+          onClose={() => setVoiceOpen(false)}
+        />
+      )}
 
       <style>{`
-        @keyframes blink { 0%,100%{opacity:.25;transform:scale(.8)} 50%{opacity:1;transform:scale(1.15)} }
+        @keyframes blink {
+          0%, 100% { opacity: .25; transform: scale(.8); }
+          50% { opacity: 1; transform: scale(1.15); }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes legalSpin { to { transform: rotate(360deg); } }
+
+        * { box-sizing: border-box; }
+        button, input { font: inherit; }
+        button {
+          transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease;
+        }
+        button:hover:not(:disabled) { transform: translateY(-1px); }
+        input:focus {
+          border-color: ${TEAL} !important;
+          box-shadow: 0 0 0 3px rgba(14, 140, 140, .12);
+        }
+
+        @media (max-width: 1300px) {
+          .case-details-responsive { flex-direction: column !important; }
+        }
       `}</style>
     </div>
   );
 }
 
-const accent = "#5b52f0";
+function InfoCard({
+  label,
+  value,
+  icon,
+  fullWidth = false,
+}: {
+  label: string;
+  value: string;
+  icon: string;
+  fullWidth?: boolean;
+}) {
+  return (
+    <div
+      style={{ ...styles.infoCard, ...(fullWidth ? styles.infoCardFull : {}) }}
+    >
+      <div style={styles.infoIcon}>{icon}</div>
+      <div style={styles.infoContent}>
+        <div style={styles.infoLabel}>{label}</div>
+        <div style={styles.infoValue}>{value}</div>
+      </div>
+    </div>
+  );
+}
+
+function CaseTextSection({
+  title,
+  value,
+  fallback,
+}: {
+  title: string;
+  value?: string;
+  fallback: string;
+}) {
+  return (
+    <div style={styles.textSection}>
+      <div style={styles.textSectionTitle}>
+        <span style={styles.sectionMarker} />
+        {title}
+      </div>
+      <p style={styles.textContent}>{value || fallback}</p>
+    </div>
+  );
+}
+
+function GlobeIcon({
+  size = 14,
+  color = TEAL,
+}: {
+  size?: number;
+  color?: string;
+}) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="1.8" />
+      <line x1="2" y1="12" x2="22" y2="12" stroke={color} strokeWidth="1.8" />
+      <path
+        d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+        stroke={color}
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function MicrophoneIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+      <line x1="12" y1="19" x2="12" y2="23" />
+      <line x1="8" y1="23" x2="16" y2="23" />
+    </svg>
+  );
+}
+
+function SendIcon() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="22" y1="2" x2="11" y2="13" />
+      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+    </svg>
+  );
+}
+
+const TEAL = "#0E8C8C";
+const TEAL_DARK = "#0A6E6E";
+const NAVY = "#152A43";
+const NAVY_SOFT = "#2C4260";
+const BG = "#EAF2F5";
+const CARD = "#FFFFFF";
+const BORDER = "#E3E9EC";
+const TEXT = "#5B6B7A";
+const MUTED = "#8A97A3";
+const TEAL_TINT = "#E1F5F5";
+const GREEN = "#1F7A5C";
+const RED = "#C94B4B";
+
 const styles = {
   loading: {
+    minHeight: "100vh",
+    background: BG,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    height: "100vh",
-    fontFamily: "Inter, sans-serif",
-    color: "#6b7280",
+    fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+    color: TEXT,
   } as React.CSSProperties,
+
+  loadingCard: {
+    padding: "28px 36px",
+    borderRadius: "14px",
+    background: CARD,
+    border: `1px solid ${BORDER}`,
+    boxShadow: "0 12px 34px rgba(21,42,67,.08)",
+    display: "flex",
+    alignItems: "center",
+    gap: "14px",
+    fontSize: "14px",
+    fontWeight: "600",
+    color: NAVY,
+  } as React.CSSProperties,
+
+  loadingSpinner: {
+    width: "20px",
+    height: "20px",
+    borderRadius: "50%",
+    border: `3px solid ${TEAL_TINT}`,
+    borderTopColor: TEAL,
+    animation: "spin .8s linear infinite",
+  } as React.CSSProperties,
+
   page: {
     minHeight: "100vh",
-    background: "#f5f4ff",
-    fontFamily: "'Inter', system-ui, sans-serif",
+    background: BG,
+    fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+    color: NAVY,
     display: "flex",
     flexDirection: "column" as const,
   } as React.CSSProperties,
+
   topbar: {
-    background: "#fff",
-    borderBottom: "1px solid #e9e6fb",
-    padding: "0 28px",
-    height: "52px",
+    minHeight: "68px",
+    padding: "12px 28px",
+    background: CARD,
+    borderBottom: `1px solid ${BORDER}`,
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    flexShrink: 0,
+    gap: "20px",
+    boxShadow: "0 2px 12px rgba(21,42,67,.04)",
+    flexWrap: "wrap" as const,
+    zIndex: 10,
   } as React.CSSProperties,
+
+  topbarLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    flexWrap: "wrap" as const,
+  } as React.CSSProperties,
+  topbarActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    flexWrap: "wrap" as const,
+  } as React.CSSProperties,
+
   backBtn: {
-    background: "none",
     border: "none",
+    background: "transparent",
+    color: TEXT,
     fontSize: "13px",
-    color: "#6b7280",
-    cursor: "pointer",
-    fontFamily: "inherit",
-    fontWeight: "500",
-  } as React.CSSProperties,
-  dividerChar: { color: "#d1d5db", fontSize: "14px" } as React.CSSProperties,
-  caseId: {
-    fontSize: "13px",
-    fontWeight: "700",
-    color: "#1a1a2e",
-  } as React.CSSProperties,
-  statusBadge: {
-    fontSize: "11px",
     fontWeight: "600",
-    padding: "3px 9px",
-    borderRadius: "20px",
+    cursor: "pointer",
+    padding: "7px 4px",
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
   } as React.CSSProperties,
+
+  backIcon: {
+    fontSize: "18px",
+    color: TEAL,
+    lineHeight: 1,
+  } as React.CSSProperties,
+  topbarDivider: {
+    width: "1px",
+    height: "22px",
+    background: BORDER,
+  } as React.CSSProperties,
+  caseIdentity: {
+    display: "flex",
+    alignItems: "center",
+    gap: "7px",
+  } as React.CSSProperties,
+  caseLabel: {
+    fontSize: "10px",
+    fontWeight: "700",
+    letterSpacing: ".1em",
+    color: MUTED,
+  } as React.CSSProperties,
+  caseId: {
+    fontSize: "14px",
+    fontWeight: "700",
+    color: NAVY,
+    letterSpacing: ".02em",
+  } as React.CSSProperties,
+
+  statusBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "6px 10px",
+    borderRadius: "20px",
+    fontSize: "10px",
+    fontWeight: "700",
+    letterSpacing: ".04em",
+    textTransform: "uppercase" as const,
+  } as React.CSSProperties,
+
   statusReview: {
-    color: "#2563eb",
-    background: "#eff6ff",
+    color: "#9A6500",
+    background: "#FFF7E3",
+    border: "1px solid #F0D58C",
   } as React.CSSProperties,
   statusFiled: {
-    color: "#16a34a",
-    background: "#f0fdf4",
+    color: GREEN,
+    background: "#E8F6EF",
+    border: "1px solid #A9DFC5",
   } as React.CSSProperties,
+  statusDot: {
+    width: "6px",
+    height: "6px",
+    borderRadius: "50%",
+    background: "#D89A22",
+  } as React.CSSProperties,
+
   fileBtn: {
-    padding: "7px 18px",
-    background: accent,
-    color: "#fff",
+    padding: "9px 14px",
+    background: NAVY,
+    color: "#FFFFFF",
     border: "none",
     borderRadius: "7px",
-    fontSize: "13px",
-    fontWeight: "600",
-    cursor: "pointer",
-  } as React.CSSProperties,
-  filedConfirm: {
-    fontSize: "13px",
-    color: "#16a34a",
-    fontWeight: "600",
-  } as React.CSSProperties,
-  body: {
-    flex: 1,
-    display: "flex",
-    gap: "20px",
-    padding: "24px 28px",
-    overflow: "hidden",
-  } as React.CSSProperties,
-  left: {
-    width: "340px",
-    flexShrink: 0,
-    background: "#fff",
-    borderRadius: "12px",
-    border: "1px solid #e9e6fb",
-    padding: "20px",
-    overflowY: "auto" as const,
-  } as React.CSSProperties,
-  right: {
-    flex: 1,
-    background: "#fff",
-    borderRadius: "12px",
-    border: "1px solid #e9e6fb",
-    padding: "20px",
-    display: "flex",
-    flexDirection: "column" as const,
-    overflow: "hidden",
-  } as React.CSSProperties,
-  sectionTitle: {
-    fontSize: "11px",
+    fontSize: "12px",
     fontWeight: "700",
-    color: "#9ca3af",
-    textTransform: "uppercase" as const,
-    letterSpacing: "0.07em",
-    marginBottom: "10px",
-  } as React.CSSProperties,
-  detailRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: "10px",
-    gap: "12px",
-  } as React.CSSProperties,
-  detailLabel: {
-    fontSize: "12px",
-    color: "#9ca3af",
-    fontWeight: "500",
-    flexShrink: 0,
-  } as React.CSSProperties,
-  detailValue: {
-    fontSize: "12px",
-    color: "#1a1a2e",
-    fontWeight: "500",
-    textAlign: "right" as const,
-  } as React.CSSProperties,
-  divider: {
-    height: "1px",
-    background: "#f3f0ff",
-    margin: "14px 0",
-  } as React.CSSProperties,
-  descText: {
-    fontSize: "13px",
-    color: "#374151",
-    lineHeight: "1.7",
-    marginBottom: "14px",
-  } as React.CSSProperties,
-  chatHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: "12px",
-  } as React.CSSProperties,
-  chatSub: {
-    fontSize: "11px",
-    color: "#9ca3af",
-    marginTop: "2px",
-  } as React.CSSProperties,
-  aiOnline: {
+    cursor: "pointer",
     display: "flex",
     alignItems: "center",
-    gap: "5px",
-    fontSize: "11px",
-    color: "#16a34a",
-    fontWeight: "600",
+    gap: "7px",
+    boxShadow: "0 4px 12px rgba(21,42,67,.14)",
   } as React.CSSProperties,
-  onlineDot: {
+
+  fileIcon: { fontSize: "14px" } as React.CSSProperties,
+
+  filedConfirm: {
+    padding: "8px 12px",
+    borderRadius: "7px",
+    background: "#E8F6EF",
+    color: GREEN,
+    fontSize: "12px",
+    fontWeight: "700",
+    display: "flex",
+    gap: "6px",
+    alignItems: "center",
+  } as React.CSSProperties,
+
+  langBtn: {
+    padding: "8px 12px",
+    background: TEAL_TINT,
+    border: `1px solid ${TEAL}`,
+    borderRadius: "7px",
+    color: TEAL_DARK,
+    fontSize: "12px",
+    fontWeight: "700",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+  } as React.CSSProperties,
+
+  voiceBtn: {
+    padding: "9px 14px",
+    background: TEAL,
+    border: `1px solid ${TEAL}`,
+    borderRadius: "7px",
+    color: "#FFFFFF",
+    fontSize: "12px",
+    fontWeight: "700",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "7px",
+    boxShadow: "0 4px 12px rgba(14,140,140,.2)",
+  } as React.CSSProperties,
+
+  body: {
+    flex: 1,
+    display: "grid",
+    gridTemplateColumns: "minmax(340px, 0.85fr) minmax(420px, 1.3fr) 300px",
+    gap: "20px",
+    padding: "24px 28px",
+    minHeight: "calc(100vh - 68px)",
+    overflow: "hidden",
+  } as React.CSSProperties,
+
+  casePanel: {
+    position: "relative",
+    background: CARD,
+    border: `1px solid ${BORDER}`,
+    borderRadius: "16px",
+    padding: "26px",
+    overflowY: "auto",
+    boxShadow: "0 10px 30px rgba(21,42,67,.06)",
+  } as React.CSSProperties,
+
+  panelAccent: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "4px",
+    borderRadius: "16px 16px 0 0",
+    background: `linear-gradient(90deg, ${TEAL}, ${NAVY})`,
+  } as React.CSSProperties,
+
+  panelHeader: {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: "16px",
+    marginBottom: "22px",
+  } as React.CSSProperties,
+
+  eyebrow: {
+    fontSize: "10px",
+    fontWeight: "700",
+    letterSpacing: ".1em",
+    color: TEAL,
+    textTransform: "uppercase" as const,
+    marginBottom: "6px",
+  } as React.CSSProperties,
+
+  panelTitle: {
+    margin: 0,
+    fontSize: "21px",
+    lineHeight: "1.2",
+    fontWeight: "750",
+    color: NAVY,
+    letterSpacing: "-.02em",
+  } as React.CSSProperties,
+
+  caseNumberBadge: {
+    padding: "7px 10px",
+    background: BG,
+    color: NAVY_SOFT,
+    border: `1px solid ${BORDER}`,
+    borderRadius: "7px",
+    fontSize: "10px",
+    fontWeight: "700",
+    whiteSpace: "nowrap" as const,
+  } as React.CSSProperties,
+
+  infoGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "10px",
+  } as React.CSSProperties,
+
+  infoCard: {
+    minWidth: 0,
+    display: "flex",
+    alignItems: "flex-start",
+    gap: "10px",
+    padding: "12px",
+    borderRadius: "10px",
+    background: "#F8FAFB",
+    border: `1px solid ${BORDER}`,
+  } as React.CSSProperties,
+
+  infoCardFull: { gridColumn: "1 / -1" } as React.CSSProperties,
+
+  infoIcon: {
+    width: "30px",
+    height: "30px",
+    borderRadius: "8px",
+    background: TEAL_TINT,
+    color: TEAL_DARK,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "13px",
+    fontWeight: "700",
+    flexShrink: 0,
+  } as React.CSSProperties,
+
+  infoContent: { minWidth: 0, flex: 1 } as React.CSSProperties,
+
+  infoLabel: {
+    fontSize: "9px",
+    fontWeight: "700",
+    color: MUTED,
+    letterSpacing: ".06em",
+    textTransform: "uppercase" as const,
+    marginBottom: "4px",
+  } as React.CSSProperties,
+
+  infoValue: {
+    fontSize: "12px",
+    lineHeight: "1.45",
+    color: NAVY,
+    fontWeight: "600",
+    overflowWrap: "anywhere" as const,
+  } as React.CSSProperties,
+
+  contentDivider: {
+    height: "1px",
+    background: BORDER,
+    margin: "22px 0",
+  } as React.CSSProperties,
+
+  textSection: { marginBottom: "20px" } as React.CSSProperties,
+
+  textSectionTitle: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    fontSize: "11px",
+    fontWeight: "700",
+    color: NAVY_SOFT,
+    textTransform: "uppercase" as const,
+    letterSpacing: ".06em",
+    marginBottom: "8px",
+  } as React.CSSProperties,
+
+  sectionMarker: {
+    width: "4px",
+    height: "16px",
+    borderRadius: "4px",
+    background: TEAL,
+  } as React.CSSProperties,
+
+  textContent: {
+    margin: 0,
+    fontSize: "13px",
+    lineHeight: "1.75",
+    color: TEXT,
+    background: "#F8FAFB",
+    border: `1px solid ${BORDER}`,
+    borderRadius: "9px",
+    padding: "13px",
+  } as React.CSSProperties,
+
+  aiPanel: {
+    minWidth: 0,
+    background: CARD,
+    border: `1px solid ${BORDER}`,
+    borderRadius: "16px",
+    padding: "22px",
+    display: "flex",
+    flexDirection: "column" as const,
+    minHeight: 0,
+    overflow: "hidden",
+    boxShadow: "0 10px 30px rgba(21,42,67,.06)",
+  } as React.CSSProperties,
+
+  aiHeader: {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: "16px",
+    paddingBottom: "16px",
+    borderBottom: `1px solid ${BORDER}`,
+  } as React.CSSProperties,
+
+  aiHeaderIdentity: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+  } as React.CSSProperties,
+
+  aiAvatarLarge: {
+    width: "46px",
+    height: "46px",
+    borderRadius: "12px",
+    background: `linear-gradient(145deg, ${TEAL}, ${NAVY})`,
+    color: "#FFFFFF",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "18px",
+    fontWeight: "800",
+    boxShadow: "0 8px 18px rgba(14,140,140,.2)",
+  } as React.CSSProperties,
+
+  aiTitle: {
+    margin: 0,
+    fontSize: "18px",
+    color: NAVY,
+    fontWeight: "750",
+    letterSpacing: "-.02em",
+  } as React.CSSProperties,
+  aiSubtitle: {
+    margin: "4px 0 0",
+    fontSize: "11px",
+    color: MUTED,
+  } as React.CSSProperties,
+
+  activeBadge: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "6px 9px",
+    borderRadius: "20px",
+    background: "#E8F6EF",
+    color: GREEN,
+    fontSize: "10px",
+    fontWeight: "700",
+    whiteSpace: "nowrap" as const,
+  } as React.CSSProperties,
+
+  activeDot: {
     width: "7px",
     height: "7px",
     borderRadius: "50%",
-    background: "#22c55e",
-    boxShadow: "0 0 5px #22c55e",
+    background: GREEN,
+    boxShadow: `0 0 0 3px rgba(31,122,92,.12)`,
+  } as React.CSSProperties,
+
+  quickSection: {
+    padding: "14px 0",
+    borderBottom: `1px solid ${BORDER}`,
+  } as React.CSSProperties,
+  quickLabel: {
+    fontSize: "9px",
+    fontWeight: "700",
+    letterSpacing: ".08em",
+    color: MUTED,
+    marginBottom: "8px",
   } as React.CSSProperties,
   quickRow: {
     display: "flex",
     flexWrap: "wrap" as const,
-    gap: "6px",
-    marginBottom: "14px",
+    gap: "7px",
   } as React.CSSProperties,
+
   quickBtn: {
-    padding: "5px 11px",
-    border: "1px solid #e9e6fb",
+    padding: "7px 10px",
+    border: `1px solid ${BORDER}`,
     borderRadius: "20px",
-    background: "#faf9ff",
-    color: "#6b7280",
-    fontSize: "11px",
+    background: "#F8FAFB",
+    color: NAVY_SOFT,
+    fontSize: "10px",
+    fontWeight: "600",
     cursor: "pointer",
-    fontFamily: "inherit",
-    fontWeight: "500",
   } as React.CSSProperties,
+
   messages: {
     flex: 1,
-    overflowY: "auto" as const,
+    minHeight: 0,
+    overflowY: "auto",
     display: "flex",
     flexDirection: "column" as const,
     gap: "14px",
-    marginBottom: "14px",
-    padding: "4px 0",
+    padding: "18px 4px",
   } as React.CSSProperties,
+
+  messageRow: {
+    display: "flex",
+    gap: "8px",
+    alignItems: "flex-start",
+  } as React.CSSProperties,
+
   aiAvatar: {
     width: "28px",
     height: "28px",
-    borderRadius: "7px",
-    background: accent,
-    color: "#fff",
+    borderRadius: "8px",
+    background: TEAL,
+    color: "#FFFFFF",
     fontSize: "11px",
-    fontWeight: "700",
+    fontWeight: "800",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   } as React.CSSProperties,
+
   officerAvatar: {
     width: "28px",
     height: "28px",
     borderRadius: "50%",
-    background: "#eeecfd",
-    color: accent,
-    fontSize: "10px",
-    fontWeight: "700",
+    background: "#E8EEF3",
+    color: NAVY,
+    fontSize: "9px",
+    fontWeight: "800",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   } as React.CSSProperties,
-  userBubble: {
-    padding: "10px 14px",
-    background: "#eeecfd",
-    borderRadius: "10px 10px 2px 10px",
-    fontSize: "13px",
-    color: "#1a1a2e",
-    lineHeight: "1.6",
-    maxWidth: "400px",
-  } as React.CSSProperties,
+
   aiBubble: {
-    padding: "10px 14px",
-    background: "#faf9ff",
-    border: "1px solid #e9e6fb",
-    borderRadius: "2px 10px 10px 10px",
-    fontSize: "13px",
-    color: "#374151",
-    lineHeight: "1.7",
-    maxWidth: "480px",
+    padding: "11px 13px",
+    background: "#F8FAFB",
+    border: `1px solid ${BORDER}`,
+    borderRadius: "4px 12px 12px 12px",
+    fontSize: "12.5px",
+    color: NAVY_SOFT,
+    lineHeight: "1.65",
+    maxWidth: "520px",
+  } as React.CSSProperties,
+
+  userBubble: {
+    padding: "11px 13px",
+    background: TEAL_TINT,
+    border: `1px solid rgba(14,140,140,.16)`,
+    borderRadius: "12px 12px 4px 12px",
+    fontSize: "12.5px",
+    color: NAVY,
+    lineHeight: "1.65",
+    maxWidth: "420px",
+  } as React.CSSProperties,
+
+  messageTime: {
+    fontSize: "9px",
+    color: MUTED,
+    marginTop: "4px",
+  } as React.CSSProperties,
+  typingDots: { display: "flex", gap: "4px" } as React.CSSProperties,
+  typingDot: {
+    width: "6px",
+    height: "6px",
+    borderRadius: "50%",
+    background: TEAL,
+    animation: "blink 1.2s ease-in-out infinite",
+  } as React.CSSProperties,
+
+  inputArea: {
+    paddingTop: "14px",
+    borderTop: `1px solid ${BORDER}`,
   } as React.CSSProperties,
   inputRow: {
     display: "flex",
-    gap: "7px",
+    gap: "8px",
     alignItems: "center",
   } as React.CSSProperties,
+
   input: {
     flex: 1,
-    padding: "9px 13px",
-    border: "1px solid #e5e7eb",
+    minWidth: 0,
+    padding: "11px 13px",
+    border: `1px solid ${BORDER}`,
     borderRadius: "8px",
-    fontSize: "13px",
+    fontSize: "12px",
     outline: "none",
     fontFamily: "inherit",
-    color: "#1a1a2e",
+    color: NAVY,
+    background: "#F8FAFB",
   } as React.CSSProperties,
+
   iconBtn: {
-    width: "36px",
-    height: "36px",
-    borderRadius: "7px",
-    border: "1px solid #e5e7eb",
-    background: "#fff",
+    width: "38px",
+    height: "38px",
+    borderRadius: "8px",
+    border: `1px solid ${BORDER}`,
+    background: CARD,
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    color: "#6b7280",
+    color: TEXT,
     flexShrink: 0,
   } as React.CSSProperties,
+
   iconBtnActive: {
-    background: "#fef2f2",
-    borderColor: "#fca5a5",
-    color: "#ef4444",
+    background: "#FFF0F0",
+    borderColor: RED,
+    color: RED,
   } as React.CSSProperties,
+
   sendBtn: {
-    width: "36px",
-    height: "36px",
-    borderRadius: "7px",
-    background: accent,
+    width: "38px",
+    height: "38px",
+    borderRadius: "8px",
+    background: TEAL,
     border: "none",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    color: "#fff",
+    color: "#FFFFFF",
     flexShrink: 0,
   } as React.CSSProperties,
+
   listeningText: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    margin: "7px 0 0",
+    fontSize: "10px",
+    color: RED,
+    fontWeight: "600",
+  } as React.CSSProperties,
+  listeningDot: {
+    width: "6px",
+    height: "6px",
+    borderRadius: "50%",
+    background: RED,
+  } as React.CSSProperties,
+  disabledBtn: { opacity: 0.6, cursor: "not-allowed" } as React.CSSProperties,
+
+  // ---------- Legal sidebar (matched to teal/navy system) ----------
+
+  legalSidebar: {
+    width: "100%",
+    background: CARD,
+    borderRadius: "16px",
+    border: `1px solid ${BORDER}`,
+    padding: "20px",
+    overflowY: "auto",
+    boxShadow: "0 10px 30px rgba(21,42,67,.06)",
+  } as React.CSSProperties,
+
+  legalHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: "10px",
+  } as React.CSSProperties,
+
+  legalEyebrow: {
+    fontSize: "9.5px",
+    letterSpacing: "0.1em",
+    color: TEAL,
+    fontWeight: "700",
+    textTransform: "uppercase" as const,
+    marginBottom: "4px",
+  } as React.CSSProperties,
+
+  legalTitle: {
+    fontSize: "15px",
+    fontWeight: "750",
+    color: NAVY,
+    letterSpacing: "-.01em",
+  } as React.CSSProperties,
+
+  aiBadge: {
+    background: NAVY,
+    color: "#FFFFFF",
+    padding: "4px 7px",
+    borderRadius: "5px",
+    fontSize: "9px",
+    fontWeight: "700",
+  } as React.CSSProperties,
+
+  legalDisclaimer: {
+    fontSize: "10px",
+    color: MUTED,
+    background: "#F8FAFB",
+    border: `1px dashed ${BORDER}`,
+    borderRadius: "7px",
+    padding: "8px 9px",
+    marginBottom: "14px",
+    lineHeight: "1.5",
+  } as React.CSSProperties,
+
+  legalCard: {
+    border: `1px solid ${BORDER}`,
+    borderLeft: `3px solid ${TEAL}`,
+    background: "#F8FAFB",
+    padding: "13px",
+    marginBottom: "12px",
+    borderRadius: "3px 10px 10px 3px",
+  } as React.CSSProperties,
+
+  legalCardTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "8px",
+    marginBottom: "10px",
+  } as React.CSSProperties,
+
+  sectionNumber: {
+    color: TEAL_DARK,
+    fontSize: "12px",
+    fontWeight: "700",
+    marginBottom: "3px",
+  } as React.CSSProperties,
+  legalSectionTitle: {
+    color: NAVY,
+    fontSize: "13px",
+    lineHeight: "1.35",
+    fontWeight: "700",
+  } as React.CSSProperties,
+  rankBadge: {
+    color: TEAL,
+    fontSize: "10px",
+    fontWeight: "700",
+  } as React.CSSProperties,
+
+  whyLabel: {
+    fontSize: "8.5px",
+    letterSpacing: "0.08em",
+    color: MUTED,
+    fontWeight: "700",
+    textTransform: "uppercase" as const,
+  } as React.CSSProperties,
+  whyText: {
+    fontSize: "11.5px",
+    lineHeight: "1.55",
+    color: NAVY_SOFT,
+    margin: "5px 0 11px",
+  } as React.CSSProperties,
+
+  metaGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "6px",
+  } as React.CSSProperties,
+  metaItem: {
+    background: CARD,
+    border: `1px solid ${BORDER}`,
+    padding: "7px",
+    borderRadius: "6px",
+  } as React.CSSProperties,
+  metaLabel: {
+    display: "block",
+    fontSize: "7.5px",
+    color: MUTED,
+    letterSpacing: "0.06em",
+    marginBottom: "3px",
+    textTransform: "uppercase" as const,
+  } as React.CSSProperties,
+  metaValue: {
+    display: "block",
+    fontSize: "10px",
+    fontWeight: "700",
+    color: NAVY,
+    lineHeight: "1.3",
+  } as React.CSSProperties,
+
+  subsectionNote: {
+    marginTop: "8px",
+    paddingTop: "7px",
+    borderTop: `1px dotted ${BORDER}`,
+    fontSize: "9.5px",
+    lineHeight: "1.45",
+    color: MUTED,
+  } as React.CSSProperties,
+
+  legalLoading: {
+    padding: "30px 5px",
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "center",
+    gap: "12px",
+    color: MUTED,
     fontSize: "11px",
-    color: "#ef4444",
-    marginTop: "6px",
-    fontWeight: "500",
+    textAlign: "center" as const,
+  } as React.CSSProperties,
+
+  legalSpinner: {
+    width: "20px",
+    height: "20px",
+    border: `2px solid ${TEAL_TINT}`,
+    borderTop: `2px solid ${TEAL}`,
+    borderRadius: "50%",
+    animation: "legalSpin .8s linear infinite",
+  } as React.CSSProperties,
+
+  legalError: {
+    padding: "12px",
+    background: "#FBEBEA",
+    color: RED,
+    fontSize: "11px",
+    lineHeight: "1.5",
+    marginBottom: "12px",
+    borderRadius: "8px",
+  } as React.CSSProperties,
+
+  retryBtn: {
+    display: "block",
+    marginTop: "8px",
+    border: `1px solid ${RED}`,
+    background: "transparent",
+    color: RED,
+    cursor: "pointer",
+    padding: "5px 9px",
+    borderRadius: "5px",
+    fontSize: "11px",
+    fontWeight: "600",
+  } as React.CSSProperties,
+
+  noLegalResults: {
+    padding: "20px 5px",
+    color: MUTED,
+    fontSize: "11px",
+    lineHeight: "1.5",
+  } as React.CSSProperties,
+
+  refreshLegalBtn: {
+    width: "100%",
+    background: "transparent",
+    border: `1px solid ${NAVY}`,
+    color: NAVY,
+    borderRadius: "7px",
+    padding: "9px",
+    fontSize: "11px",
+    fontWeight: "700",
+    cursor: "pointer",
+    marginTop: "4px",
   } as React.CSSProperties,
 };
