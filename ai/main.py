@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from agents.fir_agent import chat, sessions
+from agents.legal_recommender import recommend_sections
 
 app = FastAPI(title="KAVACH AI Engine")
 
@@ -9,6 +10,9 @@ class ChatRequest(BaseModel):
     message: str
     language: str = "en"
 
+class LegalRecommendationRequest(BaseModel):
+    incident_description: str
+
 @app.post("/agent/fir/chat")
 def fir_chat(request: ChatRequest):
     return chat(request.session_id, request.message, request.language)
@@ -16,3 +20,7 @@ def fir_chat(request: ChatRequest):
 @app.get("/agent/fir/session/{session_id}")
 def get_session(session_id: str):
     return sessions.get(session_id, {})
+
+@app.post("/agent/legal/recommend")
+def legal_recommend(request: LegalRecommendationRequest):
+    return recommend_sections(request.incident_description)
