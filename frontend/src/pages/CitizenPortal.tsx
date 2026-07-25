@@ -63,8 +63,13 @@ const translations = {
       "Your complaint has been received and assigned to the nearest available officer.",
     saveRef: "Save this reference number to track your complaint status.",
     returnHome: "Return to Home",
-    fillAlert: "Please fill in incident type, location and description.",
+    fillAlert:
+      "Please fill in complainant name, victim name, incident type, location and description.",
     failAlert: "Submission failed. Please try again.",
+    complainantName: "Complainant's Name *",
+    complainantPlaceholder: "Enter the name of the person filing the complaint",
+    victimName: "Victim's Name *",
+    victimPlaceholder: "Enter the name of the victim",
     switchLang: "ಕನ್ನಡ",
   },
   kn: {
@@ -101,8 +106,13 @@ const translations = {
     saveRef:
       "ನಿಮ್ಮ ದೂರಿನ ಸ್ಥಿತಿಯನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಲು ಈ ಉಲ್ಲೇಖ ಸಂಖ್ಯೆಯನ್ನು ಉಳಿಸಿ.",
     returnHome: "ಮುಖಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ",
-    fillAlert: "ದಯವಿಟ್ಟು ಘಟನೆಯ ಮಾದರಿ, ಸ್ಥಳ ಮತ್ತು ವಿವರಣೆಯನ್ನು ಭರ್ತಿ ಮಾಡಿ.",
+    fillAlert:
+      "ದಯವಿಟ್ಟು ದೂರುದಾರರ ಹೆಸರು, ಬಲಿಪಶುವಿನ ಹೆಸರು, ಘಟನೆಯ ಮಾದರಿ, ಸ್ಥಳ ಮತ್ತು ವಿವರಣೆಯನ್ನು ಭರ್ತಿ ಮಾಡಿ.",
     failAlert: "ಸಲ್ಲಿಕೆ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+    complainantName: "ದೂರುದಾರರ ಹೆಸರು *",
+    complainantPlaceholder: "ದೂರು ಸಲ್ಲಿಸುವ ವ್ಯಕ್ತಿಯ ಹೆಸರನ್ನು ನಮೂದಿಸಿ",
+    victimName: "ಬಲಿಪಶುವಿನ ಹೆಸರು *",
+    victimPlaceholder: "ಬಲಿಪಶುವಿನ ಹೆಸರನ್ನು ನಮೂದಿಸಿ",
     switchLang: "English",
   },
 };
@@ -124,6 +134,8 @@ export default function CitizenPortal() {
   };
 
   const [form, setForm] = useState({
+    complainant_name: user?.name || "",
+    victim_name: "",
     incident_type: "",
     incident_date: "",
     incident_time: "",
@@ -140,6 +152,8 @@ export default function CitizenPortal() {
 
   const handleSubmit = async () => {
     if (
+      !form.complainant_name ||
+      !form.victim_name ||
       !form.incident_type ||
       !form.incident_description ||
       !form.incident_location
@@ -250,6 +264,42 @@ export default function CitizenPortal() {
 
         {/* Form fields */}
         <div style={S.grid}>
+          {/* Complainant + Victim */}
+          <div>
+            <label style={S.label}>{t.complainantName}</label>
+            <input
+              style={S.input}
+              placeholder={t.complainantPlaceholder}
+              value={form.complainant_name}
+              onChange={(e) => update("complainant_name", e.target.value)}
+              onFocus={(e) => {
+                e.target.style.borderColor = "#0E8C8C";
+                e.target.style.boxShadow = "0 0 0 3px rgba(14,140,140,0.12)";
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = "#E3E9EC";
+                e.target.style.boxShadow = "none";
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={S.label}>{t.victimName}</label>
+            <input
+              style={S.input}
+              placeholder={t.victimPlaceholder}
+              value={form.victim_name}
+              onChange={(e) => update("victim_name", e.target.value)}
+              onFocus={(e) => {
+                e.target.style.borderColor = "#0E8C8C";
+                e.target.style.boxShadow = "0 0 0 3px rgba(14,140,140,0.12)";
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = "#E3E9EC";
+                e.target.style.boxShadow = "none";
+              }}
+            />
+          </div>
           {/* Incident Type */}
           <div style={{ gridColumn: "1 / -1" }}>
             <label style={S.label}>{t.incidentType}</label>
