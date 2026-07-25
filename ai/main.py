@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from agents.fir_agent import chat, sessions
-
 app = FastAPI(title="KAVACH AI Engine")
 
 class ChatRequest(BaseModel):

@@ -9,6 +9,7 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 FIR_FIELDS = [
     "complainant_name",
     "complainant_contact",
+    "victim_name", 
     "complainant_address",
     "incident_date",
     "incident_time",
@@ -44,13 +45,13 @@ def extract_data(history: list) -> dict:
         messages=[{
             "role": "user",
             "content": f"""Extract FIR information from this conversation into JSON.
-Only include fields clearly mentioned. Return ONLY raw JSON, no markdown.
+Only include fields that were clearly mentioned.
 
 Conversation:
 {conversation_text}
 
-Keys to extract (omit if not mentioned):
-complainant_name, complainant_contact, complainant_address,
+Return ONLY a JSON object with these keys (omit if not mentioned):
+complainant_name, victim_name, complainant_contact, complainant_address,
 incident_date, incident_time, incident_location,
 incident_description, accused_description, witnesses,
 stolen_property, injuries_reported"""
@@ -78,19 +79,26 @@ def build_system_prompt(collected_data: dict, remaining: list, language: str) ->
     else:
         return f"""
         You are KAVACH, an AI assistant for the Karnataka State Police helping lodge an FIR.
-        
-        Your job:
-        - Ask ONE question at a time, never multiple
-        - Be empathetic — the person may be distressed
-        - If the user is vague, ask a gentle follow-up
-        - Once all fields are collected, summarize the FIR and ask for confirmation
-        - Keep responses short and clear
-        - If the user speaks in Kannada, switch to Kannada
-        
-        Already collected: {json.dumps(collected_data, ensure_ascii=False)}
-        Still needed: {remaining}
-        
-        {"All information collected. Now summarize the FIR clearly and ask the user to confirm." if not remaining else ""}
+
+Your job is to collect the following information conversationally, one question at a time:
+- Complainant name (person filing the complaint) and contact
+- Victim name (person who was harmed — may be same as complainant)
+- Complainant address
+- Date, time, and location of incident
+- Full description of what happened
+- Description of accused (if known)
+- Witnesses (if any)
+- Stolen property or injuries (if applicable)
+
+Rules:
+1. Ask ONE question at a time. Never overwhelm.
+2. After getting complainant name, immediately ask: "Is the victim the same person, or someone else?"
+3. Be empathetic — the person may be distressed.
+4. If the user is vague, ask a gentle follow-up.
+5. Once all fields are collected, summarize and ask for confirmation.
+
+Current collected data: {collected_data}
+Fields still needed: {remaining}
         """
 
 def chat(session_id: str, user_message: str, language: str = "en") -> dict:

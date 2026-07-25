@@ -4,6 +4,8 @@ from pydantic import BaseModel
 from typing import Optional, List
 import httpx, uuid, json
 from datetime import datetime
+from app.schemas.fir import TTSRequest, TTSResponse
+from app.schemas.tts import synthesize_speech
 
 app = FastAPI(title="Prakalpa Backend")
 app.add_middleware(CORSMiddleware,
@@ -47,6 +49,8 @@ def login(req: LoginRequest):
 class ComplaintSubmit(BaseModel):
     citizen_username: str
     citizen_name: str
+    complainant_name: str = ""
+    victim_name: str = ""
     mode: str 
     incident_type: Optional[str] = None
     incident_date: Optional[str] = None
@@ -66,8 +70,10 @@ class ComplaintSubmit(BaseModel):
 @app.post("/api/v1/complaints/submit")
 def submit_complaint(complaint: ComplaintSubmit):
     complaint_id = f"CMP-{str(uuid.uuid4())[:8].upper()}"
+    resolved_name = complaint.complainant_name or complaint.citizen_name or "Unknown"
     complaints[complaint_id] = {
         **complaint.dict(),
+        "citizen_name": resolved_name,
         "complaint_id": complaint_id,
         "status": "PENDING",
         "submitted_at": datetime.now().isoformat(),
@@ -116,3 +122,8 @@ async def fir_chat(request: ChatRequest):
     async with httpx.AsyncClient() as client:
         response = await client.post("http://127.0.0.1:8001/agent/fir/chat",json=request.dict(), timeout=30.0)
     return response.json()
+
+@app.post("/api/v1/fir/tts", response_model=TTSResponse)
+async def fir_tts(request: TTSRequest):
+    result = synthesize_speech(request.text, request.language)
+    return TTSResponse(**result)
