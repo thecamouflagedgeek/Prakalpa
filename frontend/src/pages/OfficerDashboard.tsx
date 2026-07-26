@@ -505,6 +505,17 @@ function NavIcon({ name, color }: { name: string; color: string }) {
           />
         </svg>
       );
+    case "bolt":
+      return (
+        <svg {...common}>
+          <path
+            d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"
+            stroke={color}
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
     case "logout":
       return (
         <svg {...common}>

@@ -279,7 +279,7 @@ export default function BNSRecommendation() {
               key: "analytics",
               label: t.explainableAI,
               icon: "chart",
-              path: "/dash",
+              path: "/explain",
             },
             {
               key: "reports",

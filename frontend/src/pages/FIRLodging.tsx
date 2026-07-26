@@ -6,6 +6,8 @@ import {
   useTranslation,
   I18nextProvider,
 } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../store/authStore";
 
 // 1. Define Translation Resources
 const resources = {
@@ -159,8 +161,21 @@ const Icon = ({
   </svg>
 );
 
+// ---------- KAVACH design tokens (shared across pages) ----------
+const NAVY = "#152A43";
+const NAVY_DEEP = "#0E2438";
+const TEAL = "#0E8C8C";
+const TEAL_DARK = "#0A6E6E";
+const TEAL_TINT = "#E1F5F5";
+const BORDER = "#E3E9EC";
+const BG_SECTION = "#EAF2F5";
+const TEXT = "#5B6B7A";
+const MUTED = "#8A97A3";
+
 function FIRLodgingContent() {
   const { t, i18n: currentI18n } = useTranslation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -246,29 +261,47 @@ function FIRLodgingContent() {
 
   const dm = darkMode;
   const C = {
-    navy: "#132542",
-    teal: "#16b7a4",
-    tealLight: "#e5f7f4",
-    tealSoft: "#f0fbf9",
+    navy: NAVY,
+    teal: TEAL,
+    tealLight: TEAL_TINT,
+    tealSoft: TEAL_TINT,
     white: "#ffffff",
-    background: dm ? "#101722" : "#f7f9fa",
+    background: dm ? NAVY_DEEP : BG_SECTION,
     sidebar: dm ? "#111b29" : "#ffffff",
     card: dm ? "#172334" : "#ffffff",
-    border: dm ? "#263547" : "#e5ebef",
-    text: dm ? "#f1f5f9" : "#132542",
-    muted: dm ? "#94a3b8" : "#8090a5",
-    softText: dm ? "#aebaca" : "#68788d",
-    green: "#16a34a",
+    border: dm ? "#263547" : BORDER,
+    text: dm ? "#f1f5f9" : NAVY,
+    muted: dm ? "#94a3b8" : MUTED,
+    softText: dm ? "#aebaca" : TEXT,
   };
 
+  // NOTE: paths below are best-guess placeholders — update to match your
+  // actual router config. "AI Analysis" and "Legal Library" are mapped to
+  // the Explainable AI and BNS Section Recommender pages since those are
+  // the closest existing equivalents.
   const navItems = [
-    { label: t("nav.firLodging"), active: true },
-    { label: t("nav.aiAnalysis"), active: false },
-    { label: t("nav.crimeHotspots"), active: false },
-    { label: t("nav.networkGraph"), active: false },
-    { label: t("nav.caseHistory"), active: false },
-    { label: t("nav.legalLibrary"), active: false },
+    { label: t("nav.firLodging"), active: true, path: "/officer/fir-lodging" },
+    { label: t("nav.aiAnalysis"), active: false, path: "/officer/explain" },
+    { label: t("nav.crimeHotspots"), active: false, path: "/dash" },
+    {
+      label: t("nav.networkGraph"),
+      active: false,
+      path: "/officer/network-graph",
+    },
+    {
+      label: t("nav.caseHistory"),
+      active: false,
+      path: "/officer/case-history",
+    },
+    {
+      label: t("nav.legalLibrary"),
+      active: false,
+      path: "/bns-recommendation",
+    },
   ];
+
+  const officerName = user?.name || "Unknown Officer";
+  const officerBadge = user?.badge || "";
 
   return (
     <div
@@ -278,7 +311,7 @@ function FIRLodgingContent() {
         display: "flex",
         background: C.background,
         color: C.text,
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "'Inter', 'Segoe UI', sans-serif",
       }}
     >
       {/* SIDEBAR */}
@@ -287,49 +320,59 @@ function FIRLodgingContent() {
           width: "270px",
           minWidth: "270px",
           minHeight: "100vh",
-          background: C.sidebar,
+          background: dm
+            ? C.sidebar
+            : `linear-gradient(180deg, ${NAVY} 0%, ${NAVY_DEEP} 100%)`,
           borderRight: `1px solid ${C.border}`,
           display: "flex",
           flexDirection: "column",
-          padding: "28px 18px",
+          padding: "24px 18px",
         }}
       >
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "12px",
-            padding: "0 10px",
-            marginBottom: "52px",
+            gap: "10px",
+            padding: "0 8px",
+            marginBottom: "30px",
           }}
         >
           <div
             style={{
-              width: "45px",
-              height: "45px",
-              borderRadius: "14px",
-              background: C.tealLight,
-              color: C.teal,
+              width: "36px",
+              height: "36px",
+              borderRadius: "10px",
+              background: `linear-gradient(150deg, ${TEAL}, ${NAVY})`,
+              color: "#FFFFFF",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              flexShrink: 0,
             }}
           >
-            <Icon size={19}>
+            <Icon size={17}>
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </Icon>
           </div>
           <div>
-            <div style={{ fontSize: "21px", fontWeight: 800, color: C.navy }}>
-              Suraj
+            <div
+              style={{
+                fontFamily: "'Poppins', 'Segoe UI', sans-serif",
+                fontSize: "16px",
+                fontWeight: 700,
+                color: "#FFFFFF",
+              }}
+            >
+              KAVACH
             </div>
             <div
               style={{
-                fontSize: "10px",
+                fontSize: "9.5px",
                 fontWeight: 700,
-                color: C.muted,
-                letterSpacing: "1.2px",
-                marginTop: "3px",
+                color: "rgba(255,255,255,0.45)",
+                letterSpacing: "0.08em",
+                marginTop: "2px",
               }}
             >
               {t("platformTitle")}
@@ -341,10 +384,10 @@ function FIRLodgingContent() {
           style={{
             width: "100%",
             border: "none",
-            background: C.navy,
-            color: C.white,
-            borderRadius: "12px",
-            padding: "13px",
+            background: TEAL,
+            color: "#FFFFFF",
+            borderRadius: "10px",
+            padding: "12px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -352,8 +395,9 @@ function FIRLodgingContent() {
             fontSize: "13px",
             fontWeight: 700,
             cursor: "pointer",
-            marginBottom: "30px",
-            boxShadow: "0 10px 22px rgba(19,37,66,0.16)",
+            marginBottom: "24px",
+            fontFamily: "'Inter', sans-serif",
+            boxShadow: "0 10px 22px rgba(14,140,140,0.25)",
           }}
         >
           <Icon size={16}>
@@ -363,114 +407,214 @@ function FIRLodgingContent() {
           {t("newSession")}
         </button>
 
-        <p
-          style={{
-            fontSize: "10px",
-            color: C.muted,
-            fontWeight: 800,
-            letterSpacing: "1.2px",
-            margin: "0 12px 12px",
-          }}
-        >
-          PLATFORM
-        </p>
-
-        {navItems.map((item) => (
-          <div
-            key={item.label}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              padding: "13px 14px",
-              borderRadius: "12px",
-              marginBottom: "5px",
-              color: item.active ? C.teal : C.softText,
-              background: item.active ? C.tealLight : "transparent",
-              fontSize: "13px",
-              fontWeight: item.active ? 700 : 500,
-              cursor: "pointer",
-            }}
-          >
-            <span
-              style={{
-                width: "7px",
-                height: "7px",
-                borderRadius: "50%",
-                background: item.active ? C.teal : C.muted,
-              }}
-            />
-            {item.label}
-          </div>
-        ))}
-
-        {/* SECURITY CARD */}
         <div
           style={{
-            marginTop: "auto",
-            padding: "17px",
-            borderRadius: "16px",
-            background: C.tealSoft,
-            border: `1px solid ${dm ? "#244c4a" : "#d1f0eb"}`,
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              color: C.teal,
-              fontSize: "12px",
-              fontWeight: 800,
-              marginBottom: "8px",
-            }}
-          >
-            <Icon size={16}>
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </Icon>
-            {t("security.channel")}
-          </div>
           <p
             style={{
-              fontSize: "11px",
-              lineHeight: 1.6,
-              color: C.softText,
-              marginBottom: "12px",
+              fontSize: "10px",
+              color: "rgba(255,255,255,0.4)",
+              fontWeight: 700,
+              letterSpacing: "0.12em",
+              margin: "0 10px 10px",
+              textTransform: "uppercase",
             }}
           >
-            {t("security.desc")}
+            Platform
           </p>
+
+          {navItems.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={() => navigate(item.path)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "11px",
+                padding: "10px 12px",
+                borderRadius: "8px",
+                marginBottom: "3px",
+                border: "none",
+                color: item.active ? "#FFFFFF" : "rgba(255,255,255,0.65)",
+                background: item.active
+                  ? "rgba(14,140,140,0.22)"
+                  : "transparent",
+                fontSize: "13.5px",
+                fontWeight: item.active ? 600 : 500,
+                cursor: "pointer",
+                fontFamily: "'Inter', sans-serif",
+                textAlign: "left",
+                width: "100%",
+              }}
+            >
+              <span
+                style={{
+                  width: "6px",
+                  height: "6px",
+                  borderRadius: "50%",
+                  background: item.active ? TEAL : "rgba(255,255,255,0.35)",
+                  flexShrink: 0,
+                }}
+              />
+              {item.label}
+            </button>
+          ))}
+
+          {/* SECURITY CARD */}
           <div
             style={{
-              height: "5px",
-              borderRadius: "5px",
-              background: dm ? "#254c4b" : "#ccebe6",
+              marginTop: "auto",
+              padding: "16px",
+              borderRadius: "12px",
+              background: "rgba(14,140,140,0.14)",
+              border: `1px solid rgba(14,140,140,0.3)`,
             }}
           >
             <div
               style={{
-                height: "100%",
-                width: `${progress.percent}%`,
-                background: C.teal,
-                borderRadius: "5px",
-                transition: "width 0.5s ease",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                color: TEAL,
+                fontSize: "11.5px",
+                fontWeight: 800,
+                marginBottom: "8px",
               }}
-            />
+            >
+              <Icon size={15}>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </Icon>
+              {t("security.channel")}
+            </div>
+            <p
+              style={{
+                fontSize: "10.5px",
+                lineHeight: 1.6,
+                color: "rgba(255,255,255,0.6)",
+                marginBottom: "12px",
+              }}
+            >
+              {t("security.desc")}
+            </p>
+            <div
+              style={{
+                height: "5px",
+                borderRadius: "5px",
+                background: "rgba(255,255,255,0.12)",
+              }}
+            >
+              <div
+                style={{
+                  height: "100%",
+                  width: `${progress.percent}%`,
+                  background: TEAL,
+                  borderRadius: "5px",
+                  transition: "width 0.5s ease",
+                }}
+              />
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "10px",
+                color: "rgba(255,255,255,0.5)",
+                marginTop: "7px",
+              }}
+            >
+              <span>{t("security.completion")}</span>
+              <span>
+                {progress.filled}/{progress.total}
+              </span>
+            </div>
           </div>
+        </div>
+
+        {/* OFFICER FOOTER */}
+        <div
+          style={{
+            borderTop: "1px solid rgba(255,255,255,0.12)",
+            paddingTop: "16px",
+            marginTop: "16px",
+          }}
+        >
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
-              fontSize: "10px",
-              color: C.softText,
-              marginTop: "7px",
+              alignItems: "center",
+              gap: "10px",
+              padding: "0 8px",
+              marginBottom: "12px",
             }}
           >
-            <span>{t("security.completion")}</span>
-            <span>
-              {progress.filled}/{progress.total}
-            </span>
+            <div
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "50%",
+                background: "rgba(255,255,255,0.12)",
+                color: "#FFFFFF",
+                fontSize: "13px",
+                fontWeight: 600,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              {(officerName || "O").charAt(0).toUpperCase()}
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: "12.5px",
+                  fontWeight: 600,
+                  color: "#FFFFFF",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {officerName}
+              </div>
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: "rgba(255,255,255,0.5)",
+                  marginTop: "1px",
+                }}
+              >
+                {officerBadge}
+              </div>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              logout();
+              navigate("/");
+            }}
+            style={{
+              width: "100%",
+              padding: "9px 12px",
+              background: "rgba(255,255,255,0.06)",
+              border: "none",
+              borderRadius: "8px",
+              color: "rgba(255,255,255,0.8)",
+              fontSize: "12.5px",
+              fontWeight: 500,
+              cursor: "pointer",
+              fontFamily: "'Inter', sans-serif",
+            }}
+          >
+            Sign out
+          </button>
         </div>
       </aside>
 
@@ -510,16 +654,17 @@ function FIRLodgingContent() {
             >
               <span>{t("header.kavach")}</span>
               <span>/</span>
-              <span style={{ color: C.teal, fontWeight: 700 }}>
+              <span style={{ color: TEAL, fontWeight: 700 }}>
                 {t("header.firLodging")}
               </span>
             </div>
             <h1
               style={{
                 margin: 0,
-                fontSize: "22px",
-                color: C.navy,
-                fontWeight: 800,
+                fontFamily: "'Poppins', 'Segoe UI', sans-serif",
+                fontSize: "20px",
+                color: NAVY,
+                fontWeight: 700,
               }}
             >
               {t("header.title")}
@@ -531,20 +676,21 @@ function FIRLodgingContent() {
             <button
               onClick={handleLanguageToggle}
               style={{
-                padding: "9px 14px",
-                borderRadius: "10px",
-                border: `1px solid ${C.border}`,
-                background: C.card,
-                color: C.text,
+                padding: "8px 14px",
+                borderRadius: "20px",
+                border: `1px solid ${TEAL}`,
+                background: TEAL_TINT,
+                color: TEAL_DARK,
                 cursor: "pointer",
                 fontSize: "12px",
                 fontWeight: 600,
                 display: "flex",
                 alignItems: "center",
                 gap: "6px",
+                fontFamily: "'Inter', sans-serif",
               }}
             >
-              <Icon size={16}>
+              <Icon size={14}>
                 <circle cx="12" cy="12" r="10" />
                 <line x1="2" y1="12" x2="22" y2="12" />
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
@@ -556,8 +702,8 @@ function FIRLodgingContent() {
             <button
               onClick={() => setDarkMode(!dm)}
               style={{
-                width: "38px",
-                height: "38px",
+                width: "36px",
+                height: "36px",
                 borderRadius: "10px",
                 border: `1px solid ${C.border}`,
                 background: C.card,
@@ -596,6 +742,8 @@ function FIRLodgingContent() {
                 justifyContent: "space-between",
                 alignItems: "flex-end",
                 marginBottom: "28px",
+                flexWrap: "wrap",
+                gap: "14px",
               }}
             >
               <div>
@@ -604,7 +752,7 @@ function FIRLodgingContent() {
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
-                    color: C.teal,
+                    color: TEAL,
                     fontSize: "11px",
                     fontWeight: 800,
                     marginBottom: "10px",
@@ -615,7 +763,7 @@ function FIRLodgingContent() {
                       width: "8px",
                       height: "8px",
                       borderRadius: "50%",
-                      background: C.teal,
+                      background: TEAL,
                     }}
                   />
                   {t("content.liveAssistance")}
@@ -623,15 +771,20 @@ function FIRLodgingContent() {
                 <h2
                   style={{
                     margin: 0,
-                    fontSize: "30px",
-                    fontWeight: 800,
-                    color: C.navy,
+                    fontFamily: "'Poppins', 'Segoe UI', sans-serif",
+                    fontSize: "26px",
+                    fontWeight: 700,
+                    color: NAVY,
                   }}
                 >
                   {t("content.heading")}
                 </h2>
                 <p
-                  style={{ marginTop: "8px", fontSize: "14px", color: C.muted }}
+                  style={{
+                    marginTop: "8px",
+                    fontSize: "13.5px",
+                    color: C.muted,
+                  }}
                 >
                   {t("content.subheading")}
                 </p>
@@ -639,8 +792,8 @@ function FIRLodgingContent() {
 
               <div
                 style={{
-                  padding: "11px 16px",
-                  borderRadius: "12px",
+                  padding: "10px 16px",
+                  borderRadius: "10px",
                   background: C.card,
                   border: `1px solid ${C.border}`,
                   color: C.softText,
@@ -670,10 +823,10 @@ function FIRLodgingContent() {
                       <div
                         style={{
                           maxWidth: "65%",
-                          padding: "15px 18px",
-                          background: C.navy,
+                          padding: "14px 18px",
+                          background: NAVY,
                           color: "#fff",
-                          borderRadius: "18px 18px 4px 18px",
+                          borderRadius: "16px 16px 4px 16px",
                           fontSize: "14px",
                           lineHeight: 1.7,
                         }}
@@ -691,18 +844,18 @@ function FIRLodgingContent() {
                     >
                       <div
                         style={{
-                          width: "42px",
-                          height: "42px",
-                          borderRadius: "13px",
-                          background: C.tealLight,
-                          color: C.teal,
+                          width: "38px",
+                          height: "38px",
+                          borderRadius: "11px",
+                          background: TEAL_TINT,
+                          color: TEAL_DARK,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           flexShrink: 0,
                         }}
                       >
-                        <Icon size={19}>
+                        <Icon size={17}>
                           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                         </Icon>
                       </div>
@@ -711,11 +864,11 @@ function FIRLodgingContent() {
                           maxWidth: "75%",
                           background: C.card,
                           border: `1px solid ${C.border}`,
-                          borderRadius: "18px 18px 18px 5px",
+                          borderRadius: "16px 16px 16px 5px",
                           overflow: "hidden",
                         }}
                       >
-                        <div style={{ padding: "18px 20px" }}>
+                        <div style={{ padding: "16px 20px" }}>
                           <p
                             style={{
                               margin: 0,
@@ -753,7 +906,7 @@ function FIRLodgingContent() {
                 gap: "10px",
                 background: C.card,
                 border: `1px solid ${C.border}`,
-                borderRadius: "15px",
+                borderRadius: "14px",
                 padding: "10px 12px 10px 16px",
               }}
             >
@@ -770,17 +923,18 @@ function FIRLodgingContent() {
                   background: "transparent",
                   color: C.text,
                   fontSize: "14px",
+                  fontFamily: "'Inter', sans-serif",
                 }}
               />
               <button
                 onClick={sendMessage}
                 disabled={loading || !input.trim()}
                 style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "11px",
+                  width: "38px",
+                  height: "38px",
+                  borderRadius: "10px",
                   border: "none",
-                  background: loading || !input.trim() ? C.border : C.teal,
+                  background: loading || !input.trim() ? C.border : TEAL,
                   color: "#fff",
                   cursor: loading || !input.trim() ? "not-allowed" : "pointer",
                   display: "flex",

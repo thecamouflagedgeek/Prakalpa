@@ -142,25 +142,39 @@ export default function ExplainableAI() {
             {
               key: "dashboard",
               label: "Dashboard",
+              icon: "grid",
               path: "/officer/dashboard",
             },
             {
               key: "cases",
               label: "BNS Sections",
-              path: "/bns-recommendation",
+              icon: "case",
+              path: "/bns",
             },
-            { key: "districts", label: "Crime Hotspot", path: "/dash" },
+            {
+              key: "districts",
+              label: "Crime Hotspot",
+              icon: "map",
+              path: "/dash",
+            },
             {
               key: "analytics",
               label: "Explainable AI",
-              path: "/officer/explain",
+              icon: "chart",
+              path: "/explain",
             },
             {
               key: "reports",
               label: "Generate report",
+              icon: "bolt",
               path: "/generate-report",
             },
-            { key: "settings", label: "Settings", path: "/settings" },
+            {
+              key: "settings",
+              label: "Settings",
+              icon: "gear",
+              path: "/settings",
+            },
           ].map((item) => (
             <button
               key={item.key}
@@ -168,6 +182,12 @@ export default function ExplainableAI() {
               onClick={() => navigate(item.path)}
               style={S.navItem(item.key === "analytics")}
             >
+              <NavIcon
+                name={item.icon}
+                color={
+                  item.key === "cases" ? "#FFFFFF" : "rgba(255,255,255,0.55)"
+                }
+              />
               {item.label}
             </button>
           ))}
@@ -191,6 +211,7 @@ export default function ExplainableAI() {
             }}
             style={S.logoutBtn}
           >
+            <NavIcon name="logout" color="rgba(255,255,255,0.7)" />
             Sign out
           </button>
         </div>
@@ -473,6 +494,143 @@ function ShieldIcon({
       />
     </svg>
   );
+}
+
+function NavIcon({ name, color }: { name: string; color: string }) {
+  const common = {
+    width: 17,
+    height: 17,
+    viewBox: "0 0 24 24",
+    fill: "none" as const,
+  };
+  switch (name) {
+    case "grid":
+      return (
+        <svg {...common}>
+          <rect
+            x="4"
+            y="4"
+            width="7"
+            height="7"
+            rx="1.4"
+            stroke={color}
+            strokeWidth="1.7"
+          />
+          <rect
+            x="13"
+            y="4"
+            width="7"
+            height="7"
+            rx="1.4"
+            stroke={color}
+            strokeWidth="1.7"
+          />
+          <rect
+            x="4"
+            y="13"
+            width="7"
+            height="7"
+            rx="1.4"
+            stroke={color}
+            strokeWidth="1.7"
+          />
+          <rect
+            x="13"
+            y="13"
+            width="7"
+            height="7"
+            rx="1.4"
+            stroke={color}
+            strokeWidth="1.7"
+          />
+        </svg>
+      );
+    case "case":
+      return (
+        <svg {...common}>
+          <rect
+            x="3"
+            y="8"
+            width="18"
+            height="12"
+            rx="1.5"
+            stroke={color}
+            strokeWidth="1.7"
+          />
+          <path
+            d="M8 8V6a2 2 0 012-2h4a2 2 0 012 2v2"
+            stroke={color}
+            strokeWidth="1.7"
+          />
+        </svg>
+      );
+    case "map":
+      return (
+        <svg {...common}>
+          <path
+            d="M9 4l-5 2v14l5-2 6 2 5-2V4l-5 2-6-2z"
+            stroke={color}
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+          />
+          <path d="M9 4v14M15 6v14" stroke={color} strokeWidth="1.6" />
+        </svg>
+      );
+    case "chart":
+      return (
+        <svg {...common}>
+          <path
+            d="M4 20V10M11 20V4M18 20v-7"
+            stroke={color}
+            strokeWidth="1.9"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
+    case "bolt":
+      return (
+        <svg {...common}>
+          <path
+            d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"
+            stroke={color}
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case "gear":
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="3" stroke={color} strokeWidth="1.6" />
+          <path
+            d="M19 12a7 7 0 00-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 00-2-1.2L14.2 3H9.8l-.4 2.6a7 7 0 00-2 1.2l-2.3-.9-2 3.4 2 1.5A7 7 0 005 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-.9c.6.5 1.3.9 2 1.2l.4 2.6h4.4l.4-2.6c.7-.3 1.4-.7 2-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"
+            stroke={color}
+            strokeWidth="1.3"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case "logout":
+      return (
+        <svg {...common}>
+          <path
+            d="M9 4H5a1 1 0 00-1 1v14a1 1 0 001 1h4"
+            stroke={color}
+            strokeWidth="1.6"
+            strokeLinecap="round"
+          />
+          <path
+            d="M15 16l4-4-4-4M19 12H9"
+            stroke={color}
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    default:
+      return null;
+  }
 }
 
 // ---------- Styles (matching KAVACH's navy/teal system) ----------

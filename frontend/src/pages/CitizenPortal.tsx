@@ -2,6 +2,18 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuthStore } from "../store/authStore";
+import {
+  Home,
+  FileText,
+  Search,
+  LifeBuoy,
+  Phone,
+  Settings as SettingsIcon,
+  Users,
+  Paperclip,
+  MapPin,
+  Calendar,
+} from "lucide-react";
 
 const INCIDENT_TYPES_EN = [
   "Theft",
@@ -32,6 +44,7 @@ const INCIDENT_TYPES_KN = [
 const translations = {
   en: {
     pageTitle: "File a Complaint",
+    eyebrow: "Citizen Portal",
     welcome: "Welcome,",
     signOut: "Sign out",
     mode: "Mode",
@@ -71,9 +84,20 @@ const translations = {
     victimName: "Victim's Name *",
     victimPlaceholder: "Enter the name of the victim",
     switchLang: "ಕನ್ನಡ",
+    sectionComplainant: "Complainant & Victim",
+    sectionIncident: "Incident Details",
+    sectionAdditional: "Additional Information",
+    sectionContact: "Contact Information",
+    navHome: "Home",
+    navFileComplaint: "File a Complaint",
+    navTrackStatus: "Track FIR Status",
+    navInformation: "Know Your Rights",
+    navEmergency: "Emergency Contacts",
+    navSettings: "Settings",
   },
   kn: {
     pageTitle: "ದೂರು ದಾಖಲಿಸಿ",
+    eyebrow: "ನಾಗರಿಕ ಪೋರ್ಟಲ್",
     welcome: "ಸ್ವಾಗತ,",
     signOut: "ಹೊರಹೋಗಿ",
     mode: "ವಿಧಾನ",
@@ -114,6 +138,16 @@ const translations = {
     victimName: "ಬಲಿಪಶುವಿನ ಹೆಸರು *",
     victimPlaceholder: "ಬಲಿಪಶುವಿನ ಹೆಸರನ್ನು ನಮೂದಿಸಿ",
     switchLang: "English",
+    sectionComplainant: "ದೂರುದಾರರು ಮತ್ತು ಬಲಿಪಶು",
+    sectionIncident: "ಘಟನೆಯ ವಿವರಗಳು",
+    sectionAdditional: "ಹೆಚ್ಚುವರಿ ಮಾಹಿತಿ",
+    sectionContact: "ಸಂಪರ್ಕ ಮಾಹಿತಿ",
+    navHome: "ಮುಖಪುಟ",
+    navFileComplaint: "ದೂರು ದಾಖಲಿಸಿ",
+    navTrackStatus: "ಎಫ್‌ಐಆರ್ ಸ್ಥಿತಿ ಟ್ರ್ಯಾಕ್ ಮಾಡಿ",
+    navInformation: "ನಿಮ್ಮ ಹಕ್ಕುಗಳನ್ನು ತಿಳಿಯಿರಿ",
+    navEmergency: "ತುರ್ತು ಸಂಪರ್ಕಗಳು",
+    navSettings: "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
   },
 };
 
@@ -183,26 +217,125 @@ export default function CitizenPortal() {
 
   const S = styles;
 
+  // ---- Sidebar (shared between form view and success view) ----
+  // NOTE: route paths below are best-guess placeholders — update to match
+  // your actual router config for the citizen-facing pages.
+  const navItems = [
+    { key: "home", label: t.navHome, icon: Home, path: "/citizen/dashboard" },
+    {
+      key: "complaint",
+      label: t.navFileComplaint,
+      icon: FileText,
+      path: "/citizen/complaint",
+    },
+    {
+      key: "track",
+      label: t.navTrackStatus,
+      icon: Search,
+      path: "/citizen/track",
+    },
+    {
+      key: "information",
+      label: t.navInformation,
+      icon: LifeBuoy,
+      path: "/citizen/information",
+    },
+    {
+      key: "emergency",
+      label: t.navEmergency,
+      icon: Phone,
+      path: "/citizen/emergency",
+    },
+    {
+      key: "settings",
+      label: t.navSettings,
+      icon: SettingsIcon,
+      path: "/settings",
+    },
+  ];
+
+  const Sidebar = (
+    <aside style={S.sidebar}>
+      <div style={S.sidebarLogoRow}>
+        <div style={S.sidebarLogoIcon}>
+          <ShieldIcon size={18} color="#FFFFFF" />
+        </div>
+        <div>
+          <div style={S.sidebarLogoTitle}>KAVACH</div>
+          <div style={S.sidebarLogoSub}>{t.eyebrow}</div>
+        </div>
+      </div>
+
+      <nav style={S.navList}>
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const active = item.key === "complaint";
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => navigate(item.path)}
+              style={S.navItem(active)}
+            >
+              <Icon
+                size={16}
+                color={active ? "#FFFFFF" : "rgba(255,255,255,0.6)"}
+              />
+              {item.label}
+            </button>
+          );
+        })}
+      </nav>
+
+      <div style={S.sidebarFooter}>
+        <div style={S.sidebarUserRow}>
+          <div style={S.sidebarAvatar}>
+            {(user?.name || "C").charAt(0).toUpperCase()}
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={S.sidebarUserName}>{user?.name || "Citizen"}</div>
+            <div style={S.sidebarUserMeta}>{user?.username}</div>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            logout();
+            navigate("/");
+          }}
+          style={S.sidebarLogoutBtn}
+        >
+          {t.signOut}
+        </button>
+      </div>
+    </aside>
+  );
+
   if (submitted) {
     return (
       <div style={S.page}>
-        <div style={{ ...S.card, textAlign: "center", maxWidth: "420px" }}>
-          <div style={S.successIcon}>
-            <CheckIcon />
+        {Sidebar}
+        <div style={S.main}>
+          <div style={S.successWrap}>
+            <div style={{ ...S.card, textAlign: "center", maxWidth: "440px" }}>
+              <div style={S.successIcon}>
+                <CheckIcon />
+              </div>
+              <h2 style={S.successTitle}>{t.complaintSubmitted}</h2>
+              <p style={S.successSub}>{t.submittedSub}</p>
+              <div style={S.idBadge}>{complaintId}</div>
+              <p style={S.idHint}>{t.saveRef}</p>
+              <button
+                onClick={() => {
+                  logout();
+                  navigate("/");
+                }}
+                style={S.btnOutline}
+              >
+                {t.returnHome}
+              </button>
+            </div>
           </div>
-          <h2 style={S.successTitle}>{t.complaintSubmitted}</h2>
-          <p style={S.successSub}>{t.submittedSub}</p>
-          <div style={S.idBadge}>{complaintId}</div>
-          <p style={S.idHint}>{t.saveRef}</p>
-          <button
-            onClick={() => {
-              logout();
-              navigate("/");
-            }}
-            style={S.btnOutline}
-          >
-            {t.returnHome}
-          </button>
         </div>
       </div>
     );
@@ -210,300 +343,342 @@ export default function CitizenPortal() {
 
   return (
     <div style={S.page}>
-      <div style={S.card}>
-        {/* Header */}
-        <div style={S.header}>
-          <div style={S.headerLeft}>
-            <div style={S.logoIcon}>
-              <ShieldIcon size={17} color="#FFFFFF" />
-            </div>
-            <div>
-              <div style={S.pageTitle}>{t.pageTitle}</div>
-              <div style={S.pageSub}>
-                {t.welcome} {user?.name}
-              </div>
+      {Sidebar}
+
+      <div style={S.main}>
+        <div style={S.topbar}>
+          <div>
+            <div style={S.topbarEyebrow}>{t.eyebrow}</div>
+            <div style={S.topbarTitle}>{t.pageTitle}</div>
+            <div style={S.topbarSub}>
+              {t.welcome} {user?.name}
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            {/* Translate Button */}
             <button onClick={toggleLanguage} style={S.translateBtn}>
               <GlobeIcon size={14} color={TEAL} />
               {t.switchLang}
             </button>
-            <button
-              onClick={() => {
-                logout();
-                navigate("/");
-              }}
-              style={S.logoutBtn}
-            >
-              {t.signOut}
-            </button>
           </div>
         </div>
 
-        {/* Mode toggle */}
-        <div style={S.modeRow}>
-          <span style={S.modeLabel}>{t.mode}</span>
-          <div style={S.modeToggle}>
-            {(["form", "chat"] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() =>
-                  m === "chat" ? navigate("/fir-chat") : setMode(m)
-                }
-                style={S.modeBtn(m === mode)}
-              >
-                {m === "form" ? t.formMode : t.chatMode}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div style={S.divider} />
-
-        {/* Form fields */}
-        <div style={S.grid}>
-          {/* Complainant + Victim */}
-          <div>
-            <label style={S.label}>{t.complainantName}</label>
-            <input
-              style={S.input}
-              placeholder={t.complainantPlaceholder}
-              value={form.complainant_name}
-              onChange={(e) => update("complainant_name", e.target.value)}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#0E8C8C";
-                e.target.style.boxShadow = "0 0 0 3px rgba(14,140,140,0.12)";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#E3E9EC";
-                e.target.style.boxShadow = "none";
-              }}
-            />
-          </div>
-
-          <div>
-            <label style={S.label}>{t.victimName}</label>
-            <input
-              style={S.input}
-              placeholder={t.victimPlaceholder}
-              value={form.victim_name}
-              onChange={(e) => update("victim_name", e.target.value)}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#0E8C8C";
-                e.target.style.boxShadow = "0 0 0 3px rgba(14,140,140,0.12)";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#E3E9EC";
-                e.target.style.boxShadow = "none";
-              }}
-            />
-          </div>
-          {/* Incident Type */}
-          <div style={{ gridColumn: "1 / -1" }}>
-            <label style={S.label}>{t.incidentType}</label>
-            <div style={S.typeGrid}>
-              {incidentTypes.map((typeLabel, idx) => {
-                const typeVal = INCIDENT_TYPES_EN[idx];
-                return (
+        <div style={S.body}>
+          <div style={S.card}>
+            {/* Mode toggle */}
+            <div style={S.modeRow}>
+              <span style={S.modeLabel}>{t.mode}</span>
+              <div style={S.modeToggle}>
+                {(["form", "chat"] as const).map((m) => (
                   <button
-                    key={typeVal}
-                    onClick={() => update("incident_type", typeVal)}
-                    style={S.typeBtn(form.incident_type === typeVal)}
+                    key={m}
+                    onClick={() =>
+                      m === "chat" ? navigate("/fir-chat") : setMode(m)
+                    }
+                    style={S.modeBtn(m === mode)}
                   >
-                    {typeLabel}
+                    {m === "form" ? t.formMode : t.chatMode}
                   </button>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Date + Time */}
-          <div>
-            <label style={S.label}>{t.dateOfIncident}</label>
-            <input
-              style={S.input}
-              type="date"
-              value={form.incident_date}
-              onChange={(e) => update("incident_date", e.target.value)}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#0E8C8C";
-                e.target.style.boxShadow = "0 0 0 3px rgba(14,140,140,0.12)";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#E3E9EC";
-                e.target.style.boxShadow = "none";
-              }}
-            />
-          </div>
-          <div>
-            <label style={S.label}>{t.timeOfIncident}</label>
-            <input
-              style={S.input}
-              type="time"
-              value={form.incident_time}
-              onChange={(e) => update("incident_time", e.target.value)}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#0E8C8C";
-                e.target.style.boxShadow = "0 0 0 3px rgba(14,140,140,0.12)";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#E3E9EC";
-                e.target.style.boxShadow = "none";
-              }}
-            />
-          </div>
+            {/* ---------- Section: Complainant & Victim ---------- */}
+            <div style={S.section}>
+              <div style={S.sectionHead}>
+                <Users size={15} color={TEAL_DARK} />
+                <span style={S.sectionTitle}>{t.sectionComplainant}</span>
+              </div>
+              <div style={S.grid}>
+                <div>
+                  <label style={S.label}>{t.complainantName}</label>
+                  <input
+                    style={S.input}
+                    placeholder={t.complainantPlaceholder}
+                    value={form.complainant_name}
+                    onChange={(e) => update("complainant_name", e.target.value)}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = TEAL;
+                      e.target.style.boxShadow =
+                        "0 0 0 3px rgba(14,140,140,0.12)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = BORDER;
+                      e.target.style.boxShadow = "none";
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={S.label}>{t.victimName}</label>
+                  <input
+                    style={S.input}
+                    placeholder={t.victimPlaceholder}
+                    value={form.victim_name}
+                    onChange={(e) => update("victim_name", e.target.value)}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = TEAL;
+                      e.target.style.boxShadow =
+                        "0 0 0 3px rgba(14,140,140,0.12)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = BORDER;
+                      e.target.style.boxShadow = "none";
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
 
-          {/* Location */}
-          <div style={{ gridColumn: "1 / -1" }}>
-            <label style={S.label}>{t.locationOfIncident}</label>
-            <input
-              style={S.input}
-              placeholder={t.locationPlaceholder}
-              value={form.incident_location}
-              onChange={(e) => update("incident_location", e.target.value)}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#0E8C8C";
-                e.target.style.boxShadow = "0 0 0 3px rgba(14,140,140,0.12)";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#E3E9EC";
-                e.target.style.boxShadow = "none";
-              }}
-            />
-          </div>
+            {/* ---------- Section: Incident Details ---------- */}
+            <div style={S.section}>
+              <div style={S.sectionHead}>
+                <FileText size={15} color={TEAL_DARK} />
+                <span style={S.sectionTitle}>{t.sectionIncident}</span>
+              </div>
+              <div style={S.grid}>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={S.label}>{t.incidentType}</label>
+                  <div style={S.typeGrid}>
+                    {incidentTypes.map((typeLabel, idx) => {
+                      const typeVal = INCIDENT_TYPES_EN[idx];
+                      return (
+                        <button
+                          key={typeVal}
+                          onClick={() => update("incident_type", typeVal)}
+                          style={S.typeBtn(form.incident_type === typeVal)}
+                        >
+                          {typeLabel}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-          {/* Description */}
-          <div style={{ gridColumn: "1 / -1" }}>
-            <label style={S.label}>{t.descriptionOfIncident}</label>
-            <textarea
-              style={S.textarea}
-              rows={4}
-              placeholder={t.descPlaceholder}
-              value={form.incident_description}
-              onChange={(e) => update("incident_description", e.target.value)}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#0E8C8C";
-                e.target.style.boxShadow = "0 0 0 3px rgba(14,140,140,0.12)";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#E3E9EC";
-                e.target.style.boxShadow = "none";
-              }}
-            />
-          </div>
+                <div>
+                  <label style={S.label}>
+                    <Calendar
+                      size={11}
+                      style={{ marginRight: 4, verticalAlign: "-1.5px" }}
+                    />
+                    {t.dateOfIncident}
+                  </label>
+                  <input
+                    style={S.input}
+                    type="date"
+                    value={form.incident_date}
+                    onChange={(e) => update("incident_date", e.target.value)}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = TEAL;
+                      e.target.style.boxShadow =
+                        "0 0 0 3px rgba(14,140,140,0.12)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = BORDER;
+                      e.target.style.boxShadow = "none";
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={S.label}>{t.timeOfIncident}</label>
+                  <input
+                    style={S.input}
+                    type="time"
+                    value={form.incident_time}
+                    onChange={(e) => update("incident_time", e.target.value)}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = TEAL;
+                      e.target.style.boxShadow =
+                        "0 0 0 3px rgba(14,140,140,0.12)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = BORDER;
+                      e.target.style.boxShadow = "none";
+                    }}
+                  />
+                </div>
 
-          {/* Accused */}
-          <div style={{ gridColumn: "1 / -1" }}>
-            <label style={S.label}>{t.accusedDescription}</label>
-            <textarea
-              style={S.textarea}
-              rows={2}
-              placeholder={t.accusedPlaceholder}
-              value={form.accused_description}
-              onChange={(e) => update("accused_description", e.target.value)}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#0E8C8C";
-                e.target.style.boxShadow = "0 0 0 3px rgba(14,140,140,0.12)";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#E3E9EC";
-                e.target.style.boxShadow = "none";
-              }}
-            />
-          </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={S.label}>
+                    <MapPin
+                      size={11}
+                      style={{ marginRight: 4, verticalAlign: "-1.5px" }}
+                    />
+                    {t.locationOfIncident}
+                  </label>
+                  <input
+                    style={S.input}
+                    placeholder={t.locationPlaceholder}
+                    value={form.incident_location}
+                    onChange={(e) =>
+                      update("incident_location", e.target.value)
+                    }
+                    onFocus={(e) => {
+                      e.target.style.borderColor = TEAL;
+                      e.target.style.boxShadow =
+                        "0 0 0 3px rgba(14,140,140,0.12)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = BORDER;
+                      e.target.style.boxShadow = "none";
+                    }}
+                  />
+                </div>
 
-          {/* Witnesses + Evidence */}
-          <div>
-            <label style={S.label}>{t.witnesses}</label>
-            <input
-              style={S.input}
-              placeholder={t.witnessesPlaceholder}
-              value={form.witnesses}
-              onChange={(e) => update("witnesses", e.target.value)}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#0E8C8C";
-                e.target.style.boxShadow = "0 0 0 3px rgba(14,140,140,0.12)";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#E3E9EC";
-                e.target.style.boxShadow = "none";
-              }}
-            />
-          </div>
-          <div>
-            <label style={S.label}>{t.evidenceAvailable}</label>
-            <input
-              style={S.input}
-              placeholder={t.evidencePlaceholder}
-              value={form.evidence}
-              onChange={(e) => update("evidence", e.target.value)}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#0E8C8C";
-                e.target.style.boxShadow = "0 0 0 3px rgba(14,140,140,0.12)";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#E3E9EC";
-                e.target.style.boxShadow = "none";
-              }}
-            />
-          </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={S.label}>{t.descriptionOfIncident}</label>
+                  <textarea
+                    style={S.textarea}
+                    rows={4}
+                    placeholder={t.descPlaceholder}
+                    value={form.incident_description}
+                    onChange={(e) =>
+                      update("incident_description", e.target.value)
+                    }
+                    onFocus={(e) => {
+                      e.target.style.borderColor = TEAL;
+                      e.target.style.boxShadow =
+                        "0 0 0 3px rgba(14,140,140,0.12)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = BORDER;
+                      e.target.style.boxShadow = "none";
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
 
-          {/* Contact + Address */}
-          <div>
-            <label style={S.label}>{t.contactNumber}</label>
-            <input
-              style={S.input}
-              placeholder={t.contactPlaceholder}
-              value={form.contact_number}
-              onChange={(e) => update("contact_number", e.target.value)}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#0E8C8C";
-                e.target.style.boxShadow = "0 0 0 3px rgba(14,140,140,0.12)";
+            {/* ---------- Section: Additional Information ---------- */}
+            <div style={S.section}>
+              <div style={S.sectionHead}>
+                <Paperclip size={15} color={TEAL_DARK} />
+                <span style={S.sectionTitle}>{t.sectionAdditional}</span>
+              </div>
+              <div style={S.grid}>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label style={S.label}>{t.accusedDescription}</label>
+                  <textarea
+                    style={S.textarea}
+                    rows={2}
+                    placeholder={t.accusedPlaceholder}
+                    value={form.accused_description}
+                    onChange={(e) =>
+                      update("accused_description", e.target.value)
+                    }
+                    onFocus={(e) => {
+                      e.target.style.borderColor = TEAL;
+                      e.target.style.boxShadow =
+                        "0 0 0 3px rgba(14,140,140,0.12)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = BORDER;
+                      e.target.style.boxShadow = "none";
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={S.label}>{t.witnesses}</label>
+                  <input
+                    style={S.input}
+                    placeholder={t.witnessesPlaceholder}
+                    value={form.witnesses}
+                    onChange={(e) => update("witnesses", e.target.value)}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = TEAL;
+                      e.target.style.boxShadow =
+                        "0 0 0 3px rgba(14,140,140,0.12)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = BORDER;
+                      e.target.style.boxShadow = "none";
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={S.label}>{t.evidenceAvailable}</label>
+                  <input
+                    style={S.input}
+                    placeholder={t.evidencePlaceholder}
+                    value={form.evidence}
+                    onChange={(e) => update("evidence", e.target.value)}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = TEAL;
+                      e.target.style.boxShadow =
+                        "0 0 0 3px rgba(14,140,140,0.12)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = BORDER;
+                      e.target.style.boxShadow = "none";
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* ---------- Section: Contact Information ---------- */}
+            <div style={{ ...S.section, marginBottom: 0 }}>
+              <div style={S.sectionHead}>
+                <Phone size={15} color={TEAL_DARK} />
+                <span style={S.sectionTitle}>{t.sectionContact}</span>
+              </div>
+              <div style={S.grid}>
+                <div>
+                  <label style={S.label}>{t.contactNumber}</label>
+                  <input
+                    style={S.input}
+                    placeholder={t.contactPlaceholder}
+                    value={form.contact_number}
+                    onChange={(e) => update("contact_number", e.target.value)}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = TEAL;
+                      e.target.style.boxShadow =
+                        "0 0 0 3px rgba(14,140,140,0.12)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = BORDER;
+                      e.target.style.boxShadow = "none";
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={S.label}>{t.address}</label>
+                  <input
+                    style={S.input}
+                    placeholder={t.addressPlaceholder}
+                    value={form.address}
+                    onChange={(e) => update("address", e.target.value)}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = TEAL;
+                      e.target.style.boxShadow =
+                        "0 0 0 3px rgba(14,140,140,0.12)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = BORDER;
+                      e.target.style.boxShadow = "none";
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div style={S.divider} />
+
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              style={S.submitBtn}
+              onMouseEnter={(e) => {
+                if (!loading) e.currentTarget.style.background = TEAL_DARK;
               }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#E3E9EC";
-                e.target.style.boxShadow = "none";
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = TEAL;
               }}
-            />
-          </div>
-          <div>
-            <label style={S.label}>{t.address}</label>
-            <input
-              style={S.input}
-              placeholder={t.addressPlaceholder}
-              value={form.address}
-              onChange={(e) => update("address", e.target.value)}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#0E8C8C";
-                e.target.style.boxShadow = "0 0 0 3px rgba(14,140,140,0.12)";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#E3E9EC";
-                e.target.style.boxShadow = "none";
-              }}
-            />
+            >
+              {loading ? t.submitting : t.submitComplaint}
+            </button>
+
+            <p style={S.notice}>{t.notice}</p>
           </div>
         </div>
-
-        <div style={S.divider} />
-
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          style={S.submitBtn}
-          onMouseEnter={(e) => {
-            if (!loading) e.currentTarget.style.background = "#0A6E6E";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "#0E8C8C";
-          }}
-        >
-          {loading ? t.submitting : t.submitComplaint}
-        </button>
-
-        <p style={S.notice}>{t.notice}</p>
       </div>
     </div>
   );
@@ -565,6 +740,7 @@ function CheckIcon() {
 const TEAL = "#0E8C8C";
 const TEAL_DARK = "#0A6E6E";
 const NAVY = "#152A43";
+const NAVY_DEEP = "#0E2438";
 const NAVY_SOFT = "#2C4260";
 const BG_SECTION = "#EAF2F5";
 const BORDER = "#E3E9EC";
@@ -574,63 +750,199 @@ const TEAL_TINT = "#E1F5F5";
 const styles = {
   page: {
     minHeight: "100vh",
+    display: "flex",
     background: BG_SECTION,
     fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
-    padding: "32px 16px",
+  } as React.CSSProperties,
+
+  // ---------- Sidebar ----------
+  sidebar: {
+    width: "236px",
+    flexShrink: 0,
+    background: `linear-gradient(180deg, ${NAVY} 0%, ${NAVY_DEEP} 100%)`,
     display: "flex",
-    justifyContent: "center",
+    flexDirection: "column",
+    padding: "24px 18px",
+    position: "sticky" as const,
+    top: 0,
+    height: "100vh",
   } as React.CSSProperties,
-  card: {
-    width: "100%",
-    maxWidth: "720px",
-    background: "#FFFFFF",
-    borderRadius: "14px",
-    padding: "32px",
-    border: `1px solid ${BORDER}`,
-    boxShadow: "0 12px 34px rgba(21,42,67,0.07)",
-    height: "fit-content",
-  } as React.CSSProperties,
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: "20px",
-  } as React.CSSProperties,
-  headerLeft: {
+  sidebarLogoRow: {
     display: "flex",
     alignItems: "center",
-    gap: "12px",
+    gap: 10,
+    padding: "0 8px",
+    marginBottom: 30,
   } as React.CSSProperties,
-  logoIcon: {
-    width: "36px",
-    height: "36px",
-    borderRadius: "9px",
+  sidebarLogoIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     background: `linear-gradient(150deg, ${TEAL}, ${NAVY})`,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   } as React.CSSProperties,
-  pageTitle: {
+  sidebarLogoTitle: {
     fontFamily: "'Poppins', 'Segoe UI', sans-serif",
-    fontSize: "18px",
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: 700,
+    color: "#FFFFFF",
+  } as React.CSSProperties,
+  sidebarLogoSub: {
+    fontSize: 9.5,
+    letterSpacing: "0.08em",
+    color: "rgba(255,255,255,0.45)",
+    marginTop: 1,
+    textTransform: "uppercase" as const,
+  } as React.CSSProperties,
+  navList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 3,
+    flex: 1,
+  } as React.CSSProperties,
+  navItem: (active: boolean): React.CSSProperties => ({
+    display: "flex",
+    alignItems: "center",
+    gap: 11,
+    padding: "10px 12px",
+    borderRadius: 8,
+    border: "none",
+    cursor: "pointer",
+    fontFamily: "'Inter', sans-serif",
+    fontSize: 13.5,
+    fontWeight: active ? 600 : 500,
+    background: active ? "rgba(14,140,140,0.22)" : "transparent",
+    color: active ? "#FFFFFF" : "rgba(255,255,255,0.65)",
+    textAlign: "left",
+  }),
+  sidebarFooter: {
+    borderTop: "1px solid rgba(255,255,255,0.12)",
+    paddingTop: 16,
+    marginTop: 12,
+  } as React.CSSProperties,
+  sidebarUserRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "0 8px",
+    marginBottom: 12,
+  } as React.CSSProperties,
+  sidebarAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: "50%",
+    background: "rgba(255,255,255,0.12)",
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: 600,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  } as React.CSSProperties,
+  sidebarUserName: {
+    fontSize: 12.5,
+    fontWeight: 600,
+    color: "#FFFFFF",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  } as React.CSSProperties,
+  sidebarUserMeta: {
+    fontSize: 11,
+    color: "rgba(255,255,255,0.5)",
+    marginTop: 1,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  } as React.CSSProperties,
+  sidebarLogoutBtn: {
+    width: "100%",
+    padding: "9px 12px",
+    background: "rgba(255,255,255,0.06)",
+    border: "none",
+    borderRadius: 8,
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 12.5,
+    fontWeight: 500,
+    cursor: "pointer",
+    fontFamily: "'Inter', sans-serif",
+  } as React.CSSProperties,
+
+  // ---------- Main ----------
+  main: {
+    flex: 1,
+    minWidth: 0,
+    display: "flex",
+    flexDirection: "column",
+  } as React.CSSProperties,
+  topbar: {
+    background: "#FFFFFF",
+    borderBottom: `1px solid ${BORDER}`,
+    padding: "18px 32px",
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+  } as React.CSSProperties,
+  topbarEyebrow: {
+    fontSize: 10,
+    fontWeight: 700,
+    color: TEAL_DARK,
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.08em",
+    marginBottom: 4,
+  } as React.CSSProperties,
+  topbarTitle: {
+    fontFamily: "'Poppins', 'Segoe UI', sans-serif",
+    fontSize: 20,
+    fontWeight: 700,
     color: NAVY,
     letterSpacing: "-0.01em",
   } as React.CSSProperties,
-  pageSub: {
-    fontSize: "12px",
-    color: "#9AA7B0",
-    marginTop: "2px",
+  topbarSub: {
+    fontSize: 12.5,
+    color: TEXT,
+    marginTop: 3,
   } as React.CSSProperties,
+
+  body: {
+    flex: 1,
+    overflowY: "auto",
+    padding: "28px 32px 60px",
+    display: "flex",
+    justifyContent: "center",
+  } as React.CSSProperties,
+
+  successWrap: {
+    flex: 1,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "32px",
+  } as React.CSSProperties,
+
+  card: {
+    width: "100%",
+    maxWidth: "720px",
+    background: "#FFFFFF",
+    borderRadius: "16px",
+    padding: "28px 32px 32px",
+    border: `1px solid ${BORDER}`,
+    boxShadow: "0 12px 34px rgba(21,42,67,0.06)",
+    height: "fit-content",
+  } as React.CSSProperties,
+
   translateBtn: {
     fontSize: "12px",
     fontWeight: "600",
     color: TEAL,
     background: TEAL_TINT,
     border: `1px solid ${TEAL}`,
-    borderRadius: "6px",
-    padding: "5px 12px",
+    borderRadius: "20px",
+    padding: "6px 14px",
     cursor: "pointer",
     fontFamily: "'Inter', sans-serif",
     height: "fit-content",
@@ -638,22 +950,12 @@ const styles = {
     alignItems: "center",
     gap: "6px",
   } as React.CSSProperties,
-  logoutBtn: {
-    fontSize: "12px",
-    color: TEXT,
-    background: "none",
-    border: `1px solid ${BORDER}`,
-    borderRadius: "6px",
-    padding: "5px 12px",
-    cursor: "pointer",
-    fontFamily: "'Inter', sans-serif",
-    height: "fit-content",
-  } as React.CSSProperties,
+
   modeRow: {
     display: "flex",
     alignItems: "center",
     gap: "12px",
-    marginBottom: "16px",
+    marginBottom: "22px",
   } as React.CSSProperties,
   modeLabel: {
     fontSize: "12px",
@@ -679,10 +981,34 @@ const styles = {
     color: active ? TEAL : "#8A97A3",
     boxShadow: active ? "0 1px 4px rgba(21,42,67,0.10)" : "none",
   }),
+
+  // ---------- Sectioned form panels ----------
+  section: {
+    background: BG_SECTION,
+    border: `1px solid ${BORDER}`,
+    borderLeft: `3px solid ${TEAL}`,
+    borderRadius: "3px 12px 12px 3px",
+    padding: "16px 18px 18px",
+    marginBottom: "16px",
+  } as React.CSSProperties,
+  sectionHead: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    marginBottom: "14px",
+  } as React.CSSProperties,
+  sectionTitle: {
+    fontSize: "11px",
+    fontWeight: 800,
+    color: NAVY,
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.06em",
+  } as React.CSSProperties,
+
   divider: {
     height: "1px",
     background: BORDER,
-    margin: "20px 0",
+    margin: "8px 0 20px",
   } as React.CSSProperties,
   grid: {
     display: "grid",
@@ -708,6 +1034,7 @@ const styles = {
     fontFamily: "inherit",
     boxSizing: "border-box" as const,
     color: NAVY,
+    background: "#FFFFFF",
     transition: "border-color 0.15s ease, box-shadow 0.15s ease",
   } as React.CSSProperties,
   textarea: {
@@ -721,6 +1048,7 @@ const styles = {
     resize: "vertical" as const,
     boxSizing: "border-box" as const,
     color: NAVY,
+    background: "#FFFFFF",
     transition: "border-color 0.15s ease, box-shadow 0.15s ease",
   } as React.CSSProperties,
   typeGrid: {
@@ -741,13 +1069,13 @@ const styles = {
   }),
   submitBtn: {
     width: "100%",
-    padding: "11px 0",
+    padding: "12px 0",
     background: TEAL,
     border: "none",
-    borderRadius: "7px",
+    borderRadius: "8px",
     color: "#FFFFFF",
-    fontSize: "13px",
-    fontWeight: "600",
+    fontSize: "13.5px",
+    fontWeight: "700",
     cursor: "pointer",
     fontFamily: "inherit",
     transition: "background 0.15s ease",
