@@ -11,6 +11,8 @@ import GenerateReport from "./pages/GenerateReport";
 import BNSRecommend from "./pages/BNSRecommendation";
 import ExplainAI from "./pages/ExplainableAI";
 import TrackFIR from "./pages/TrackFirStatus";
+import Right from "./pages/Rights";
+import Emer from "./pages/Emergency";
 
 export default function App() {
   const { user } = useAuthStore();
@@ -48,6 +50,8 @@ export default function App() {
         <Route path="/bns" element={<BNSRecommend />} />
         <Route path="/explain" element={<ExplainAI />} />
         <Route path="/track" element={<TrackFIR />} />
+        <Route path="/right" element={<Right />} />
+        <Route path="/emergency" element={<Emer />} />
       </Routes>
     </BrowserRouter>
   );

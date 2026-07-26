@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuthStore } from "../store/authStore";
 import {
-  Home,
   FileText,
   Search,
   LifeBuoy,
@@ -88,7 +87,6 @@ const translations = {
     sectionIncident: "Incident Details",
     sectionAdditional: "Additional Information",
     sectionContact: "Contact Information",
-    navHome: "Home",
     navFileComplaint: "File a Complaint",
     navTrackStatus: "Track FIR Status",
     navInformation: "Know Your Rights",
@@ -142,7 +140,6 @@ const translations = {
     sectionIncident: "ಘಟನೆಯ ವಿವರಗಳು",
     sectionAdditional: "ಹೆಚ್ಚುವರಿ ಮಾಹಿತಿ",
     sectionContact: "ಸಂಪರ್ಕ ಮಾಹಿತಿ",
-    navHome: "ಮುಖಪುಟ",
     navFileComplaint: "ದೂರು ದಾಖಲಿಸಿ",
     navTrackStatus: "ಎಫ್‌ಐಆರ್ ಸ್ಥಿತಿ ಟ್ರ್ಯಾಕ್ ಮಾಡಿ",
     navInformation: "ನಿಮ್ಮ ಹಕ್ಕುಗಳನ್ನು ತಿಳಿಯಿರಿ",
@@ -221,12 +218,11 @@ export default function CitizenPortal() {
   // NOTE: route paths below are best-guess placeholders — update to match
   // your actual router config for the citizen-facing pages.
   const navItems = [
-    { key: "home", label: t.navHome, icon: Home, path: "/citizen/dashboard" },
     {
       key: "complaint",
       label: t.navFileComplaint,
       icon: FileText,
-      path: "/citizen/complaint",
+      path: "/citizen",
     },
     {
       key: "track",
@@ -238,13 +234,13 @@ export default function CitizenPortal() {
       key: "information",
       label: t.navInformation,
       icon: LifeBuoy,
-      path: "/citizen/information",
+      path: "/right",
     },
     {
       key: "emergency",
       label: t.navEmergency,
       icon: Phone,
-      path: "/citizen/emergency",
+      path: "/emergency",
     },
     {
       key: "settings",

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import {
-  Home,
   FileText,
   Search,
   LifeBuoy,
@@ -12,12 +11,181 @@ import {
   ClipboardList,
   CheckCircle2,
   Clock,
+  Globe2,
 } from "lucide-react";
+import i18n from "i18next";
+import {
+  initReactI18next,
+  I18nextProvider,
+  useTranslation,
+} from "react-i18next";
 import { useAuthStore } from "../store/authStore";
+
+/* =========================================================
+JSON-BASED LOCALIZATION
+========================================================= */
+
+const resources = {
+  en: {
+    translation: {
+      sidebar: {
+        citizenPortal: "Citizen Portal",
+        fileComplaint: "File a Complaint",
+        trackStatus: "Track FIR Status",
+        knowRights: "Know Your Rights",
+        emergencyContacts: "Emergency Contacts",
+        settings: "Settings",
+        signOut: "Sign out",
+      },
+
+      header: {
+        citizenPortal: "Citizen Portal",
+        title: "Track FIR Status",
+        subtitle: "Check progress on complaints filed by Form or Chat with AI",
+        translate: "ಕನ್ನಡ",
+      },
+
+      lookup: {
+        placeholder: "Enter your complaint reference, e.g. CMP-A1B2C3D4",
+        searching: "Searching…",
+        track: "Track",
+      },
+
+      status: {
+        received: "Received",
+        underReview: "Under Review",
+        firFiled: "FIR Filed",
+      },
+
+      complaints: {
+        title: "My Complaints",
+        subtitle: "Everything you've filed, whether by form or AI chat",
+        noComplaints: "You haven't filed any complaints yet.",
+        selectComplaint:
+          "Enter a complaint reference above, or pick one of your complaints below.",
+        complaintReference: "Complaint Reference",
+        incidentType: "Incident Type",
+        date: "Date",
+        location: "Location",
+        assignedOfficer: "Assigned Officer",
+        notYetAssigned: "Not yet assigned",
+        description: "Description",
+        aiCollectedInformation: "AI-collected information",
+        firNumber: "FIR Number",
+        incident: "Incident",
+        filedViaChat: "Filed via Chat with AI",
+        filedViaForm: "Filed via Form",
+      },
+
+      errors: {
+        backend: "Backend is not reachable. Please try again shortly.",
+        notFound: "No complaint found with that reference number.",
+        somethingWrong: "Something went wrong looking up this complaint.",
+        requestFailed: "Request failed",
+      },
+
+      loading: {
+        complaints: "Loading your complaints…",
+      },
+
+      common: {
+        empty: "—",
+      },
+    },
+  },
+
+  kn: {
+    translation: {
+      sidebar: {
+        citizenPortal: "ನಾಗರಿಕ ಪೋರ್ಟಲ್",
+        fileComplaint: "ದೂರು ದಾಖಲಿಸಿ",
+        trackStatus: "FIR ಸ್ಥಿತಿ ಟ್ರ್ಯಾಕ್ ಮಾಡಿ",
+        knowRights: "ನಿಮ್ಮ ಹಕ್ಕುಗಳನ್ನು ತಿಳಿಯಿರಿ",
+        emergencyContacts: "ತುರ್ತು ಸಂಪರ್ಕಗಳು",
+        settings: "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+        signOut: "ಸೈನ್ ಔಟ್",
+      },
+
+      header: {
+        citizenPortal: "ನಾಗರಿಕ ಪೋರ್ಟಲ್",
+        title: "FIR ಸ್ಥಿತಿ ಟ್ರ್ಯಾಕ್ ಮಾಡಿ",
+        subtitle:
+          "ಫಾರ್ಮ್ ಅಥವಾ AI ಚಾಟ್ ಮೂಲಕ ದಾಖಲಿಸಿದ ದೂರುಗಳ ಪ್ರಗತಿಯನ್ನು ಪರಿಶೀಲಿಸಿ",
+        translate: "English",
+      },
+
+      lookup: {
+        placeholder: "ನಿಮ್ಮ ದೂರು ಉಲ್ಲೇಖ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ, ಉದಾ. CMP-A1B2C3D4",
+        searching: "ಹುಡುಕಲಾಗುತ್ತಿದೆ…",
+        track: "ಟ್ರ್ಯಾಕ್ ಮಾಡಿ",
+      },
+
+      status: {
+        received: "ಸ್ವೀಕರಿಸಲಾಗಿದೆ",
+        underReview: "ಪರಿಶೀಲನೆಯಲ್ಲಿದೆ",
+        firFiled: "FIR ದಾಖಲಿಸಲಾಗಿದೆ",
+      },
+
+      complaints: {
+        title: "ನನ್ನ ದೂರುಗಳು",
+        subtitle: "ಫಾರ್ಮ್ ಅಥವಾ AI ಚಾಟ್ ಮೂಲಕ ನೀವು ದಾಖಲಿಸಿದ ಎಲ್ಲಾ ದೂರುಗಳು",
+        noComplaints: "ನೀವು ಇನ್ನೂ ಯಾವುದೇ ದೂರುಗಳನ್ನು ದಾಖಲಿಸಿಲ್ಲ.",
+        selectComplaint:
+          "ಮೇಲಿನ ದೂರು ಉಲ್ಲೇಖ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ ಅಥವಾ ಕೆಳಗಿನ ನಿಮ್ಮ ದೂರುಗಳಲ್ಲಿ ಒಂದನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
+        complaintReference: "ದೂರು ಉಲ್ಲೇಖ",
+        incidentType: "ಘಟನೆಯ ಪ್ರಕಾರ",
+        date: "ದಿನಾಂಕ",
+        location: "ಸ್ಥಳ",
+        assignedOfficer: "ನಿಯೋಜಿತ ಅಧಿಕಾರಿ",
+        notYetAssigned: "ಇನ್ನೂ ನಿಯೋಜಿಸಲಾಗಿಲ್ಲ",
+        description: "ವಿವರಣೆ",
+        aiCollectedInformation: "AI ಸಂಗ್ರಹಿಸಿದ ಮಾಹಿತಿ",
+        firNumber: "FIR ಸಂಖ್ಯೆ",
+        incident: "ಘಟನೆ",
+        filedViaChat: "AI ಚಾಟ್ ಮೂಲಕ ದಾಖಲಿಸಲಾಗಿದೆ",
+        filedViaForm: "ಫಾರ್ಮ್ ಮೂಲಕ ದಾಖಲಿಸಲಾಗಿದೆ",
+      },
+
+      errors: {
+        backend:
+          "ಬ್ಯಾಕೆಂಡ್ ಸಂಪರ್ಕಿಸಲಾಗುತ್ತಿಲ್ಲ. ದಯವಿಟ್ಟು ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+        notFound: "ಈ ಉಲ್ಲೇಖ ಸಂಖ್ಯೆಯೊಂದಿಗೆ ಯಾವುದೇ ದೂರು ಕಂಡುಬಂದಿಲ್ಲ.",
+        somethingWrong: "ಈ ದೂರುವನ್ನು ಹುಡುಕುವಾಗ ಏನೋ ತಪ್ಪಾಗಿದೆ.",
+        requestFailed: "ವಿನಂತಿ ವಿಫಲವಾಗಿದೆ",
+      },
+
+      loading: {
+        complaints: "ನಿಮ್ಮ ದೂರುಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ…",
+      },
+
+      common: {
+        empty: "—",
+      },
+    },
+  },
+};
+
+const i18nInstance = i18n.createInstance();
+
+i18nInstance.use(initReactI18next).init({
+  resources,
+  lng: "en",
+  fallbackLng: "en",
+  keySeparator: ".",
+  interpolation: {
+    escapeValue: false,
+  },
+});
+
+/* =========================================================
+CONSTANTS
+========================================================= */
 
 const API_BASE = "http://localhost:8000/api/v1";
 
-// ---------- Types ----------
+/* =========================================================
+TYPES
+========================================================= */
 
 interface Complaint {
   complaint_id: string;
@@ -25,13 +193,13 @@ interface Complaint {
   citizen_name: string;
   complainant_name?: string;
   victim_name?: string;
-  mode: string; // "form" | "chat"
+  mode: string;
   incident_type?: string;
   incident_date?: string;
   incident_time?: string;
   incident_location?: string;
   incident_description?: string;
-  status: string; // "PENDING" | "UNDER_REVIEW" | "FIR_FILED"
+  status: string;
   submitted_at: string;
   assigned_officer?: string | null;
   fir_number?: string | null;
@@ -40,36 +208,60 @@ interface Complaint {
 }
 
 const STATUS_STEPS = [
-  { key: "PENDING", label: "Received" },
-  { key: "UNDER_REVIEW", label: "Under Review" },
-  { key: "FIR_FILED", label: "FIR Filed" },
+  {
+    key: "PENDING",
+    labelKey: "status.received",
+  },
+  {
+    key: "UNDER_REVIEW",
+    labelKey: "status.underReview",
+  },
+  {
+    key: "FIR_FILED",
+    labelKey: "status.firFiled",
+  },
 ];
 
 function statusIndex(status: string): number {
   const idx = STATUS_STEPS.findIndex(
     (s) => s.key === (status || "").toUpperCase(),
   );
+
   return idx === -1 ? 0 : idx;
 }
 
-function describeError(err: unknown): string {
+function describeError(err: unknown, t: (key: string) => string): string {
   if (axios.isAxiosError(err)) {
-    if (err.code === "ERR_NETWORK")
-      return "Backend is not reachable. Please try again shortly.";
+    if (err.code === "ERR_NETWORK") {
+      return t("errors.backend");
+    }
+
     const detail = err.response?.data?.detail;
-    if (typeof detail === "string") return detail;
-    if (err.response?.status === 404)
-      return "No complaint found with that reference number.";
-    if (err.response?.status) return `Request failed (${err.response.status})`;
+
+    if (typeof detail === "string") {
+      return detail;
+    }
+
+    if (err.response?.status === 404) {
+      return t("errors.notFound");
+    }
+
+    if (err.response?.status) {
+      return `${t("errors.requestFailed")} (${err.response.status})`;
+    }
   }
-  return "Something went wrong looking up this complaint.";
+
+  return t("errors.somethingWrong");
 }
 
-function formatDateTime(iso: string): string {
+function formatDateTime(iso: string, language: "en" | "kn"): string {
   if (!iso) return "—";
+
   const d = new Date(iso);
+
   if (isNaN(d.getTime())) return iso;
-  return d.toLocaleString("en-IN", {
+
+  return d.toLocaleString(language === "kn" ? "kn-IN" : "en-IN", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -78,23 +270,51 @@ function formatDateTime(iso: string): string {
   });
 }
 
-// ---------- Component ----------
+/* =========================================================
+MAIN COMPONENT
+========================================================= */
 
 export default function TrackFIRStatus() {
+  const { t, i18n: currentI18n } = useTranslation();
+
   const { user, logout } = useAuthStore();
+
   const navigate = useNavigate();
+
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const [language, setLanguage] = useState<"en" | "kn">("en");
+
   const [lookupId, setLookupId] = useState(searchParams.get("id") || "");
+
   const [selected, setSelected] = useState<Complaint | null>(null);
+
   const [lookupLoading, setLookupLoading] = useState(false);
+
   const [lookupError, setLookupError] = useState<string | null>(null);
 
   const [myComplaints, setMyComplaints] = useState<Complaint[]>([]);
+
   const [listLoading, setListLoading] = useState(true);
+
   const [listError, setListError] = useState<string | null>(null);
 
-  // Load the citizen's own complaints for the sidebar-style list
+  /* =========================================================
+LANGUAGE TOGGLE
+========================================================= */
+
+  const toggleLanguage = () => {
+    const nextLanguage = language === "en" ? "kn" : "en";
+
+    setLanguage(nextLanguage);
+
+    currentI18n.changeLanguage(nextLanguage);
+  };
+
+  /* =========================================================
+LOAD CITIZEN COMPLAINTS
+========================================================= */
+
   useEffect(() => {
     setListLoading(true);
     axios
@@ -103,78 +323,107 @@ export default function TrackFIRStatus() {
         const mine = (res.data || []).filter(
           (c) => c.citizen_username === user?.username,
         );
+
         mine.sort((a, b) =>
           (b.submitted_at || "").localeCompare(a.submitted_at || ""),
         );
+
         setMyComplaints(mine);
       })
-      .catch((err) => setListError(describeError(err)))
+      .catch((err) => setListError(describeError(err, t)))
       .finally(() => setListLoading(false));
   }, [user?.username]);
 
-  // Deep-link support: /citizen/track?id=CMP-XXXX auto-loads that complaint
+  /* =========================================================
+DEEP-LINK SUPPORT
+========================================================= */
+
   useEffect(() => {
     const id = searchParams.get("id");
-    if (id) runLookup(id);
+
+    if (id) {
+      runLookup(id);
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /* =========================================================
+LOOKUP
+========================================================= */
+
   const runLookup = (idOverride?: string) => {
     const id = (idOverride ?? lookupId).trim();
+
     if (!id) return;
 
     setLookupLoading(true);
+
     setLookupError(null);
+
     setSelected(null);
 
     axios
       .get<Complaint>(`${API_BASE}/complaints/${encodeURIComponent(id)}`)
       .then((res) => {
         setSelected(res.data);
+
         setSearchParams({ id });
       })
-      .catch((err) => setLookupError(describeError(err)))
+      .catch((err) => setLookupError(describeError(err, t)))
       .finally(() => setLookupLoading(false));
   };
 
+  /* =========================================================
+SELECT FROM LIST
+========================================================= */
+
   const selectFromList = (c: Complaint) => {
     setSelected(c);
+
     setLookupId(c.complaint_id);
+
     setLookupError(null);
-    setSearchParams({ id: c.complaint_id });
+
+    setSearchParams({
+      id: c.complaint_id,
+    });
   };
 
   const S = styles;
 
+  /* =========================================================
+NAVIGATION
+========================================================= */
+
   const navItems = [
-    { key: "home", label: "Home", icon: Home, path: "/citizen/dashboard" },
     {
       key: "complaint",
-      label: "File a Complaint",
+      label: t("sidebar.fileComplaint"),
       icon: FileText,
       path: "/citizen",
     },
     {
       key: "track",
-      label: "Track FIR Status",
+      label: t("sidebar.trackStatus"),
       icon: Search,
-      path: "/citizen/track",
+      path: "/track",
     },
     {
       key: "information",
-      label: "Know Your Rights",
+      label: t("sidebar.knowRights"),
       icon: LifeBuoy,
-      path: "/citizen/information",
+      path: "/right",
     },
     {
       key: "emergency",
-      label: "Emergency Contacts",
+      label: t("sidebar.emergencyContacts"),
       icon: Phone,
-      path: "/citizen/emergency",
+      path: "/emergency",
     },
     {
       key: "settings",
-      label: "Settings",
+      label: t("sidebar.settings"),
       icon: SettingsIcon,
       path: "/settings",
     },
@@ -182,22 +431,29 @@ export default function TrackFIRStatus() {
 
   return (
     <div style={S.page}>
-      {/* SIDEBAR */}
+      {/* =====================================================
+SIDEBAR
+===================================================== */}
+
       <aside style={S.sidebar}>
         <div style={S.sidebarLogoRow}>
           <div style={S.sidebarLogoIcon}>
             <ShieldIcon size={18} color="#FFFFFF" />
           </div>
+
           <div>
             <div style={S.sidebarLogoTitle}>KAVACH</div>
-            <div style={S.sidebarLogoSub}>Citizen Portal</div>
+
+            <div style={S.sidebarLogoSub}>{t("sidebar.citizenPortal")}</div>
           </div>
         </div>
 
         <nav style={S.navList}>
           {navItems.map((item) => {
             const Icon = item.icon;
+
             const active = item.key === "track";
+
             return (
               <button
                 key={item.key}
@@ -209,6 +465,7 @@ export default function TrackFIRStatus() {
                   size={16}
                   color={active ? "#FFFFFF" : "rgba(255,255,255,0.6)"}
                 />
+
                 {item.label}
               </button>
             );
@@ -220,11 +477,14 @@ export default function TrackFIRStatus() {
             <div style={S.sidebarAvatar}>
               {(user?.name || "C").charAt(0).toUpperCase()}
             </div>
+
             <div style={{ minWidth: 0 }}>
               <div style={S.sidebarUserName}>{user?.name || "Citizen"}</div>
+
               <div style={S.sidebarUserMeta}>{user?.username}</div>
             </div>
           </div>
+
           <button
             type="button"
             onClick={() => {
@@ -233,74 +493,98 @@ export default function TrackFIRStatus() {
             }}
             style={S.sidebarLogoutBtn}
           >
-            Sign out
+            {t("sidebar.signOut")}
           </button>
         </div>
       </aside>
 
-      {/* MAIN */}
+      {/* =====================================================
+      MAIN
+  ===================================================== */}
+
       <div style={S.main}>
         <div style={S.topbar}>
           <div>
-            <div style={S.topbarEyebrow}>Citizen Portal</div>
-            <div style={S.topbarTitle}>Track FIR Status</div>
-            <div style={S.topbarSub}>
-              Check progress on complaints filed by Form or Chat with AI
-            </div>
+            <div style={S.topbarEyebrow}>{t("header.citizenPortal")}</div>
+
+            <div style={S.topbarTitle}>{t("header.title")}</div>
+
+            <div style={S.topbarSub}>{t("header.subtitle")}</div>
           </div>
+
+          {/* =================================================
+          TRANSLATE BUTTON
+      ================================================= */}
+
+          <button type="button" onClick={toggleLanguage} style={S.translateBtn}>
+            <Globe2 size={15} />
+
+            {t("header.translate")}
+          </button>
         </div>
 
         <div style={S.body}>
-          {/* Lookup bar */}
+          {/* =================================================
+          LOOKUP BAR
+      ================================================= */}
+
           <div style={S.lookupBar}>
             <input
               style={S.lookupInput}
-              placeholder="Enter your complaint reference, e.g. CMP-A1B2C3D4"
+              placeholder={t("lookup.placeholder")}
               value={lookupId}
               onChange={(e) => setLookupId(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && runLookup()}
             />
+
             <button
               style={S.primaryBtn}
               onClick={() => runLookup()}
               disabled={!lookupId.trim() || lookupLoading}
             >
-              {lookupLoading ? "Searching…" : "Track"}
+              {lookupLoading ? t("lookup.searching") : t("lookup.track")}
             </button>
           </div>
 
           {lookupError && <div style={S.errorBox}>{lookupError}</div>}
 
-          {/* Detail panel */}
+          {/* =================================================
+          DETAIL PANEL
+      ================================================= */}
+
           {selected && <ComplaintDetail complaint={selected} />}
 
           {!selected && !lookupError && !lookupLoading && (
-            <div style={S.emptyState}>
-              Enter a complaint reference above, or pick one of your complaints
-              below.
-            </div>
+            <div style={S.emptyState}>{t("complaints.selectComplaint")}</div>
           )}
 
-          {/* My complaints list */}
+          {/* =================================================
+          MY COMPLAINTS LIST
+      ================================================= */}
+
           <div style={S.panel}>
-            <div style={S.panelTitle}>My Complaints</div>
-            <div style={S.panelSubtitle}>
-              Everything you've filed, whether by form or AI chat
-            </div>
+            <div style={S.panelTitle}>{t("complaints.title")}</div>
+
+            <div style={S.panelSubtitle}>{t("complaints.subtitle")}</div>
 
             <div style={{ marginTop: 14 }}>
               {listLoading && (
-                <div style={S.loadingState}>Loading your complaints…</div>
+                <div style={S.loadingState}>{t("loading.complaints")}</div>
               )}
+
               {listError && <div style={S.errorBox}>{listError}</div>}
+
               {!listLoading && !listError && myComplaints.length === 0 && (
-                <div style={S.emptyState}>
-                  You haven't filed any complaints yet.
-                </div>
+                <div style={S.emptyState}>{t("complaints.noComplaints")}</div>
               )}
+
               {!listLoading && !listError && myComplaints.length > 0 && (
                 <div
-                  style={{ display: "flex", flexDirection: "column", gap: 10 }}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 10,
+                  }}
                 >
                   {myComplaints.map((c) => (
                     <button
@@ -319,14 +603,21 @@ export default function TrackFIRStatus() {
                         }}
                       >
                         <ModeBadge mode={c.mode} />
-                        <div style={{ minWidth: 0 }}>
+
+                        <div
+                          style={{
+                            minWidth: 0,
+                          }}
+                        >
                           <div style={S.listRowId}>{c.complaint_id}</div>
+
                           <div style={S.listRowMeta}>
-                            {c.incident_type || "Incident"} ·{" "}
-                            {formatDateTime(c.submitted_at)}
+                            {c.incident_type || t("complaints.incident")} ·{" "}
+                            {formatDateTime(c.submitted_at, language)}
                           </div>
                         </div>
                       </div>
+
                       <StatusBadge status={c.status} />
                     </button>
                   ))}
@@ -340,11 +631,15 @@ export default function TrackFIRStatus() {
   );
 }
 
-// ---------- Sub-components ----------
+/* =========================================================
+MODE BADGE
+========================================================= */
 
 function ModeBadge({ mode }: { mode: string }) {
   const isChat = (mode || "").toLowerCase() === "chat";
+
   const Icon = isChat ? MessageSquare : ClipboardList;
+
   return (
     <div
       style={{
@@ -360,15 +655,25 @@ function ModeBadge({ mode }: { mode: string }) {
       }}
       title={isChat ? "Filed via Chat with AI" : "Filed via Form"}
     >
-      <Icon size={14} />
+      {" "}
+      <Icon size={14} />{" "}
     </div>
   );
 }
 
+/* =========================================================
+STATUS BADGE
+========================================================= */
+
 function StatusBadge({ status }: { status: string }) {
   const idx = statusIndex(status);
+
   const color = idx === 2 ? "#1F7A5C" : idx === 1 ? TEAL_DARK : "#8A97A3";
+
   const bg = idx === 2 ? "#E5F6EC" : idx === 1 ? TEAL_TINT : BG_SECTION;
+
+  const statusLabel = STATUS_STEPS[idx].labelKey;
+
   return (
     <span
       style={{
@@ -383,16 +688,27 @@ function StatusBadge({ status }: { status: string }) {
         whiteSpace: "nowrap",
       }}
     >
-      {STATUS_STEPS[idx].label}
+      {i18nInstance.t(statusLabel)}{" "}
     </span>
   );
 }
 
+/* =========================================================
+STATUS TIMELINE
+========================================================= */
+
 function StatusTimeline({ status }: { status: string }) {
+  const { t } = useTranslation();
+
   const idx = statusIndex(status);
+
   return (
     <div
-      style={{ display: "flex", alignItems: "center", margin: "18px 0 4px" }}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        margin: "18px 0 4px",
+      }}
     >
       {STATUS_STEPS.map((step, i) => (
         <div
@@ -428,8 +744,9 @@ function StatusTimeline({ status }: { status: string }) {
                 <CheckCircle2 size={15} />
               ) : i === idx ? (
                 <Clock size={14} />
-              ) : null}
+              ) : null}{" "}
             </div>
+
             <span
               style={{
                 fontSize: 10.5,
@@ -438,9 +755,10 @@ function StatusTimeline({ status }: { status: string }) {
                 whiteSpace: "nowrap",
               }}
             >
-              {step.label}
+              {t(step.labelKey)}
             </span>
           </div>
+
           {i < STATUS_STEPS.length - 1 && (
             <div
               style={{
@@ -457,7 +775,15 @@ function StatusTimeline({ status }: { status: string }) {
   );
 }
 
+/* =========================================================
+COMPLAINT DETAIL
+========================================================= */
+
 function ComplaintDetail({ complaint: c }: { complaint: Complaint }) {
+  const { t, i18n: currentI18n } = useTranslation();
+
+  const language = currentI18n.language === "kn" ? "kn" : "en";
+
   return (
     <div style={styles.panel}>
       <div
@@ -469,8 +795,12 @@ function ComplaintDetail({ complaint: c }: { complaint: Complaint }) {
           flexWrap: "wrap",
         }}
       >
+        {" "}
         <div>
-          <div style={styles.panelSubtitle}>Complaint Reference</div>
+          {" "}
+          <div style={styles.panelSubtitle}>
+            {t("complaints.complaintReference")}{" "}
+          </div>
           <div
             style={{
               fontFamily: "'Poppins', sans-serif",
@@ -482,8 +812,15 @@ function ComplaintDetail({ complaint: c }: { complaint: Complaint }) {
             {c.complaint_id}
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
           <ModeBadge mode={c.mode} />
+
           <StatusBadge status={c.status} />
         </div>
       </div>
@@ -503,23 +840,33 @@ function ComplaintDetail({ complaint: c }: { complaint: Complaint }) {
             fontWeight: 600,
           }}
         >
-          FIR Number: {c.fir_number}
+          {t("complaints.firNumber")}: {c.fir_number}
         </div>
       )}
 
       <div style={styles.detailGrid}>
-        <DetailCell label="Incident Type" value={c.incident_type} />
-        <DetailCell label="Date" value={c.incident_date} />
-        <DetailCell label="Location" value={c.incident_location} />
         <DetailCell
-          label="Assigned Officer"
-          value={c.assigned_officer || "Not yet assigned"}
+          label={t("complaints.incidentType")}
+          value={c.incident_type}
+        />
+
+        <DetailCell label={t("complaints.date")} value={c.incident_date} />
+
+        <DetailCell
+          label={t("complaints.location")}
+          value={c.incident_location}
+        />
+
+        <DetailCell
+          label={t("complaints.assignedOfficer")}
+          value={c.assigned_officer || t("complaints.notYetAssigned")}
         />
       </div>
 
       {c.incident_description && (
         <div style={{ marginTop: 14 }}>
-          <div style={styles.panelSubtitle}>Description</div>
+          <div style={styles.panelSubtitle}>{t("complaints.description")}</div>
+
           <p
             style={{
               fontSize: 13,
@@ -536,7 +883,11 @@ function ComplaintDetail({ complaint: c }: { complaint: Complaint }) {
       {c.mode?.toLowerCase() === "chat" &&
         c.chat_collected_data &&
         Object.keys(c.chat_collected_data).length > 0 && (
-          <details style={{ marginTop: 16 }}>
+          <details
+            style={{
+              marginTop: 16,
+            }}
+          >
             <summary
               style={{
                 fontSize: 11.5,
@@ -545,12 +896,14 @@ function ComplaintDetail({ complaint: c }: { complaint: Complaint }) {
                 cursor: "pointer",
               }}
             >
-              AI-collected information
+              {t("complaints.aiCollectedInformation")}
             </summary>
+
             <div style={styles.kvGrid}>
               {Object.entries(c.chat_collected_data).map(([k, v]) => (
                 <div key={k} style={styles.kvCell}>
                   <div style={styles.kvLabel}>{k.replace(/_/g, " ")}</div>
+
                   <div style={styles.kvValue}>
                     {v === null || v === undefined ? "—" : String(v)}
                   </div>
@@ -563,6 +916,10 @@ function ComplaintDetail({ complaint: c }: { complaint: Complaint }) {
   );
 }
 
+/* =========================================================
+DETAIL CELL
+========================================================= */
+
 function DetailCell({
   label,
   value,
@@ -572,11 +929,16 @@ function DetailCell({
 }) {
   return (
     <div style={styles.detailCell}>
-      <div style={styles.detailLabel}>{label}</div>
+      {" "}
+      <div style={styles.detailLabel}>{label} </div>
       <div style={styles.detailValue}>{value || "—"}</div>
     </div>
   );
 }
+
+/* =========================================================
+SHIELD ICON
+========================================================= */
 
 function ShieldIcon({
   size = 20,
@@ -587,17 +949,20 @@ function ShieldIcon({
 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {" "}
       <path
         d="M12 3l7 3v6c0 4.5-3 7.7-7 9-4-1.3-7-4.5-7-9V6l7-3z"
         stroke={color}
         strokeWidth="1.7"
         strokeLinejoin="round"
-      />
+      />{" "}
     </svg>
   );
 }
 
-// ---------- Design tokens (shared) ----------
+/* =========================================================
+DESIGN TOKENS
+========================================================= */
 
 const NAVY = "#152A43";
 const NAVY_DEEP = "#0E2438";
@@ -608,6 +973,10 @@ const BORDER = "#E3E9EC";
 const BG_SECTION = "#EAF2F5";
 const TEXT = "#5B6B7A";
 const MUTED = "#8A97A3";
+
+/* =========================================================
+STYLES
+========================================================= */
 
 const styles = {
   page: {
@@ -628,6 +997,7 @@ const styles = {
     top: 0,
     height: "100vh",
   } as React.CSSProperties,
+
   sidebarLogoRow: {
     display: "flex",
     alignItems: "center",
@@ -635,6 +1005,7 @@ const styles = {
     padding: "0 8px",
     marginBottom: 30,
   } as React.CSSProperties,
+
   sidebarLogoIcon: {
     width: 32,
     height: 32,
@@ -645,12 +1016,14 @@ const styles = {
     justifyContent: "center",
     flexShrink: 0,
   } as React.CSSProperties,
+
   sidebarLogoTitle: {
     fontFamily: "'Poppins', 'Segoe UI', sans-serif",
     fontSize: 16,
     fontWeight: 700,
     color: "#FFFFFF",
   } as React.CSSProperties,
+
   sidebarLogoSub: {
     fontSize: 9.5,
     letterSpacing: "0.08em",
@@ -658,12 +1031,14 @@ const styles = {
     marginTop: 1,
     textTransform: "uppercase" as const,
   } as React.CSSProperties,
+
   navList: {
     display: "flex",
     flexDirection: "column",
     gap: 3,
     flex: 1,
   } as React.CSSProperties,
+
   navItem: (active: boolean): React.CSSProperties => ({
     display: "flex",
     alignItems: "center",
@@ -679,11 +1054,13 @@ const styles = {
     color: active ? "#FFFFFF" : "rgba(255,255,255,0.65)",
     textAlign: "left",
   }),
+
   sidebarFooter: {
     borderTop: "1px solid rgba(255,255,255,0.12)",
     paddingTop: 16,
     marginTop: 12,
   } as React.CSSProperties,
+
   sidebarUserRow: {
     display: "flex",
     alignItems: "center",
@@ -691,6 +1068,7 @@ const styles = {
     padding: "0 8px",
     marginBottom: 12,
   } as React.CSSProperties,
+
   sidebarAvatar: {
     width: 32,
     height: 32,
@@ -704,6 +1082,7 @@ const styles = {
     justifyContent: "center",
     flexShrink: 0,
   } as React.CSSProperties,
+
   sidebarUserName: {
     fontSize: 12.5,
     fontWeight: 600,
@@ -712,6 +1091,7 @@ const styles = {
     overflow: "hidden",
     textOverflow: "ellipsis",
   } as React.CSSProperties,
+
   sidebarUserMeta: {
     fontSize: 11,
     color: "rgba(255,255,255,0.5)",
@@ -720,6 +1100,7 @@ const styles = {
     overflow: "hidden",
     textOverflow: "ellipsis",
   } as React.CSSProperties,
+
   sidebarLogoutBtn: {
     width: "100%",
     padding: "9px 12px",
@@ -739,11 +1120,17 @@ const styles = {
     display: "flex",
     flexDirection: "column",
   } as React.CSSProperties,
+
   topbar: {
     background: "#FFFFFF",
     borderBottom: `1px solid ${BORDER}`,
     padding: "18px 32px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 20,
   } as React.CSSProperties,
+
   topbarEyebrow: {
     fontSize: 10,
     fontWeight: 700,
@@ -752,16 +1139,34 @@ const styles = {
     letterSpacing: "0.08em",
     marginBottom: 4,
   } as React.CSSProperties,
+
   topbarTitle: {
     fontFamily: "'Poppins', 'Segoe UI', sans-serif",
     fontSize: 20,
     fontWeight: 700,
     color: NAVY,
   } as React.CSSProperties,
+
   topbarSub: {
     fontSize: 12.5,
     color: TEXT,
     marginTop: 3,
+  } as React.CSSProperties,
+
+  translateBtn: {
+    display: "flex",
+    alignItems: "center",
+    gap: 7,
+    padding: "9px 15px",
+    borderRadius: 20,
+    border: `1px solid ${TEAL}`,
+    background: TEAL_TINT,
+    color: TEAL_DARK,
+    fontSize: 12,
+    fontWeight: 700,
+    cursor: "pointer",
+    fontFamily: "'Inter', sans-serif",
+    whiteSpace: "nowrap",
   } as React.CSSProperties,
 
   body: {
@@ -777,7 +1182,11 @@ const styles = {
     boxSizing: "border-box",
   } as React.CSSProperties,
 
-  lookupBar: { display: "flex", gap: 10 } as React.CSSProperties,
+  lookupBar: {
+    display: "flex",
+    gap: 10,
+  } as React.CSSProperties,
+
   lookupInput: {
     flex: 1,
     padding: "12px 14px",
@@ -788,6 +1197,7 @@ const styles = {
     color: NAVY,
     background: "#FFFFFF",
   } as React.CSSProperties,
+
   primaryBtn: {
     padding: "12px 20px",
     borderRadius: 8,
@@ -810,12 +1220,14 @@ const styles = {
     border: `1px dashed ${BORDER}`,
     borderRadius: 10,
   } as React.CSSProperties,
+
   loadingState: {
     padding: "16px",
     textAlign: "center" as const,
     color: MUTED,
     fontSize: 12.5,
   } as React.CSSProperties,
+
   errorBox: {
     padding: "12px 14px",
     background: "#FBEBEA",
@@ -831,12 +1243,14 @@ const styles = {
     borderRadius: 14,
     padding: 20,
   } as React.CSSProperties,
+
   panelTitle: {
     fontFamily: "'Poppins', 'Segoe UI', sans-serif",
     fontSize: 14,
     fontWeight: 700,
     color: NAVY,
   } as React.CSSProperties,
+
   panelSubtitle: {
     fontSize: 11,
     color: MUTED,
@@ -851,12 +1265,14 @@ const styles = {
     gap: 10,
     marginTop: 16,
   } as React.CSSProperties,
+
   detailCell: {
     background: BG_SECTION,
     border: `1px solid ${BORDER}`,
     borderRadius: 8,
     padding: "10px 12px",
   } as React.CSSProperties,
+
   detailLabel: {
     fontSize: 9.5,
     color: MUTED,
@@ -864,6 +1280,7 @@ const styles = {
     letterSpacing: "0.04em",
     marginBottom: 3,
   } as React.CSSProperties,
+
   detailValue: {
     fontSize: 13,
     fontWeight: 600,
@@ -876,18 +1293,21 @@ const styles = {
     gap: 8,
     marginTop: 10,
   } as React.CSSProperties,
+
   kvCell: {
     background: BG_SECTION,
     border: `1px solid ${BORDER}`,
     borderRadius: 7,
     padding: "8px 10px",
   } as React.CSSProperties,
+
   kvLabel: {
     fontSize: 9,
     color: MUTED,
     textTransform: "capitalize" as const,
     marginBottom: 2,
   } as React.CSSProperties,
+
   kvValue: {
     fontSize: 12,
     fontWeight: 600,
@@ -909,14 +1329,33 @@ const styles = {
     textAlign: "left",
     width: "100%",
   }),
+
   listRowId: {
     fontSize: 12.5,
     fontWeight: 700,
     color: NAVY,
   } as React.CSSProperties,
+
   listRowMeta: {
     fontSize: 11,
     color: TEXT,
     marginTop: 1,
   } as React.CSSProperties,
 };
+
+/* =========================================================
+I18N PROVIDER EXPORT
+========================================================= */
+
+function TrackFIRStatusWithLocalization() {
+  return <TrackFIRStatus />;
+}
+
+export function TrackFIRStatusLocalized() {
+  return (
+    <I18nextProvider i18n={i18nInstance}>
+      {" "}
+      <TrackFIRStatusWithLocalization />{" "}
+    </I18nextProvider>
+  );
+}
