@@ -87,7 +87,7 @@ export default function OfficerDashboard() {
     { key: "dashboard", label: t.navDashboard, icon: "grid" },
     { key: "cases", label: t.navBNS, icon: "case" },
     { key: "districts", label: t.navCrime, icon: "map" },
-    { key: "analytics", label: t.navExplain, icon: "chart" },
+    { key: "explain", label: t.navExplain, icon: "chart" },
     { key: "reports", label: t.navGenerate, icon: "bolt" },
     { key: "settings", label: t.navSettings, icon: "gear" },
   ];
@@ -137,13 +137,14 @@ export default function OfficerDashboard() {
               key={item.key}
               type="button"
               onClick={() => {
-                if (item.key === "districts" || item.key === "analytics") {
+                if (item.key === "districts") {
                   navigate("/dash");
                 } else if (item.key === "reports") {
                   navigate("/generate-report");
                 } else if (item.key === "cases") {
                   navigate("/bns");
-                } else {
+                } else if (item.key === "explain") navigate("/explain");
+                else {
                   setActiveNav(item.key);
                 }
               }}

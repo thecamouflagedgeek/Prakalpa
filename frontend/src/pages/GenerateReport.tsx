@@ -419,7 +419,7 @@ export default function GenerateReport() {
             { key: "dashboard", label: "Dashboard", icon: "grid" },
             { key: "cases", label: "BNS Sections", icon: "case" },
             { key: "districts", label: "Crime Hotspot", icon: "map" },
-            { key: "analytics", label: "Explainable AI", icon: "chart" },
+            { key: "explain", label: "Explainable AI", icon: "chart" },
             { key: "reports", label: "Generate report", icon: "bolt" },
             { key: "settings", label: "Settings", icon: "gear" },
           ].map((item) => (
@@ -429,6 +429,7 @@ export default function GenerateReport() {
               onClick={() => {
                 if (item.key === "districts" || item.key === "analytics")
                   navigate("/dash");
+                else if (item.key === "explain") navigate("/explain");
                 else if (item.key === "reports") navigate("/generate-report");
                 else if (item.key === "dashboard")
                   navigate("/officer/dashboard");
