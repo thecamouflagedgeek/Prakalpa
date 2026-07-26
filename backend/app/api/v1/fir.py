@@ -4,7 +4,7 @@ import httpx
 
 router = APIRouter(prefix="/fir", tags=["FIR"])
 
-AI_ENGINE_URL = "http://localhost:8001"
+AI_ENGINE_URL = "https://prakalpa-ai.onrender.com"
 
 @router.post("/chat", response_model=FIRChatResponse)
 async def fir_chat(request: FIRChatRequest):

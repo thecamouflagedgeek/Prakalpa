@@ -82,7 +82,7 @@ def pattern_summary(station: str):
 
     try:
         response = requests.post(
-            "http://localhost:8001/agent/crime/pattern-summary",
+            "https://prakalpa-ai.onrender.com/agent/crime/pattern-summary",
             json=payload,
             timeout=30
         )
@@ -110,7 +110,7 @@ def ai_summary(station: str):
     )
 
     response = requests.post(
-        "http://localhost:8001/agent/crime/analyze",
+        "https://prakalpa-ai.onrender.com/agent/crime/analyze",
         json=payload
     )
 

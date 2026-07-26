@@ -14,7 +14,7 @@ app = FastAPI(title="Prakalpa Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "https://prakalpa-frontend.onrender.com",],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -190,7 +190,7 @@ class LegalRecommendationRequest(BaseModel):
 @app.post("/api/v1/fir/chat")
 async def fir_chat(request: ChatRequest):
     async with httpx.AsyncClient() as client:
-        response = await client.post("http://127.0.0.1:8001/agent/fir/chat",json=request.dict(), timeout=30.0)
+        response = await client.post("https://prakalpa-ai.onrender.com/agent/fir/chat",json=request.dict(), timeout=30.0)
     return response.json()
 
 @app.post("/api/v1/fir/tts", response_model=TTSResponse)
@@ -202,7 +202,7 @@ async def legal_recommend(request: LegalRecommendationRequest):
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                "http://127.0.0.1:8001/agent/legal/recommend",
+                "https://prakalpa-ai.onrender.com/agent/legal/recommend",
                 json={
                     "incident_description": request.incident_description
                 },
@@ -237,7 +237,7 @@ class LegalRecommendRequest(BaseModel):
 async def legal_recommend(request: LegalRecommendRequest):
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            "http://127.0.0.1:8001/agent/legal/recommend",
+            "https://prakalpa-ai.onrender.com/agent/legal/recommend",
             json=request.dict(),
             timeout=30.0,
         )
