@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./store/authStore";
 import Landing from "./pages/Landing";
+import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import CitizenPortal from "./pages/CitizenPortal";
 import OfficerDashboard from "./pages/OfficerDashboard";
@@ -22,6 +23,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="/dash" element={<Dashboard />} />
         <Route
           path="/citizen"

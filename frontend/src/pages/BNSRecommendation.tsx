@@ -267,7 +267,7 @@ export default function BNSRecommendation() {
               key: "cases",
               label: t.bnsSections,
               icon: "case",
-              path: "/bns-recommendation",
+              path: "/bns",
             },
             {
               key: "districts",
