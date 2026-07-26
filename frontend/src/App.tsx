@@ -14,6 +14,8 @@ import ExplainAI from "./pages/ExplainableAI";
 import TrackFIR from "./pages/TrackFirStatus";
 import Right from "./pages/Rights";
 import Emer from "./pages/Emergency";
+import About from "./pages/About";
+import District from "./pages/District";
 
 export default function App() {
   const { user } = useAuthStore();
@@ -54,6 +56,8 @@ export default function App() {
         <Route path="/track" element={<TrackFIR />} />
         <Route path="/right" element={<Right />} />
         <Route path="/emergency" element={<Emer />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/dis" element={<District />} />
       </Routes>
     </BrowserRouter>
   );

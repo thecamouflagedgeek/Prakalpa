@@ -4,8 +4,9 @@ from agents.legal_retriever import retrieve_sections
 
 import json
 import os
+_key = os.getenv("GROQI")
 
-
+print(f"[legal_recommender] Using key ending in: ...{_key[-6:] if _key else 'NOT FOUND'}")
 load_dotenv()
 
 client = Groq(

@@ -38,6 +38,7 @@ const IGlobe = (p: { color?: string; size?: number }) => (
     fill="none"
   >
     <circle cx="12" cy="12" r="10" stroke={p.color ?? C.teal} strokeWidth="2" />
+
     <line
       x1="2"
       y1="12"
@@ -69,34 +70,40 @@ const IShield = (p: { color?: string; size?: number }) => (
     />
   </svg>
 );
+
 const IChat = (p: { color?: string }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    {" "}
     <path
       d="M4 5h16v11H8l-4 4V5z"
       stroke={p.color}
       strokeWidth="1.7"
       strokeLinejoin="round"
-    />
+    />{" "}
   </svg>
 );
+
 const ISection = (p: { color?: string }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    {" "}
     <path
       d="M6 3h9l4 4v14H6V3z"
       stroke={p.color}
       strokeWidth="1.7"
       strokeLinejoin="round"
-    />
+    />{" "}
     <path
       d="M9 12h6M9 16h6"
       stroke={p.color}
       strokeWidth="1.7"
       strokeLinecap="round"
-    />
+    />{" "}
   </svg>
 );
+
 const ILock = (p: { color?: string }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    {" "}
     <rect
       x="5"
       y="11"
@@ -105,40 +112,46 @@ const ILock = (p: { color?: string }) => (
       rx="2"
       stroke={p.color}
       strokeWidth="1.7"
-    />
-    <path d="M8 11V8a4 4 0 018 0v3" stroke={p.color} strokeWidth="1.7" />
+    />{" "}
+    <path d="M8 11V8a4 4 0 018 0v3" stroke={p.color} strokeWidth="1.7" />{" "}
   </svg>
 );
+
 const IChart = (p: { color?: string }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    {" "}
     <path
       d="M4 20V10M11 20V4M18 20v-7"
       stroke={p.color}
       strokeWidth="2"
       strokeLinecap="round"
-    />
+    />{" "}
   </svg>
 );
+
 const IUsers = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-    <circle cx="9" cy="8" r="3" stroke={C.teal} strokeWidth="1.7" />
+    {" "}
+    <circle cx="9" cy="8" r="3" stroke={C.teal} strokeWidth="1.7" />{" "}
     <path
       d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"
       stroke={C.teal}
       strokeWidth="1.7"
       strokeLinecap="round"
-    />
-    <circle cx="17" cy="9" r="2.3" stroke={C.teal} strokeWidth="1.7" />
+    />{" "}
+    <circle cx="17" cy="9" r="2.3" stroke={C.teal} strokeWidth="1.7" />{" "}
     <path
       d="M15.5 14c2.6.3 4.5 2.5 4.5 6"
       stroke={C.teal}
       strokeWidth="1.7"
       strokeLinecap="round"
-    />
+    />{" "}
   </svg>
 );
+
 const ICase = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    {" "}
     <rect
       x="3"
       y="8"
@@ -147,71 +160,81 @@ const ICase = () => (
       rx="1.5"
       stroke={C.teal}
       strokeWidth="1.7"
-    />
+    />{" "}
     <path
       d="M8 8V6a2 2 0 012-2h4a2 2 0 012 2v2"
       stroke={C.teal}
       strokeWidth="1.7"
-    />
+    />{" "}
   </svg>
 );
+
 const ITrophy = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    {" "}
     <path
       d="M8 4h8v5a4 4 0 01-8 0V4z"
       stroke={C.teal}
       strokeWidth="1.7"
       strokeLinejoin="round"
-    />
+    />{" "}
     <path
       d="M12 13v3M9 20h6M10 16.5h4"
       stroke={C.teal}
       strokeWidth="1.7"
       strokeLinecap="round"
-    />
+    />{" "}
     <path
       d="M8 5H5a3 3 0 003 3M16 5h3a3 3 0 01-3 3"
       stroke={C.teal}
       strokeWidth="1.7"
-    />
+    />{" "}
   </svg>
 );
+
 const IStatGlobe = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="12" r="8.5" stroke={C.teal} strokeWidth="1.7" />
+    {" "}
+    <circle cx="12" cy="12" r="8.5" stroke={C.teal} strokeWidth="1.7" />{" "}
     <path
       d="M3.5 12h17M12 3.5c2.5 2.4 3.8 5.4 3.8 8.5S14.5 18.1 12 20.5C9.5 18.1 8.2 15.1 8.2 12S9.5 5.9 12 3.5z"
       stroke={C.teal}
       strokeWidth="1.5"
-    />
+    />{" "}
   </svg>
 );
+
 const IArrow = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+    {" "}
     <path
       d="M5 12h14M13 6l6 6-6 6"
       stroke={C.teal}
       strokeWidth="2.2"
       strokeLinecap="round"
       strokeLinejoin="round"
-    />
+    />{" "}
   </svg>
 );
+
 const ICheck = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="12" r="10" fill={C.iconGreen} />
+    {" "}
+    <circle cx="12" cy="12" r="10" fill={C.iconGreen} />{" "}
     <path
       d="M7 12.5l3 3 7-7"
       stroke={C.iconGreenFg}
       strokeWidth="2.2"
       strokeLinecap="round"
       strokeLinejoin="round"
-    />
+    />{" "}
   </svg>
 );
+
 const IPlay = () => (
   <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-    <path d="M6 4l14 8-14 8V4z" fill={C.teal} />
+    {" "}
+    <path d="M6 4l14 8-14 8V4z" fill={C.teal} />{" "}
   </svg>
 );
 
@@ -251,8 +274,8 @@ function Stat({
           flexShrink: 0,
         }}
       >
-        {icon}
-      </div>
+        {icon}{" "}
+      </div>{" "}
       <div>
         <div
           style={{
@@ -263,7 +286,7 @@ function Stat({
             lineHeight: 1.1,
           }}
         >
-          {value}
+          {value}{" "}
         </div>
         <div
           style={{
@@ -273,9 +296,9 @@ function Stat({
             marginTop: 2,
           }}
         >
-          {label}
-        </div>
-      </div>
+          {label}{" "}
+        </div>{" "}
+      </div>{" "}
     </div>
   );
 }
@@ -298,6 +321,7 @@ function ServiceCard({
   learnMoreText: string;
 }) {
   const [hover, setHover] = useState(false);
+
   return (
     <div
       onMouseEnter={() => setHover(true)}
@@ -327,8 +351,9 @@ function ServiceCard({
           marginBottom: 20,
         }}
       >
-        {icon({ color: fg })}
+        {icon({ color: fg })}{" "}
       </div>
+
       <h3
         style={{
           fontFamily: F.head,
@@ -340,6 +365,7 @@ function ServiceCard({
       >
         {title}
       </h3>
+
       <p
         style={{
           fontFamily: F.body,
@@ -351,6 +377,7 @@ function ServiceCard({
       >
         {desc}
       </p>
+
       <a
         href="#"
         style={{
@@ -390,19 +417,14 @@ export default function KavachLandingPage() {
 
   const navKeys = [
     { key: "home", label: t("nav.home") },
-    { key: "about", label: t("nav.about") },
-    { key: "services", label: t("nav.services") },
-    { key: "districts", label: t("nav.districts") },
-    { key: "insights", label: t("nav.insights") },
-    { key: "careers", label: t("nav.careers") },
-    { key: "contact", label: t("nav.contact") },
+    { key: "about", label: t("nav.about"), path: "/about" },
+    { key: "districts", label: t("nav.districts"), path: "/dis" },
   ];
 
   return (
     <div style={{ background: C.white, width: "100%", minHeight: "100vh" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
-        * { box-sizing: border-box; }
+      {" "}
+      <style>{`         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');         * { box-sizing: border-box; }
         body { margin: 0; }
         a:focus-visible, button:focus-visible { outline: 2px solid ${C.teal}; outline-offset: 2px; }
         @media (max-width: 900px) {
@@ -414,7 +436,6 @@ export default function KavachLandingPage() {
           .kv-about-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
-
       {/* ---------------- HEADER ---------------- */}
       <header
         style={{
@@ -449,6 +470,7 @@ export default function KavachLandingPage() {
             >
               <IShield size={18} />
             </div>
+
             <span
               style={{
                 fontFamily: F.head,
@@ -466,7 +488,13 @@ export default function KavachLandingPage() {
             {navKeys.map((item) => (
               <a
                 key={item.key}
-                href="#"
+                href={
+                  item.key === "about"
+                    ? "/about"
+                    : item.key === "districts"
+                      ? "/dis"
+                      : "#"
+                }
                 style={{
                   fontFamily: F.body,
                   fontSize: 13.5,
@@ -522,7 +550,6 @@ export default function KavachLandingPage() {
           </div>
         </div>
       </header>
-
       {/* ---------------- HERO ---------------- */}
       <section style={{ position: "relative", overflow: "hidden" }}>
         <img
@@ -537,6 +564,7 @@ export default function KavachLandingPage() {
             objectPosition: "center",
           }}
         />
+
         <div
           style={{
             position: "absolute",
@@ -568,6 +596,7 @@ export default function KavachLandingPage() {
             <br />
             <span style={{ color: C.teal }}>{t("hero.title_line2")}</span>
           </h1>
+
           <p
             style={{
               fontFamily: F.body,
@@ -580,6 +609,7 @@ export default function KavachLandingPage() {
           >
             {t("hero.desc")}
           </p>
+
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
             <button
               style={{
@@ -596,6 +626,7 @@ export default function KavachLandingPage() {
             >
               {t("hero.our_services")}
             </button>
+
             <button
               style={{
                 background: C.white,
@@ -630,7 +661,6 @@ export default function KavachLandingPage() {
           </div>
         </div>
       </section>
-
       {/* ---------------- STATS BAR ---------------- */}
       <section
         style={{
@@ -674,7 +704,6 @@ export default function KavachLandingPage() {
           />
         </div>
       </section>
-
       {/* ---------------- WHAT WE DO ---------------- */}
       <section style={{ background: C.bgSection, padding: "70px 28px 60px" }}>
         <div style={{ maxWidth: 1180, margin: "0 auto" }}>
@@ -700,6 +729,7 @@ export default function KavachLandingPage() {
               >
                 {t("what_we_do.tag")}
               </div>
+
               <h2
                 style={{
                   fontFamily: F.head,
@@ -717,6 +747,7 @@ export default function KavachLandingPage() {
                 </span>
               </h2>
             </div>
+
             <p
               style={{
                 fontFamily: F.body,
@@ -752,6 +783,7 @@ export default function KavachLandingPage() {
               desc={t("services_list.s1_desc")}
               learnMoreText={t("what_we_do.learn_more")}
             />
+
             <ServiceCard
               bg={C.iconGreen}
               fg={C.iconGreenFg}
@@ -760,6 +792,7 @@ export default function KavachLandingPage() {
               desc={t("services_list.s2_desc")}
               learnMoreText={t("what_we_do.learn_more")}
             />
+
             <ServiceCard
               bg={C.iconPurple}
               fg={C.iconPurpleFg}
@@ -768,6 +801,7 @@ export default function KavachLandingPage() {
               desc={t("services_list.s3_desc")}
               learnMoreText={t("what_we_do.learn_more")}
             />
+
             <ServiceCard
               bg={C.iconOrange}
               fg={C.iconOrangeFg}
@@ -779,7 +813,6 @@ export default function KavachLandingPage() {
           </div>
         </div>
       </section>
-
       {/* ---------------- ABOUT ---------------- */}
       <section style={{ padding: "80px 28px" }}>
         <div
@@ -806,6 +839,7 @@ export default function KavachLandingPage() {
             >
               {t("about.tag")}
             </div>
+
             <h2
               style={{
                 fontFamily: F.head,
@@ -819,6 +853,7 @@ export default function KavachLandingPage() {
               {t("about.title_line1")}{" "}
               <span style={{ color: C.teal }}>{t("about.title_line2")}</span>
             </h2>
+
             <p
               style={{
                 fontFamily: F.body,
@@ -830,6 +865,7 @@ export default function KavachLandingPage() {
             >
               {t("about.desc")}
             </p>
+
             <div
               style={{
                 display: "flex",
@@ -845,6 +881,7 @@ export default function KavachLandingPage() {
                     style={{ display: "flex", alignItems: "center", gap: 10 }}
                   >
                     <ICheck />
+
                     <span
                       style={{
                         fontFamily: F.body,
@@ -859,6 +896,7 @@ export default function KavachLandingPage() {
                 ),
               )}
             </div>
+
             <button
               style={{
                 background: C.teal,
@@ -888,6 +926,7 @@ export default function KavachLandingPage() {
                 objectFit: "cover",
               }}
             />
+
             <div
               style={{
                 position: "absolute",
@@ -910,6 +949,7 @@ export default function KavachLandingPage() {
               >
                 15+
               </div>
+
               <div
                 style={{
                   fontFamily: F.body,
@@ -921,6 +961,7 @@ export default function KavachLandingPage() {
               >
                 {t("about.badge_years")}
               </div>
+
               <div
                 style={{
                   fontFamily: F.body,
@@ -935,7 +976,6 @@ export default function KavachLandingPage() {
           </div>
         </div>
       </section>
-
       {/* ---------------- TRUSTED BY ---------------- */}
       <section
         style={{
@@ -957,6 +997,7 @@ export default function KavachLandingPage() {
           >
             {t("trusted.in_coordination_with")}
           </div>
+
           <div
             style={{
               display: "flex",

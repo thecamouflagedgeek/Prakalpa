@@ -13,7 +13,7 @@ import {
   Clock,
   Globe2,
 } from "lucide-react";
-import i18n from "i18next";
+import i18next from "i18next";
 import {
   initReactI18next,
   I18nextProvider,
@@ -22,7 +22,7 @@ import {
 import { useAuthStore } from "../store/authStore";
 
 /* =========================================================
-JSON-BASED LOCALIZATION
+   JSON-BASED LOCALIZATION
 ========================================================= */
 
 const resources = {
@@ -60,9 +60,12 @@ const resources = {
       complaints: {
         title: "My Complaints",
         subtitle: "Everything you've filed, whether by form or AI chat",
+
         noComplaints: "You haven't filed any complaints yet.",
+
         selectComplaint:
           "Enter a complaint reference above, or pick one of your complaints below.",
+
         complaintReference: "Complaint Reference",
         incidentType: "Incident Type",
         date: "Date",
@@ -79,8 +82,11 @@ const resources = {
 
       errors: {
         backend: "Backend is not reachable. Please try again shortly.",
+
         notFound: "No complaint found with that reference number.",
+
         somethingWrong: "Something went wrong looking up this complaint.",
+
         requestFailed: "Request failed",
       },
 
@@ -116,6 +122,7 @@ const resources = {
 
       lookup: {
         placeholder: "ನಿಮ್ಮ ದೂರು ಉಲ್ಲೇಖ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ, ಉದಾ. CMP-A1B2C3D4",
+
         searching: "ಹುಡುಕಲಾಗುತ್ತಿದೆ…",
         track: "ಟ್ರ್ಯಾಕ್ ಮಾಡಿ",
       },
@@ -128,10 +135,14 @@ const resources = {
 
       complaints: {
         title: "ನನ್ನ ದೂರುಗಳು",
+
         subtitle: "ಫಾರ್ಮ್ ಅಥವಾ AI ಚಾಟ್ ಮೂಲಕ ನೀವು ದಾಖಲಿಸಿದ ಎಲ್ಲಾ ದೂರುಗಳು",
+
         noComplaints: "ನೀವು ಇನ್ನೂ ಯಾವುದೇ ದೂರುಗಳನ್ನು ದಾಖಲಿಸಿಲ್ಲ.",
+
         selectComplaint:
           "ಮೇಲಿನ ದೂರು ಉಲ್ಲೇಖ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ ಅಥವಾ ಕೆಳಗಿನ ನಿಮ್ಮ ದೂರುಗಳಲ್ಲಿ ಒಂದನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
+
         complaintReference: "ದೂರು ಉಲ್ಲೇಖ",
         incidentType: "ಘಟನೆಯ ಪ್ರಕಾರ",
         date: "ದಿನಾಂಕ",
@@ -149,8 +160,11 @@ const resources = {
       errors: {
         backend:
           "ಬ್ಯಾಕೆಂಡ್ ಸಂಪರ್ಕಿಸಲಾಗುತ್ತಿಲ್ಲ. ದಯವಿಟ್ಟು ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+
         notFound: "ಈ ಉಲ್ಲೇಖ ಸಂಖ್ಯೆಯೊಂದಿಗೆ ಯಾವುದೇ ದೂರು ಕಂಡುಬಂದಿಲ್ಲ.",
+
         somethingWrong: "ಈ ದೂರುವನ್ನು ಹುಡುಕುವಾಗ ಏನೋ ತಪ್ಪಾಗಿದೆ.",
+
         requestFailed: "ವಿನಂತಿ ವಿಫಲವಾಗಿದೆ",
       },
 
@@ -165,26 +179,55 @@ const resources = {
   },
 };
 
-const i18nInstance = i18n.createInstance();
+/* =========================================================
+   I18N INSTANCE
+
+   IMPORTANT:
+   initImmediate: false ensures that translations are
+   ready before the first React render.
+
+   FIX: every useTranslation() call below is bound to this
+   exact instance via `{ i18n: i18nInstance }`. Previously,
+   useTranslation() relied purely on React context from
+   <I18nextProvider>. If this component (or a sub-component
+   like ModeBadge/StatusBadge/etc.) ever renders outside that
+   provider's tree — e.g. because the page imports the raw
+   `TrackFIRStatus` export instead of the default
+   `TrackFIRStatusLocalized`, or gets rendered inside another
+   layout/provider — react-i18next silently falls back to the
+   global default i18next singleton, which has none of these
+   resources loaded. That fallback instance has no keys, so
+   t("sidebar.citizenPortal") just returns the literal key
+   string "sidebar.citizenPortal" — exactly the bug you saw.
+
+   Binding directly to i18nInstance makes every t() call work
+   correctly no matter how/where the component tree is mounted.
+========================================================= */
+
+const i18nInstance = i18next.createInstance();
 
 i18nInstance.use(initReactI18next).init({
   resources,
   lng: "en",
   fallbackLng: "en",
+  defaultNS: "translation",
+  ns: ["translation"],
   keySeparator: ".",
+  nsSeparator: false,
   interpolation: {
     escapeValue: false,
   },
+  initImmediate: false,
 });
 
 /* =========================================================
-CONSTANTS
+   CONSTANTS
 ========================================================= */
 
 const API_BASE = "http://localhost:8000/api/v1";
 
 /* =========================================================
-TYPES
+   TYPES
 ========================================================= */
 
 interface Complaint {
@@ -206,6 +249,10 @@ interface Complaint {
   chat_session_id?: string | null;
   chat_collected_data?: Record<string, unknown> | null;
 }
+
+/* =========================================================
+   STATUS STEPS
+========================================================= */
 
 const STATUS_STEPS = [
   {
@@ -229,6 +276,10 @@ function statusIndex(status: string): number {
 
   return idx === -1 ? 0 : idx;
 }
+
+/* =========================================================
+   ERROR HANDLING
+========================================================= */
 
 function describeError(err: unknown, t: (key: string) => string): string {
   if (axios.isAxiosError(err)) {
@@ -254,6 +305,10 @@ function describeError(err: unknown, t: (key: string) => string): string {
   return t("errors.somethingWrong");
 }
 
+/* =========================================================
+   DATE FORMAT
+========================================================= */
+
 function formatDateTime(iso: string, language: "en" | "kn"): string {
   if (!iso) return "—";
 
@@ -271,11 +326,13 @@ function formatDateTime(iso: string, language: "en" | "kn"): string {
 }
 
 /* =========================================================
-MAIN COMPONENT
+   MAIN COMPONENT
 ========================================================= */
 
-export default function TrackFIRStatus() {
-  const { t, i18n: currentI18n } = useTranslation();
+function TrackFIRStatus() {
+  const { t, i18n: currentI18n } = useTranslation("translation", {
+    i18n: i18nInstance,
+  });
 
   const { user, logout } = useAuthStore();
 
@@ -283,7 +340,9 @@ export default function TrackFIRStatus() {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [language, setLanguage] = useState<"en" | "kn">("en");
+  const [language, setLanguage] = useState<"en" | "kn">(
+    currentI18n.language === "kn" ? "kn" : "en",
+  );
 
   const [lookupId, setLookupId] = useState(searchParams.get("id") || "");
 
@@ -300,23 +359,24 @@ export default function TrackFIRStatus() {
   const [listError, setListError] = useState<string | null>(null);
 
   /* =========================================================
-LANGUAGE TOGGLE
-========================================================= */
+     LANGUAGE TOGGLE
+  ========================================================= */
 
-  const toggleLanguage = () => {
+  const toggleLanguage = async () => {
     const nextLanguage = language === "en" ? "kn" : "en";
 
-    setLanguage(nextLanguage);
+    await currentI18n.changeLanguage(nextLanguage);
 
-    currentI18n.changeLanguage(nextLanguage);
+    setLanguage(nextLanguage);
   };
 
   /* =========================================================
-LOAD CITIZEN COMPLAINTS
-========================================================= */
+     LOAD CITIZEN COMPLAINTS
+  ========================================================= */
 
   useEffect(() => {
     setListLoading(true);
+
     axios
       .get<Complaint[]>(`${API_BASE}/complaints/all`)
       .then((res) => {
@@ -332,11 +392,11 @@ LOAD CITIZEN COMPLAINTS
       })
       .catch((err) => setListError(describeError(err, t)))
       .finally(() => setListLoading(false));
-  }, [user?.username]);
+  }, [user?.username, t]);
 
   /* =========================================================
-DEEP-LINK SUPPORT
-========================================================= */
+     DEEP-LINK SUPPORT
+  ========================================================= */
 
   useEffect(() => {
     const id = searchParams.get("id");
@@ -349,8 +409,8 @@ DEEP-LINK SUPPORT
   }, []);
 
   /* =========================================================
-LOOKUP
-========================================================= */
+     LOOKUP
+  ========================================================= */
 
   const runLookup = (idOverride?: string) => {
     const id = (idOverride ?? lookupId).trim();
@@ -375,8 +435,8 @@ LOOKUP
   };
 
   /* =========================================================
-SELECT FROM LIST
-========================================================= */
+     SELECT FROM LIST
+  ========================================================= */
 
   const selectFromList = (c: Complaint) => {
     setSelected(c);
@@ -390,11 +450,9 @@ SELECT FROM LIST
     });
   };
 
-  const S = styles;
-
   /* =========================================================
-NAVIGATION
-========================================================= */
+     NAVIGATION ITEMS
+  ========================================================= */
 
   const navItems = [
     {
@@ -429,11 +487,13 @@ NAVIGATION
     },
   ];
 
+  const S = styles;
+
   return (
     <div style={S.page}>
       {/* =====================================================
-SIDEBAR
-===================================================== */}
+          SIDEBAR
+      ===================================================== */}
 
       <aside style={S.sidebar}>
         <div style={S.sidebarLogoRow}>
@@ -478,7 +538,11 @@ SIDEBAR
               {(user?.name || "C").charAt(0).toUpperCase()}
             </div>
 
-            <div style={{ minWidth: 0 }}>
+            <div
+              style={{
+                minWidth: 0,
+              }}
+            >
               <div style={S.sidebarUserName}>{user?.name || "Citizen"}</div>
 
               <div style={S.sidebarUserMeta}>{user?.username}</div>
@@ -499,10 +563,14 @@ SIDEBAR
       </aside>
 
       {/* =====================================================
-      MAIN
-  ===================================================== */}
+          MAIN
+      ===================================================== */}
 
       <div style={S.main}>
+        {/* =================================================
+            TOPBAR
+        ================================================= */}
+
         <div style={S.topbar}>
           <div>
             <div style={S.topbarEyebrow}>{t("header.citizenPortal")}</div>
@@ -512,10 +580,6 @@ SIDEBAR
             <div style={S.topbarSub}>{t("header.subtitle")}</div>
           </div>
 
-          {/* =================================================
-          TRANSLATE BUTTON
-      ================================================= */}
-
           <button type="button" onClick={toggleLanguage} style={S.translateBtn}>
             <Globe2 size={15} />
 
@@ -523,10 +587,14 @@ SIDEBAR
           </button>
         </div>
 
+        {/* =================================================
+            BODY
+        ================================================= */}
+
         <div style={S.body}>
           {/* =================================================
-          LOOKUP BAR
-      ================================================= */}
+              LOOKUP BAR
+          ================================================= */}
 
           <div style={S.lookupBar}>
             <input
@@ -534,7 +602,11 @@ SIDEBAR
               placeholder={t("lookup.placeholder")}
               value={lookupId}
               onChange={(e) => setLookupId(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && runLookup()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  runLookup();
+                }
+              }}
             />
 
             <button
@@ -549,8 +621,8 @@ SIDEBAR
           {lookupError && <div style={S.errorBox}>{lookupError}</div>}
 
           {/* =================================================
-          DETAIL PANEL
-      ================================================= */}
+              DETAIL PANEL
+          ================================================= */}
 
           {selected && <ComplaintDetail complaint={selected} />}
 
@@ -559,15 +631,19 @@ SIDEBAR
           )}
 
           {/* =================================================
-          MY COMPLAINTS LIST
-      ================================================= */}
+              MY COMPLAINTS LIST
+          ================================================= */}
 
           <div style={S.panel}>
             <div style={S.panelTitle}>{t("complaints.title")}</div>
 
             <div style={S.panelSubtitle}>{t("complaints.subtitle")}</div>
 
-            <div style={{ marginTop: 14 }}>
+            <div
+              style={{
+                marginTop: 14,
+              }}
+            >
               {listLoading && (
                 <div style={S.loadingState}>{t("loading.complaints")}</div>
               )}
@@ -612,7 +688,10 @@ SIDEBAR
                           <div style={S.listRowId}>{c.complaint_id}</div>
 
                           <div style={S.listRowMeta}>
-                            {c.incident_type || t("complaints.incident")} ·{" "}
+                            {c.incident_type || t("complaints.incident")}
+
+                            {" · "}
+
                             {formatDateTime(c.submitted_at, language)}
                           </div>
                         </div>
@@ -632,10 +711,12 @@ SIDEBAR
 }
 
 /* =========================================================
-MODE BADGE
+   MODE BADGE
 ========================================================= */
 
 function ModeBadge({ mode }: { mode: string }) {
+  const { t } = useTranslation("translation", { i18n: i18nInstance });
+
   const isChat = (mode || "").toLowerCase() === "chat";
 
   const Icon = isChat ? MessageSquare : ClipboardList;
@@ -653,19 +734,22 @@ function ModeBadge({ mode }: { mode: string }) {
         justifyContent: "center",
         flexShrink: 0,
       }}
-      title={isChat ? "Filed via Chat with AI" : "Filed via Form"}
+      title={
+        isChat ? t("complaints.filedViaChat") : t("complaints.filedViaForm")
+      }
     >
-      {" "}
-      <Icon size={14} />{" "}
+      <Icon size={14} />
     </div>
   );
 }
 
 /* =========================================================
-STATUS BADGE
+   STATUS BADGE
 ========================================================= */
 
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation("translation", { i18n: i18nInstance });
+
   const idx = statusIndex(status);
 
   const color = idx === 2 ? "#1F7A5C" : idx === 1 ? TEAL_DARK : "#8A97A3";
@@ -688,17 +772,17 @@ function StatusBadge({ status }: { status: string }) {
         whiteSpace: "nowrap",
       }}
     >
-      {i18nInstance.t(statusLabel)}{" "}
+      {t(statusLabel)}
     </span>
   );
 }
 
 /* =========================================================
-STATUS TIMELINE
+   STATUS TIMELINE
 ========================================================= */
 
 function StatusTimeline({ status }: { status: string }) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("translation", { i18n: i18nInstance });
 
   const idx = statusIndex(status);
 
@@ -744,7 +828,7 @@ function StatusTimeline({ status }: { status: string }) {
                 <CheckCircle2 size={15} />
               ) : i === idx ? (
                 <Clock size={14} />
-              ) : null}{" "}
+              ) : null}
             </div>
 
             <span
@@ -776,11 +860,13 @@ function StatusTimeline({ status }: { status: string }) {
 }
 
 /* =========================================================
-COMPLAINT DETAIL
+   COMPLAINT DETAIL
 ========================================================= */
 
 function ComplaintDetail({ complaint: c }: { complaint: Complaint }) {
-  const { t, i18n: currentI18n } = useTranslation();
+  const { t, i18n: currentI18n } = useTranslation("translation", {
+    i18n: i18nInstance,
+  });
 
   const language = currentI18n.language === "kn" ? "kn" : "en";
 
@@ -795,12 +881,11 @@ function ComplaintDetail({ complaint: c }: { complaint: Complaint }) {
           flexWrap: "wrap",
         }}
       >
-        {" "}
         <div>
-          {" "}
           <div style={styles.panelSubtitle}>
-            {t("complaints.complaintReference")}{" "}
+            {t("complaints.complaintReference")}
           </div>
+
           <div
             style={{
               fontFamily: "'Poppins', sans-serif",
@@ -812,6 +897,7 @@ function ComplaintDetail({ complaint: c }: { complaint: Complaint }) {
             {c.complaint_id}
           </div>
         </div>
+
         <div
           style={{
             display: "flex",
@@ -840,7 +926,11 @@ function ComplaintDetail({ complaint: c }: { complaint: Complaint }) {
             fontWeight: 600,
           }}
         >
-          {t("complaints.firNumber")}: {c.fir_number}
+          {t("complaints.firNumber")}
+
+          {": "}
+
+          {c.fir_number}
         </div>
       )}
 
@@ -864,7 +954,11 @@ function ComplaintDetail({ complaint: c }: { complaint: Complaint }) {
       </div>
 
       {c.incident_description && (
-        <div style={{ marginTop: 14 }}>
+        <div
+          style={{
+            marginTop: 14,
+          }}
+        >
           <div style={styles.panelSubtitle}>{t("complaints.description")}</div>
 
           <p
@@ -905,7 +999,9 @@ function ComplaintDetail({ complaint: c }: { complaint: Complaint }) {
                   <div style={styles.kvLabel}>{k.replace(/_/g, " ")}</div>
 
                   <div style={styles.kvValue}>
-                    {v === null || v === undefined ? "—" : String(v)}
+                    {v === null || v === undefined
+                      ? t("common.empty")
+                      : String(v)}
                   </div>
                 </div>
               ))}
@@ -917,7 +1013,7 @@ function ComplaintDetail({ complaint: c }: { complaint: Complaint }) {
 }
 
 /* =========================================================
-DETAIL CELL
+   DETAIL CELL
 ========================================================= */
 
 function DetailCell({
@@ -927,17 +1023,19 @@ function DetailCell({
   label: string;
   value?: string | null;
 }) {
+  const { t } = useTranslation("translation", { i18n: i18nInstance });
+
   return (
     <div style={styles.detailCell}>
-      {" "}
-      <div style={styles.detailLabel}>{label} </div>
-      <div style={styles.detailValue}>{value || "—"}</div>
+      <div style={styles.detailLabel}>{label}</div>
+
+      <div style={styles.detailValue}>{value || t("common.empty")}</div>
     </div>
   );
 }
 
 /* =========================================================
-SHIELD ICON
+   SHIELD ICON
 ========================================================= */
 
 function ShieldIcon({
@@ -949,19 +1047,18 @@ function ShieldIcon({
 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      {" "}
       <path
         d="M12 3l7 3v6c0 4.5-3 7.7-7 9-4-1.3-7-4.5-7-9V6l7-3z"
         stroke={color}
         strokeWidth="1.7"
         strokeLinejoin="round"
-      />{" "}
+      />
     </svg>
   );
 }
 
 /* =========================================================
-DESIGN TOKENS
+   DESIGN TOKENS
 ========================================================= */
 
 const NAVY = "#152A43";
@@ -975,7 +1072,7 @@ const TEXT = "#5B6B7A";
 const MUTED = "#8A97A3";
 
 /* =========================================================
-STYLES
+   STYLES
 ========================================================= */
 
 const styles = {
@@ -1344,18 +1441,15 @@ const styles = {
 };
 
 /* =========================================================
-I18N PROVIDER EXPORT
+   I18N PROVIDER EXPORT
 ========================================================= */
-
-function TrackFIRStatusWithLocalization() {
-  return <TrackFIRStatus />;
-}
 
 export function TrackFIRStatusLocalized() {
   return (
     <I18nextProvider i18n={i18nInstance}>
-      {" "}
-      <TrackFIRStatusWithLocalization />{" "}
+      <TrackFIRStatus />
     </I18nextProvider>
   );
 }
+
+export default TrackFIRStatusLocalized;
