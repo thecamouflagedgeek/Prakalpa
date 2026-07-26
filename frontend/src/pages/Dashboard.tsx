@@ -24,21 +24,17 @@ import {
   AlertTriangle,
   Flame,
   Sparkles,
-  Flag,
   Activity,
   Shield,
   Clock,
   Cloud,
   BarChart3,
   Brain,
-  ArrowRight,
-  CheckCircle2,
   TrendingUp,
   Search,
   TrendingDown,
   Layers,
   X,
-  Bot,
 } from "lucide-react";
 import {
   getDashboard,
@@ -121,9 +117,9 @@ const HeatmapLayer: React.FC<HeatmapLayerProps> = ({
       gradient: {
         0.15: "rgba(38, 185, 154, 0.45)",
         0.45: "rgba(38, 185, 154, 0.85)",
-        0.70: "rgba(231, 164, 72, 0.9)",
+        0.7: "rgba(231, 164, 72, 0.9)",
         0.88: "rgba(121, 91, 198, 0.95)",
-        1.00: "rgba(216, 91, 91, 1.0)",
+        1.0: "rgba(216, 91, 91, 1.0)",
       },
     });
 
@@ -162,17 +158,18 @@ const MapController: React.FC<MapControllerProps> = ({ center, zoom }) => {
    SKELETON COMPONENT
 ========================================================= */
 
-const Skeleton: React.FC<{ width?: string; height?: string; radius?: string }> = ({
-  width = "100%",
-  height = "18px",
-  radius = "6px",
-}) => (
+const Skeleton: React.FC<{
+  width?: string;
+  height?: string;
+  radius?: string;
+}> = ({ width = "100%", height = "18px", radius = "6px" }) => (
   <div
     style={{
       width,
       height,
       borderRadius: radius,
-      background: "linear-gradient(90deg, #E8EDEF 25%, #F4F7F8 50%, #E8EDEF 75%)",
+      background:
+        "linear-gradient(90deg, #E8EDEF 25%, #F4F7F8 50%, #E8EDEF 75%)",
       backgroundSize: "200% 100%",
       animation: "shimmer 1.4s infinite",
       boxSizing: "border-box",
@@ -208,7 +205,7 @@ const Card: React.FC<{
 ========================================================= */
 
 const RiskBadge: React.FC<{ risk: string }> = ({ risk }) => {
-  const normalized = risk.toUpperCase();
+  const normalized = (risk || "").toUpperCase();
   const color = RISK_COLOR[normalized] ?? C.muted;
   return (
     <span
@@ -228,8 +225,15 @@ const RiskBadge: React.FC<{ risk: string }> = ({ risk }) => {
         boxSizing: "border-box",
       }}
     >
-      <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: color }} />
-      {normalized} Risk
+      <span
+        style={{
+          width: "6px",
+          height: "6px",
+          borderRadius: "50%",
+          background: color,
+        }}
+      />
+      {normalized || "UNKNOWN"} Risk
     </span>
   );
 };
@@ -242,7 +246,14 @@ const renderFormattedReport = (text: string) => {
   if (!text) return null;
   const rawSections = text.split(/(?=##\s)/g).filter(Boolean);
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "12px",
+        marginTop: "12px",
+      }}
+    >
       {rawSections.map((sec, idx) => {
         const lines = sec.trim().split("\n");
         const heading = lines[0].replace(/^##\s*/, "").trim();
@@ -325,7 +336,8 @@ const Dashboard: React.FC = () => {
   const [anomalies, setAnomalies] = useState<AnomalyResponse | null>(null);
   const [anomaliesLoading, setAnomaliesLoading] = useState(false);
 
-  const [patternSummary, setPatternSummary] = useState<PatternSummaryResponse | null>(null);
+  const [patternSummary, setPatternSummary] =
+    useState<PatternSummaryResponse | null>(null);
   const [patternSummaryLoading, setPatternSummaryLoading] = useState(false);
 
   const [aiReport, setAiReport] = useState<AIReport | null>(null);
@@ -333,7 +345,9 @@ const Dashboard: React.FC = () => {
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
-  const [riskFilter, setRiskFilter] = useState<"All" | "High" | "Medium" | "Low">("All");
+  const [riskFilter, setRiskFilter] = useState<
+    "All" | "High" | "Medium" | "Low"
+  >("All");
 
   // Map Zoom State
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
@@ -350,7 +364,9 @@ const Dashboard: React.FC = () => {
     setDashLoading(true);
     getDashboard()
       .then(setDashboard)
-      .catch(() => setDashError("Failed to load dashboard data. Is the backend running?"))
+      .catch(() =>
+        setDashError("Failed to load dashboard data. Is the backend running?"),
+      )
       .finally(() => setDashLoading(false));
   }, []);
 
@@ -359,13 +375,14 @@ const Dashboard: React.FC = () => {
     setMapLoading(true);
     getHotspots()
       .then((data) => {
-        setHotspots(data);
+        setHotspots(data ?? []);
         if (data && data.length > 0) {
           handleHotspotClick(data[0].zone, false);
         }
       })
       .catch(() => setMapError("Failed to load hotspot data."))
       .finally(() => setMapLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle station click (Triggers ALL Sub-API Calls & Zooms Map)
@@ -426,25 +443,29 @@ const Dashboard: React.FC = () => {
   };
 
   // Filtered hotspots list
-  const filteredHotspots = hotspots.filter((h) => {
+  const filteredHotspots = (hotspots ?? []).filter((h) => {
     const matchesSearch =
-      h.zone.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      h.district.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRisk = riskFilter === "All" || h.risk.toUpperCase() === riskFilter.toUpperCase();
+      (h.zone || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (h.district || "").toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRisk =
+      riskFilter === "All" ||
+      (h.risk || "").toUpperCase() === riskFilter.toUpperCase();
     return matchesSearch && matchesRisk;
   });
 
   // Heatmap weighted points
-  const maxCrime = hotspots.length > 0 ? Math.max(...hotspots.map((h) => h.crime_count)) : 1;
-  const heatmapPoints: [number, number, number][] = filteredHotspots.map((h) => [
-    h.lat,
-    h.lng,
-    h.crime_count / maxCrime,
-  ]);
+  const maxCrime =
+    hotspots.length > 0
+      ? Math.max(...hotspots.map((h) => h.crime_count ?? 0))
+      : 1;
+  const heatmapPoints: [number, number, number][] = filteredHotspots.map(
+    (h) => [h.lat, h.lng, (h.crime_count ?? 0) / (maxCrime || 1)],
+  );
 
+  const zoneCrimeBreakdown = selectedZone?.crime_breakdown ?? [];
   const maxBreakdown =
-    selectedZone && selectedZone.crime_breakdown.length > 0
-      ? Math.max(...selectedZone.crime_breakdown.map((b) => b.count))
+    zoneCrimeBreakdown.length > 0
+      ? Math.max(...zoneCrimeBreakdown.map((b) => b.count ?? 0))
       : 1;
 
   return (
@@ -512,7 +533,14 @@ const Dashboard: React.FC = () => {
             <Shield size={18} color={C.white} />
           </div>
           <div>
-            <div style={{ fontSize: "14px", fontWeight: 800, color: C.navy, letterSpacing: "-0.2px" }}>
+            <div
+              style={{
+                fontSize: "14px",
+                fontWeight: 800,
+                color: C.navy,
+                letterSpacing: "-0.2px",
+              }}
+            >
               KAVACH
             </div>
             <div style={{ fontSize: "9px", color: C.muted, fontWeight: 600 }}>
@@ -520,8 +548,6 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div
@@ -565,8 +591,14 @@ const Dashboard: React.FC = () => {
               <Shield size={16} color={C.white} />
             </div>
             <div>
-              <strong style={{ display: "block", fontSize: "11px", color: C.navy }}>Command Officer</strong>
-              <span style={{ fontSize: "9px", color: C.muted }}>Karnataka State Police</span>
+              <strong
+                style={{ display: "block", fontSize: "11px", color: C.navy }}
+              >
+                Command Officer
+              </strong>
+              <span style={{ fontSize: "9px", color: C.muted }}>
+                Karnataka State Police
+              </span>
             </div>
           </div>
         </div>
@@ -621,19 +653,17 @@ const Dashboard: React.FC = () => {
             }}
           >
             {/* Search Box & Risk Filter Pills */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", flex: 1 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                flexWrap: "wrap",
+                flex: 1,
+              }}
+            >
               <div
                 style={{
-                  width: "100%",
-                  padding: "12px",
-                  borderRadius: "9px",
-                  border: "none",
-                  background: aiLoading ? C.muted : C.teal,
-                  color: "#fff",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  cursor:
-                    aiLoading || !selectedZone ? "not-allowed" : "pointer",
                   display: "flex",
                   alignItems: "center",
                   gap: "8px",
@@ -662,8 +692,18 @@ const Dashboard: React.FC = () => {
                 />
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ fontSize: "10px", color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <span
+                  style={{
+                    fontSize: "10px",
+                    color: C.muted,
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                  }}
+                >
                   Risk Filter:
                 </span>
                 {(["All", "High", "Medium", "Low"] as const).map((r) => (
@@ -689,36 +729,109 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Dashboard KPI Badges */}
-            <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+                flexWrap: "wrap",
+              }}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
                 <FileText size={14} color={C.blue} />
                 <div>
-                  <span style={{ fontSize: "9px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>FIRs</span>
-                  <div style={{ fontSize: "13px", fontWeight: 800, color: C.navy }}>{dashboard?.total_firs.toLocaleString("en-IN") ?? "—"}</div>
+                  <span
+                    style={{
+                      fontSize: "9px",
+                      color: C.muted,
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    FIRs
+                  </span>
+                  <div
+                    style={{ fontSize: "13px", fontWeight: 800, color: C.navy }}
+                  >
+                    {dashboard?.total_firs?.toLocaleString("en-IN") ?? "—"}
+                  </div>
                 </div>
               </div>
-              <div style={{ height: "24px", width: "1px", background: C.border }} />
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                style={{ height: "24px", width: "1px", background: C.border }}
+              />
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
                 <MapPin size={14} color={C.purple} />
                 <div>
-                  <span style={{ fontSize: "9px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>Districts</span>
-                  <div style={{ fontSize: "13px", fontWeight: 800, color: C.navy }}>{dashboard?.districts ?? "—"}</div>
+                  <span
+                    style={{
+                      fontSize: "9px",
+                      color: C.muted,
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Districts
+                  </span>
+                  <div
+                    style={{ fontSize: "13px", fontWeight: 800, color: C.navy }}
+                  >
+                    {dashboard?.districts ?? "—"}
+                  </div>
                 </div>
               </div>
-              <div style={{ height: "24px", width: "1px", background: C.border }} />
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                style={{ height: "24px", width: "1px", background: C.border }}
+              />
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
                 <Building2 size={14} color={C.green} />
                 <div>
-                  <span style={{ fontSize: "9px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>Stations</span>
-                  <div style={{ fontSize: "13px", fontWeight: 800, color: C.navy }}>{dashboard?.stations ?? "—"}</div>
+                  <span
+                    style={{
+                      fontSize: "9px",
+                      color: C.muted,
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Stations
+                  </span>
+                  <div
+                    style={{ fontSize: "13px", fontWeight: 800, color: C.navy }}
+                  >
+                    {dashboard?.stations ?? "—"}
+                  </div>
                 </div>
               </div>
-              <div style={{ height: "24px", width: "1px", background: C.border }} />
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                style={{ height: "24px", width: "1px", background: C.border }}
+              />
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
                 <AlertTriangle size={14} color={C.red} />
                 <div>
-                  <span style={{ fontSize: "9px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>High Risk</span>
-                  <div style={{ fontSize: "13px", fontWeight: 800, color: C.red }}>{dashboard?.high_risk_zones ?? "—"}</div>
+                  <span
+                    style={{
+                      fontSize: "9px",
+                      color: C.muted,
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    High Risk
+                  </span>
+                  <div
+                    style={{ fontSize: "13px", fontWeight: 800, color: C.red }}
+                  >
+                    {dashboard?.high_risk_zones ?? "—"}
+                  </div>
                 </div>
               </div>
             </div>
@@ -728,8 +841,15 @@ const Dashboard: React.FC = () => {
         {/* ===================================================
             SECTION 2: CRIME HOTSPOT MAP (HEATMAP ONLY)
         =================================================== */}
-        <div style={{ display: "flex", gap: "20px", width: "100%", alignItems: "stretch", flexWrap: "wrap" }}>
-          
+        <div
+          style={{
+            display: "flex",
+            gap: "20px",
+            width: "100%",
+            alignItems: "stretch",
+            flexWrap: "wrap",
+          }}
+        >
           {/* Left Column: Station List */}
           <div
             style={{
@@ -740,9 +860,19 @@ const Dashboard: React.FC = () => {
               gap: "12px",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 4px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "0 4px",
+              }}
+            >
               <div style={{ fontSize: "12px", fontWeight: 800, color: C.navy }}>
-                Karnataka Hotspots <span style={{ color: C.indigo }}>({filteredHotspots.length})</span>
+                Karnataka Hotspots{" "}
+                <span style={{ color: C.indigo }}>
+                  ({filteredHotspots.length})
+                </span>
               </div>
             </div>
 
@@ -757,10 +887,14 @@ const Dashboard: React.FC = () => {
               }}
             >
               {mapLoading ? (
-                [1, 2, 3].map((i) => <Skeleton key={i} height="120px" radius="16px" />)
+                [1, 2, 3].map((i) => (
+                  <Skeleton key={i} height="120px" radius="16px" />
+                ))
               ) : filteredHotspots.length === 0 ? (
                 <Card style={{ padding: "24px", textAlign: "center" }}>
-                  <div style={{ fontSize: "11px", color: C.muted }}>No stations match search filter</div>
+                  <div style={{ fontSize: "11px", color: C.muted }}>
+                    No stations match search filter
+                  </div>
                 </Card>
               ) : (
                 filteredHotspots.map((h) => {
@@ -771,33 +905,86 @@ const Dashboard: React.FC = () => {
                       onClick={() => handleHotspotClick(h.zone)}
                       style={{
                         background: C.white,
-                        border: isSelected ? `2px solid ${C.indigo}` : `1px solid ${C.border}`,
+                        border: isSelected
+                          ? `2px solid ${C.indigo}`
+                          : `1px solid ${C.border}`,
                         borderRadius: "16px",
                         padding: "16px 18px",
                         cursor: "pointer",
-                        boxShadow: isSelected ? "0 8px 24px rgba(79,70,229,0.12)" : "0 4px 14px rgba(18,42,57,0.03)",
+                        boxShadow: isSelected
+                          ? "0 8px 24px rgba(79,70,229,0.12)"
+                          : "0 4px 14px rgba(18,42,57,0.03)",
                         transition: "all 0.2s ease",
                         boxSizing: "border-box",
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: RISK_COLOR[h.risk] ?? C.muted }} />
-                          <span style={{ fontSize: "9px", fontWeight: 800, color: RISK_COLOR[h.risk] ?? C.muted, textTransform: "uppercase" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: "8px",
+                              height: "8px",
+                              borderRadius: "50%",
+                              background: RISK_COLOR[h.risk] ?? C.muted,
+                            }}
+                          />
+                          <span
+                            style={{
+                              fontSize: "9px",
+                              fontWeight: 800,
+                              color: RISK_COLOR[h.risk] ?? C.muted,
+                              textTransform: "uppercase",
+                            }}
+                          >
                             {h.risk} Risk Zone
                           </span>
                         </div>
                         {isSelected && (
-                          <span style={{ fontSize: "9px", background: C.indigoLight, color: C.indigo, fontWeight: 700, padding: "2px 8px", borderRadius: "10px" }}>
+                          <span
+                            style={{
+                              fontSize: "9px",
+                              background: C.indigoLight,
+                              color: C.indigo,
+                              fontWeight: 700,
+                              padding: "2px 8px",
+                              borderRadius: "10px",
+                            }}
+                          >
                             Active
                           </span>
                         )}
                       </div>
 
-                      <div style={{ fontSize: "14px", fontWeight: 800, color: C.navy, marginBottom: "2px" }}>
+                      <div
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: 800,
+                          color: C.navy,
+                          marginBottom: "2px",
+                        }}
+                      >
                         {h.zone}
                       </div>
-                      <div style={{ fontSize: "11px", color: C.muted, marginBottom: "10px" }}>
+                      <div
+                        style={{
+                          fontSize: "11px",
+                          color: C.muted,
+                          marginBottom: "10px",
+                        }}
+                      >
                         {h.district} District, Karnataka
                       </div>
 
@@ -818,7 +1005,9 @@ const Dashboard: React.FC = () => {
                           cursor: "pointer",
                         }}
                       >
-                        {isSelected ? "Selected Zone ✓" : "View Station Intelligence"}
+                        {isSelected
+                          ? "Selected Zone ✓"
+                          : "View Station Intelligence"}
                       </button>
                     </div>
                   );
@@ -828,8 +1017,21 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Right Column: Geospatial Density Map */}
-          <div style={{ flex: 1, minWidth: "400px", display: "flex", flexDirection: "column" }}>
-            <Card style={{ height: "600px", overflow: "hidden", position: "relative" }}>
+          <div
+            style={{
+              flex: 1,
+              minWidth: "400px",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Card
+              style={{
+                height: "600px",
+                overflow: "hidden",
+                position: "relative",
+              }}
+            >
               <div
                 style={{
                   position: "absolute",
@@ -855,13 +1057,26 @@ const Dashboard: React.FC = () => {
               </div>
 
               {mapError ? (
-                <div style={{ padding: "30px", textAlign: "center", color: C.red, fontSize: "12px" }}>
+                <div
+                  style={{
+                    padding: "30px",
+                    textAlign: "center",
+                    color: C.red,
+                    fontSize: "12px",
+                  }}
+                >
                   {mapError}
                 </div>
               ) : mapLoading ? (
                 <Skeleton height="100%" radius="16px" />
               ) : (
-                <div style={{ height: "100%", width: "100%", position: "relative" }}>
+                <div
+                  style={{
+                    height: "100%",
+                    width: "100%",
+                    position: "relative",
+                  }}
+                >
                   <MapContainer
                     center={[15.3173, 75.7139]}
                     zoom={7}
@@ -873,7 +1088,12 @@ const Dashboard: React.FC = () => {
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
                       url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                     />
-                    <HeatmapLayer points={heatmapPoints} radius={50} blur={35} maxZoom={12} />
+                    <HeatmapLayer
+                      points={heatmapPoints}
+                      radius={50}
+                      blur={35}
+                      maxZoom={12}
+                    />
                   </MapContainer>
 
                   {/* Floating Station Overlay Card */}
@@ -893,27 +1113,114 @@ const Dashboard: React.FC = () => {
                         boxSizing: "border-box",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
-                        <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: RISK_COLOR[selectedZone.risk] ?? C.muted }} />
-                        <span style={{ fontSize: "9px", fontWeight: 800, color: RISK_COLOR[selectedZone.risk] ?? C.muted, textTransform: "uppercase" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: "8px",
+                            height: "8px",
+                            borderRadius: "50%",
+                            background:
+                              RISK_COLOR[selectedZone.risk] ?? C.muted,
+                          }}
+                        />
+                        <span
+                          style={{
+                            fontSize: "9px",
+                            fontWeight: 800,
+                            color: RISK_COLOR[selectedZone.risk] ?? C.muted,
+                            textTransform: "uppercase",
+                          }}
+                        >
                           {selectedZone.risk} Risk Station
                         </span>
                       </div>
-                      <div style={{ fontSize: "15px", fontWeight: 800, color: C.navy, marginBottom: "2px" }}>
+                      <div
+                        style={{
+                          fontSize: "15px",
+                          fontWeight: 800,
+                          color: C.navy,
+                          marginBottom: "2px",
+                        }}
+                      >
                         {selectedZone.zone}
                       </div>
-                      <div style={{ fontSize: "11px", color: C.muted, marginBottom: "10px" }}>
+                      <div
+                        style={{
+                          fontSize: "11px",
+                          color: C.muted,
+                          marginBottom: "10px",
+                        }}
+                      >
                         {selectedZone.district} District
                       </div>
 
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                        <div style={{ background: C.background, padding: "8px 10px", borderRadius: "8px" }}>
-                          <span style={{ fontSize: "8px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>Total FIRs</span>
-                          <div style={{ fontSize: "13px", color: C.navy, fontWeight: 800 }}>{selectedZone.crime_count}</div>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr",
+                          gap: "8px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            background: C.background,
+                            padding: "8px 10px",
+                            borderRadius: "8px",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: "8px",
+                              color: C.muted,
+                              fontWeight: 700,
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            Total FIRs
+                          </span>
+                          <div
+                            style={{
+                              fontSize: "13px",
+                              color: C.navy,
+                              fontWeight: 800,
+                            }}
+                          >
+                            {selectedZone.crime_count}
+                          </div>
                         </div>
-                        <div style={{ background: C.background, padding: "8px 10px", borderRadius: "8px" }}>
-                          <span style={{ fontSize: "8px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>Risk Score</span>
-                          <div style={{ fontSize: "13px", color: RISK_COLOR[selectedZone.risk] ?? C.muted, fontWeight: 800 }}>{selectedZone.risk_score}/100</div>
+                        <div
+                          style={{
+                            background: C.background,
+                            padding: "8px 10px",
+                            borderRadius: "8px",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: "8px",
+                              color: C.muted,
+                              fontWeight: 700,
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            Risk Score
+                          </span>
+                          <div
+                            style={{
+                              fontSize: "13px",
+                              color: RISK_COLOR[selectedZone.risk] ?? C.muted,
+                              fontWeight: 800,
+                            }}
+                          >
+                            {selectedZone.risk_score}/100
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -935,17 +1242,34 @@ const Dashboard: React.FC = () => {
                       width: "170px",
                     }}
                   >
-                    <div style={{ fontSize: "9px", fontWeight: 800, color: C.navy, marginBottom: "4px" }}>
+                    <div
+                      style={{
+                        fontSize: "9px",
+                        fontWeight: 800,
+                        color: C.navy,
+                        marginBottom: "4px",
+                      }}
+                    >
                       Crime Density Scale
                     </div>
                     <div
                       style={{
                         height: "6px",
                         borderRadius: "3px",
-                        background: "linear-gradient(to right, rgba(38,185,154,0.7), #E7A448, #795BC6, #D85B5B)",
+                        background:
+                          "linear-gradient(to right, rgba(38,185,154,0.7), #E7A448, #795BC6, #D85B5B)",
                       }}
                     />
-                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px", fontSize: "8px", color: C.muted, fontWeight: 700 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginTop: "4px",
+                        fontSize: "8px",
+                        color: C.muted,
+                        fontWeight: 700,
+                      }}
+                    >
                       <span>Low</span>
                       <span>High</span>
                     </div>
@@ -959,14 +1283,38 @@ const Dashboard: React.FC = () => {
         {/* ===================================================
             SECTION 3: ZONE INTELLIGENCE & 2-COLUMN CRIME BREAKDOWN GRID
         =================================================== */}
-        <div ref={zonePanelRef} style={{ display: "flex", flexDirection: "column", gap: "20px", width: "100%", boxSizing: "border-box" }}>
+        <div
+          ref={zonePanelRef}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "20px",
+            width: "100%",
+            boxSizing: "border-box",
+          }}
+        >
           {zoneLoading && (
             <Card style={{ padding: "28px", width: "100%" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "14px",
+                }}
+              >
                 <Skeleton height="24px" width="220px" />
                 <Skeleton height="16px" width="160px" />
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "14px", marginTop: "8px" }}>
-                  {[1, 2, 3, 4].map((i) => <Skeleton key={i} height="64px" radius="10px" />)}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(4, 1fr)",
+                    gap: "14px",
+                    marginTop: "8px",
+                  }}
+                >
+                  {[1, 2, 3, 4].map((i) => (
+                    <Skeleton key={i} height="64px" radius="10px" />
+                  ))}
                 </div>
               </div>
             </Card>
@@ -976,13 +1324,48 @@ const Dashboard: React.FC = () => {
             <>
               {/* Selected Zone Intelligence Header Card */}
               <Card style={{ padding: "24px", width: "100%" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    flexWrap: "wrap",
+                    gap: "12px",
+                  }}
+                >
                   <div>
-                    <div style={{ fontSize: "10px", fontWeight: 800, color: C.green, letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: "6px" }}>
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: 800,
+                        color: C.green,
+                        letterSpacing: "0.8px",
+                        textTransform: "uppercase",
+                        marginBottom: "6px",
+                      }}
+                    >
                       Zone Intelligence
                     </div>
-                    <h2 style={{ margin: 0, fontSize: "22px", color: C.navy, fontWeight: 800, letterSpacing: "-0.5px" }}>{selectedZone.zone}</h2>
-                    <p style={{ margin: "4px 0 0", fontSize: "12px", color: C.muted }}>{selectedZone.district} District</p>
+                    <h2
+                      style={{
+                        margin: 0,
+                        fontSize: "22px",
+                        color: C.navy,
+                        fontWeight: 800,
+                        letterSpacing: "-0.5px",
+                      }}
+                    >
+                      {selectedZone.zone}
+                    </h2>
+                    <p
+                      style={{
+                        margin: "4px 0 0",
+                        fontSize: "12px",
+                        color: C.muted,
+                      }}
+                    >
+                      {selectedZone.district} District
+                    </p>
                   </div>
                   <RiskBadge risk={selectedZone.risk} />
                 </div>
@@ -998,10 +1381,37 @@ const Dashboard: React.FC = () => {
                   }}
                 >
                   {[
-                    { label: "Total FIRs", value: selectedZone.crime_count.toLocaleString("en-IN"), color: C.blue, icon: <FileText size={15} color={C.blue} /> },
-                    { label: "Risk Score", value: `${selectedZone.risk_score}/100`, color: RISK_COLOR[selectedZone.risk] ?? C.muted, icon: <TrendingUp size={15} color={RISK_COLOR[selectedZone.risk] ?? C.muted} /> },
-                    { label: "Peak Time", value: selectedZone.peak_time, color: C.purple, icon: <Clock size={15} color={C.purple} /> },
-                    { label: "Weather", value: selectedZone.common_weather, color: C.orange, icon: <Cloud size={15} color={C.orange} /> },
+                    {
+                      label: "Total FIRs",
+                      value: (selectedZone.crime_count ?? 0).toLocaleString(
+                        "en-IN",
+                      ),
+                      color: C.blue,
+                      icon: <FileText size={15} color={C.blue} />,
+                    },
+                    {
+                      label: "Risk Score",
+                      value: `${selectedZone.risk_score ?? 0}/100`,
+                      color: RISK_COLOR[selectedZone.risk] ?? C.muted,
+                      icon: (
+                        <TrendingUp
+                          size={15}
+                          color={RISK_COLOR[selectedZone.risk] ?? C.muted}
+                        />
+                      ),
+                    },
+                    {
+                      label: "Peak Time",
+                      value: selectedZone.peak_time ?? "—",
+                      color: C.purple,
+                      icon: <Clock size={15} color={C.purple} />,
+                    },
+                    {
+                      label: "Weather",
+                      value: selectedZone.common_weather ?? "—",
+                      color: C.orange,
+                      icon: <Cloud size={15} color={C.orange} />,
+                    },
                   ].map((s) => (
                     <div
                       key={s.label}
@@ -1012,13 +1422,34 @@ const Dashboard: React.FC = () => {
                         boxSizing: "border-box",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div style={{ fontSize: "9px", color: C.muted, fontWeight: 700, letterSpacing: "0.6px", textTransform: "uppercase" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: "9px",
+                            color: C.muted,
+                            fontWeight: 700,
+                            letterSpacing: "0.6px",
+                            textTransform: "uppercase",
+                          }}
+                        >
                           {s.label}
                         </div>
                         {s.icon}
                       </div>
-                      <div style={{ fontSize: "15px", color: s.color, fontWeight: 800, marginTop: "4px" }}>
+                      <div
+                        style={{
+                          fontSize: "15px",
+                          color: s.color,
+                          fontWeight: 800,
+                          marginTop: "4px",
+                        }}
+                      >
                         {s.value}
                       </div>
                     </div>
@@ -1028,95 +1459,206 @@ const Dashboard: React.FC = () => {
 
               {/* SLEEK 2-COLUMN CRIME BREAKDOWN GRID */}
               <Card style={{ padding: "24px", width: "100%" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
-                  <div style={{ fontSize: "11px", fontWeight: 800, color: C.navy, letterSpacing: "0.8px", textTransform: "uppercase", display: "flex", alignItems: "center", gap: "8px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "18px",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: 800,
+                      color: C.navy,
+                      letterSpacing: "0.8px",
+                      textTransform: "uppercase",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
                     <BarChart3 size={15} color={C.indigo} />
                     Crime Breakdown — {selectedZone.zone}
                   </div>
-                  <span style={{ fontSize: "10px", color: C.muted, fontWeight: 700 }}>
-                    {selectedZone.crime_breakdown.reduce((sum, b) => sum + b.count, 0)} Total Incidents
+                  <span
+                    style={{
+                      fontSize: "10px",
+                      color: C.muted,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {zoneCrimeBreakdown.reduce(
+                      (sum, b) => sum + (b.count ?? 0),
+                      0,
+                    )}{" "}
+                    Total Incidents
                   </span>
                 </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(2, 1fr)",
-                    gap: "12px",
-                    width: "100%",
-                    boxSizing: "border-box",
-                  }}
-                >
-                  {selectedZone.crime_breakdown.map((b, i) => {
-                    const totalIncidents = selectedZone.crime_breakdown.reduce((sum, item) => sum + item.count, 0);
-                    const percent = Math.round((b.count / (totalIncidents || 1)) * 100);
-                    const barColor = i === 0 ? C.red : i < 3 ? C.orange : C.indigo;
-                    return (
-                      <div
-                        key={b.crime}
-                        style={{
-                          background: C.background,
-                          border: `1px solid ${C.border}`,
-                          borderRadius: "12px",
-                          padding: "12px 14px",
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "8px",
-                          boxSizing: "border-box",
-                        }}
-                      >
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span
-                              style={{
-                                fontSize: "9px",
-                                fontWeight: 800,
-                                color: barColor,
-                                background: `${barColor}15`,
-                                padding: "2px 6px",
-                                borderRadius: "6px",
-                              }}
-                            >
-                              #{i + 1}
-                            </span>
-                            <span style={{ fontSize: "12px", fontWeight: 700, color: C.navy }}>{b.crime}</span>
-                          </div>
-                          <div style={{ fontSize: "11px", fontWeight: 800, color: C.text }}>
-                            {b.count} <span style={{ fontSize: "10px", color: C.muted, fontWeight: 600 }}>({percent}%)</span>
-                          </div>
-                        </div>
-
-                        {/* Embedded Progress Bar Track */}
-                        <div style={{ height: "6px", borderRadius: "3px", background: C.border, width: "100%", overflow: "hidden" }}>
+                {zoneCrimeBreakdown.length === 0 ? (
+                  <div
+                    style={{
+                      padding: "20px",
+                      textAlign: "center",
+                      fontSize: "12px",
+                      color: C.muted,
+                    }}
+                  >
+                    No crime breakdown data available for this station.
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(2, 1fr)",
+                      gap: "12px",
+                      width: "100%",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    {zoneCrimeBreakdown.map((b, i) => {
+                      const totalIncidents = zoneCrimeBreakdown.reduce(
+                        (sum, item) => sum + (item.count ?? 0),
+                        0,
+                      );
+                      const percent = Math.round(
+                        ((b.count ?? 0) / (totalIncidents || 1)) * 100,
+                      );
+                      const barColor =
+                        i === 0 ? C.red : i < 3 ? C.orange : C.indigo;
+                      return (
+                        <div
+                          key={b.crime}
+                          style={{
+                            background: C.background,
+                            border: `1px solid ${C.border}`,
+                            borderRadius: "12px",
+                            padding: "12px 14px",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "8px",
+                            boxSizing: "border-box",
+                          }}
+                        >
                           <div
                             style={{
-                              height: "100%",
-                              borderRadius: "3px",
-                              background: `linear-gradient(to right, ${barColor}, ${barColor}DD)`,
-                              width: `${(b.count / maxBreakdown) * 100}%`,
-                              transition: "width 0.5s ease",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
                             }}
-                          />
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: "9px",
+                                  fontWeight: 800,
+                                  color: barColor,
+                                  background: `${barColor}15`,
+                                  padding: "2px 6px",
+                                  borderRadius: "6px",
+                                }}
+                              >
+                                #{i + 1}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "12px",
+                                  fontWeight: 700,
+                                  color: C.navy,
+                                }}
+                              >
+                                {b.crime}
+                              </span>
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: 800,
+                                color: C.text,
+                              }}
+                            >
+                              {b.count ?? 0}{" "}
+                              <span
+                                style={{
+                                  fontSize: "10px",
+                                  color: C.muted,
+                                  fontWeight: 600,
+                                }}
+                              >
+                                ({percent}%)
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Embedded Progress Bar Track */}
+                          <div
+                            style={{
+                              height: "6px",
+                              borderRadius: "3px",
+                              background: C.border,
+                              width: "100%",
+                              overflow: "hidden",
+                            }}
+                          >
+                            <div
+                              style={{
+                                height: "100%",
+                                borderRadius: "3px",
+                                background: `linear-gradient(to right, ${barColor}, ${barColor}DD)`,
+                                width: `${((b.count ?? 0) / (maxBreakdown || 1)) * 100}%`,
+                                transition: "width 0.5s ease",
+                              }}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </Card>
             </>
           )}
 
           {/* ===================================================
-              SECTION 4: 🔮 CRIME FORECAST
+              SECTION 4: CRIME FORECAST
           =================================================== */}
           {selectedZone && (
             <Card style={{ padding: "24px", width: "100%" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "10px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "14px",
+                  flexWrap: "wrap",
+                  gap: "10px",
+                }}
+              >
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                >
                   <Sparkles size={18} color={C.indigo} />
                   <div>
-                    <div style={{ fontSize: "13px", fontWeight: 800, color: C.navy }}>Crime Forecast</div>
-                    <span style={{ fontSize: "10px", color: C.muted }}>7-Day Predictive Risk Engine</span>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 800,
+                        color: C.navy,
+                      }}
+                    >
+                      Crime Forecast
+                    </div>
+                    <span style={{ fontSize: "10px", color: C.muted }}>
+                      7-Day Predictive Risk Engine
+                    </span>
                   </div>
                 </div>
                 {forecast && <RiskBadge risk={forecast.forecast_risk} />}
@@ -1125,51 +1667,167 @@ const Dashboard: React.FC = () => {
               {forecastLoading ? (
                 <Skeleton height="60px" />
               ) : forecast ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
-                    <div style={{ background: C.background, padding: "12px", borderRadius: "10px" }}>
-                      <span style={{ fontSize: "9px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>Forecast Risk</span>
-                      <div style={{ fontSize: "15px", color: RISK_COLOR[forecast.forecast_risk] ?? C.navy, fontWeight: 800, marginTop: "2px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "16px",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(3, 1fr)",
+                      gap: "12px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        background: C.background,
+                        padding: "12px",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "9px",
+                          color: C.muted,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Forecast Risk
+                      </span>
+                      <div
+                        style={{
+                          fontSize: "15px",
+                          color: RISK_COLOR[forecast.forecast_risk] ?? C.navy,
+                          fontWeight: 800,
+                          marginTop: "2px",
+                        }}
+                      >
                         {forecast.forecast_risk}
                       </div>
                     </div>
-                    <div style={{ background: C.background, padding: "12px", borderRadius: "10px" }}>
-                      <span style={{ fontSize: "9px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>Confidence</span>
-                      <div style={{ fontSize: "15px", color: C.indigo, fontWeight: 800, marginTop: "2px" }}>
-                        {forecast.confidence}%
+                    <div
+                      style={{
+                        background: C.background,
+                        padding: "12px",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "9px",
+                          color: C.muted,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Confidence
+                      </span>
+                      <div
+                        style={{
+                          fontSize: "15px",
+                          color: C.indigo,
+                          fontWeight: 800,
+                          marginTop: "2px",
+                        }}
+                      >
+                        {forecast.confidence ?? 0}%
                       </div>
                     </div>
-                    <div style={{ background: C.background, padding: "12px", borderRadius: "10px" }}>
-                      <span style={{ fontSize: "9px", color: C.muted, fontWeight: 700, textTransform: "uppercase" }}>Forecast Period</span>
-                      <div style={{ fontSize: "13px", color: C.navy, fontWeight: 700, marginTop: "2px" }}>
-                        {forecast.forecast_period}
+                    <div
+                      style={{
+                        background: C.background,
+                        padding: "12px",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "9px",
+                          color: C.muted,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Forecast Period
+                      </span>
+                      <div
+                        style={{
+                          fontSize: "13px",
+                          color: C.navy,
+                          fontWeight: 700,
+                          marginTop: "2px",
+                        }}
+                      >
+                        {forecast.forecast_period ?? "—"}
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <div style={{ fontSize: "10px", fontWeight: 800, color: C.navy, textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: "8px" }}>
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: 800,
+                        color: C.navy,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.6px",
+                        marginBottom: "8px",
+                      }}
+                    >
                       Expected Crimes & Probability
                     </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "8px" }}>
-                      {forecast.expected_crimes.map((ec) => (
-                        <div
-                          key={ec.crime}
-                          style={{
-                            padding: "10px 12px",
-                            background: C.indigoLight,
-                            border: `1px solid ${C.indigo}20`,
-                            borderRadius: "10px",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <span style={{ fontSize: "11px", fontWeight: 700, color: C.navy }}>{ec.crime}</span>
-                          <span style={{ fontSize: "11px", fontWeight: 800, color: C.indigo }}>{ec.probability}%</span>
-                        </div>
-                      ))}
-                    </div>
+                    {(forecast.expected_crimes ?? []).length === 0 ? (
+                      <div style={{ fontSize: "11px", color: C.muted }}>
+                        No expected-crime data available.
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns:
+                            "repeat(auto-fit, minmax(180px, 1fr))",
+                          gap: "8px",
+                        }}
+                      >
+                        {(forecast.expected_crimes ?? []).map((ec) => (
+                          <div
+                            key={ec.crime}
+                            style={{
+                              padding: "10px 12px",
+                              background: C.indigoLight,
+                              border: `1px solid ${C.indigo}20`,
+                              borderRadius: "10px",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: 700,
+                                color: C.navy,
+                              }}
+                            >
+                              {ec.crime}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: 800,
+                                color: C.indigo,
+                              }}
+                            >
+                              {ec.probability}%
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : null}
@@ -1177,23 +1835,42 @@ const Dashboard: React.FC = () => {
           )}
 
           {/* ===================================================
-              SECTION 5: 📊 PATTERN ANALYSIS
+              SECTION 5: PATTERN ANALYSIS
           =================================================== */}
           {selectedZone && (
             <Card style={{ padding: "24px", width: "100%" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: "14px",
+                }}
+              >
                 <Layers size={18} color={C.purple} />
                 <div>
-                  <div style={{ fontSize: "13px", fontWeight: 800, color: C.navy }}>Pattern Analysis</div>
-                  <span style={{ fontSize: "10px", color: C.muted }}>Detected Temporal Patterns</span>
+                  <div
+                    style={{ fontSize: "13px", fontWeight: 800, color: C.navy }}
+                  >
+                    Pattern Analysis
+                  </div>
+                  <span style={{ fontSize: "10px", color: C.muted }}>
+                    Detected Temporal Patterns
+                  </span>
                 </div>
               </div>
 
               {patternsLoading ? (
                 <Skeleton height="80px" />
-              ) : patterns && patterns.patterns.length > 0 ? (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "12px" }}>
-                  {patterns.patterns.map((p, i) => (
+              ) : (patterns?.patterns ?? []).length > 0 ? (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                    gap: "12px",
+                  }}
+                >
+                  {(patterns?.patterns ?? []).map((p, i) => (
                     <div
                       key={i}
                       style={{
@@ -1206,51 +1883,105 @@ const Dashboard: React.FC = () => {
                         gap: "6px",
                       }}
                     >
-                      <div style={{ fontSize: "12px", fontWeight: 800, color: C.navy }}>{p.title}</div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", fontSize: "10px" }}>
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 800,
+                          color: C.navy,
+                        }}
+                      >
+                        {p.title}
+                      </div>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr",
+                          gap: "6px",
+                          fontSize: "10px",
+                        }}
+                      >
                         <div>
-                          <span style={{ color: C.muted, display: "block" }}>Crime</span>
-                          <strong style={{ color: C.text }}>{p.crime_type}</strong>
+                          <span style={{ color: C.muted, display: "block" }}>
+                            Crime
+                          </span>
+                          <strong style={{ color: C.text }}>
+                            {p.crime_type}
+                          </strong>
                         </div>
                         <div>
-                          <span style={{ color: C.muted, display: "block" }}>Peak Day</span>
-                          <strong style={{ color: C.purple }}>{p.peak_day ?? "Weekend"}</strong>
+                          <span style={{ color: C.muted, display: "block" }}>
+                            Peak Day
+                          </span>
+                          <strong style={{ color: C.purple }}>
+                            {p.peak_day ?? "Weekend"}
+                          </strong>
                         </div>
                         <div>
-                          <span style={{ color: C.muted, display: "block" }}>Peak Time</span>
-                          <strong style={{ color: C.navy }}>{p.peak_time}</strong>
+                          <span style={{ color: C.muted, display: "block" }}>
+                            Peak Time
+                          </span>
+                          <strong style={{ color: C.navy }}>
+                            {p.peak_time}
+                          </strong>
                         </div>
                         <div>
-                          <span style={{ color: C.muted, display: "block" }}>Confidence</span>
-                          <strong style={{ color: C.green }}>{p.confidence}%</strong>
+                          <span style={{ color: C.muted, display: "block" }}>
+                            Confidence
+                          </span>
+                          <strong style={{ color: C.green }}>
+                            {p.confidence}%
+                          </strong>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              ) : null}
+              ) : (
+                <div style={{ fontSize: "11px", color: C.muted }}>
+                  No patterns detected for this station.
+                </div>
+              )}
             </Card>
           )}
 
           {/* ===================================================
-              SECTION 6: 🚨 ANOMALY ALERTS
+              SECTION 6: ANOMALY ALERTS
           =================================================== */}
           {selectedZone && (
             <Card style={{ padding: "24px", width: "100%" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: "14px",
+                }}
+              >
                 <AlertTriangle size={18} color={C.red} />
                 <div>
-                  <div style={{ fontSize: "13px", fontWeight: 800, color: C.navy }}>Anomaly Alerts</div>
-                  <span style={{ fontSize: "10px", color: C.muted }}>Statistical Deviations vs Baseline</span>
+                  <div
+                    style={{ fontSize: "13px", fontWeight: 800, color: C.navy }}
+                  >
+                    Anomaly Alerts
+                  </div>
+                  <span style={{ fontSize: "10px", color: C.muted }}>
+                    Statistical Deviations vs Baseline
+                  </span>
                 </div>
               </div>
 
               {anomaliesLoading ? (
                 <Skeleton height="70px" />
-              ) : anomalies && anomalies.anomalies.length > 0 ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {anomalies.anomalies.map((anom, i) => {
-                    const isSpike = anom.type.toLowerCase() === "spike";
+              ) : (anomalies?.anomalies ?? []).length > 0 ? (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
+                  }}
+                >
+                  {(anomalies?.anomalies ?? []).map((anom, i) => {
+                    const isSpike = (anom.type || "").toLowerCase() === "spike";
                     return (
                       <div
                         key={i}
@@ -1266,34 +1997,72 @@ const Dashboard: React.FC = () => {
                           gap: "10px",
                         }}
                       >
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                          }}
+                        >
                           <div
                             style={{
                               width: "32px",
                               height: "32px",
                               borderRadius: "8px",
-                              background: isSpike ? `${C.red}20` : `${C.green}20`,
+                              background: isSpike
+                                ? `${C.red}20`
+                                : `${C.green}20`,
                               color: isSpike ? C.red : C.green,
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                             }}
                           >
-                            {isSpike ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                            {isSpike ? (
+                              <TrendingUp size={16} />
+                            ) : (
+                              <TrendingDown size={16} />
+                            )}
                           </div>
                           <div>
-                            <div style={{ fontSize: "12px", fontWeight: 800, color: C.navy }}>
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                fontWeight: 800,
+                                color: C.navy,
+                              }}
+                            >
                               {anom.crime} {anom.type}
                             </div>
-                            <div style={{ fontSize: "10px", color: C.muted, marginTop: "1px" }}>
+                            <div
+                              style={{
+                                fontSize: "10px",
+                                color: C.muted,
+                                marginTop: "1px",
+                              }}
+                            >
                               {anom.reason}
                             </div>
                           </div>
                         </div>
 
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <span style={{ fontSize: "16px", fontWeight: 900, color: isSpike ? C.red : C.green }}>
-                            {anom.change_percent > 0 ? `+${anom.change_percent}%` : `${anom.change_percent}%`}
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: "16px",
+                              fontWeight: 900,
+                              color: isSpike ? C.red : C.green,
+                            }}
+                          >
+                            {(anom.change_percent ?? 0) > 0
+                              ? `+${anom.change_percent}%`
+                              : `${anom.change_percent ?? 0}%`}
                           </span>
                           <span
                             style={{
@@ -1312,26 +2081,59 @@ const Dashboard: React.FC = () => {
                     );
                   })}
                 </div>
-              ) : null}
+              ) : (
+                <div style={{ fontSize: "11px", color: C.muted }}>
+                  No anomalies detected for this station.
+                </div>
+              )}
             </Card>
           )}
 
           {!selectedZone && !zoneLoading && !zoneError && (
-            <Card style={{ padding: "40px", textAlign: "center", width: "100%" }}>
-              <Activity size={32} color={C.muted} style={{ marginBottom: "12px" }} />
-              <div style={{ fontSize: "15px", fontWeight: 700, color: C.navy, marginBottom: "6px" }}>
+            <Card
+              style={{ padding: "40px", textAlign: "center", width: "100%" }}
+            >
+              <Activity
+                size={32}
+                color={C.muted}
+                style={{ marginBottom: "12px" }}
+              />
+              <div
+                style={{
+                  fontSize: "15px",
+                  fontWeight: 700,
+                  color: C.navy,
+                  marginBottom: "6px",
+                }}
+              >
                 Select a Hotspot Zone
               </div>
-              <p style={{ margin: 0, fontSize: "12px", color: C.muted, maxWidth: "340px", lineHeight: 1.6, marginInline: "auto" }}>
-                Click any hotspot station on the left list or map above to load detailed crime forecast, patterns, and anomaly alerts.
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: "12px",
+                  color: C.muted,
+                  maxWidth: "340px",
+                  lineHeight: 1.6,
+                  marginInline: "auto",
+                }}
+              >
+                Click any hotspot station on the left list or map above to load
+                detailed crime forecast, patterns, and anomaly alerts.
               </p>
+            </Card>
+          )}
+
+          {zoneError && !zoneLoading && (
+            <Card style={{ padding: "24px", width: "100%" }}>
+              <div style={{ fontSize: "12px", color: C.red }}>{zoneError}</div>
             </Card>
           )}
         </div>
       </div>
 
       {/* =====================================================
-          INNOVATIVE FLOATING AI COPILOT BUTTON (Z-Index 99999 — ALWAYS ON TOP / AAGE)
+          FLOATING AI COPILOT BUTTON
       ====================================================== */}
       <button
         onClick={() => setIsAiModalOpen(true)}
@@ -1359,12 +2161,19 @@ const Dashboard: React.FC = () => {
         <Sparkles size={18} color={C.white} />
         <span>AI Intelligence Copilot</span>
         {patternSummary && (
-          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: C.greenBright }} />
+          <span
+            style={{
+              width: "8px",
+              height: "8px",
+              borderRadius: "50%",
+              background: C.greenBright,
+            }}
+          />
         )}
       </button>
 
       {/* =====================================================
-          INNOVATIVE AI COPILOT MODAL DIALOG (Clean Outer Rounding & Formatted Markdown)
+          AI COPILOT MODAL DIALOG
       ====================================================== */}
       {isAiModalOpen && (
         <div
@@ -1414,7 +2223,9 @@ const Dashboard: React.FC = () => {
                 background: C.white,
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "12px" }}
+              >
                 <div
                   style={{
                     width: "42px",
@@ -1430,11 +2241,25 @@ const Dashboard: React.FC = () => {
                   <Brain size={22} color={C.indigo} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: "18px", fontWeight: 800, color: C.navy }}>
+                  <h3
+                    style={{
+                      margin: 0,
+                      fontSize: "18px",
+                      fontWeight: 800,
+                      color: C.navy,
+                    }}
+                  >
                     AI Intelligence Copilot
                   </h3>
-                  <p style={{ margin: "2px 0 0", fontSize: "11px", color: C.muted }}>
-                    Pattern Narrative & Groq LLM Intelligence for {selectedZone?.zone || "Karnataka State"}
+                  <p
+                    style={{
+                      margin: "2px 0 0",
+                      fontSize: "11px",
+                      color: C.muted,
+                    }}
+                  >
+                    Pattern Narrative & Groq LLM Intelligence for{" "}
+                    {selectedZone?.zone || "Karnataka State"}
                   </p>
                 </div>
               </div>
@@ -1458,7 +2283,7 @@ const Dashboard: React.FC = () => {
               </button>
             </div>
 
-            {/* Inner Scrollable Body (Clean Padding & Preserved Outer Rounded Edges) */}
+            {/* Inner Scrollable Body */}
             <div
               style={{
                 flex: 1,
@@ -1472,12 +2297,21 @@ const Dashboard: React.FC = () => {
             >
               {/* Pattern Narrative Box */}
               <div>
-                <div style={{ fontSize: "10px", fontWeight: 800, color: C.indigo, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "8px" }}>
+                <div
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 800,
+                    color: C.indigo,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.8px",
+                    marginBottom: "8px",
+                  }}
+                >
                   Explainable Pattern Narrative
                 </div>
                 {patternSummaryLoading ? (
                   <Skeleton height="60px" />
-                ) : patternSummary ? (
+                ) : patternSummary?.summary ? (
                   <div
                     style={{
                       padding: "16px 18px",
@@ -1492,7 +2326,9 @@ const Dashboard: React.FC = () => {
                     {patternSummary.summary}
                   </div>
                 ) : (
-                  <div style={{ fontSize: "11px", color: C.muted }}>Select a station to generate pattern narrative.</div>
+                  <div style={{ fontSize: "11px", color: C.muted }}>
+                    Select a station to generate pattern narrative.
+                  </div>
                 )}
               </div>
 
@@ -1509,20 +2345,32 @@ const Dashboard: React.FC = () => {
                   color: C.white,
                   fontSize: "12px",
                   fontWeight: 700,
-                  cursor: aiLoading || !selectedZone ? "not-allowed" : "pointer",
+                  cursor:
+                    aiLoading || !selectedZone ? "not-allowed" : "pointer",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "8px",
                 }}
               >
-                {aiLoading ? "Generating Groq LLM Assessment..." : "Run Full Groq LLM Intelligence Assessment →"}
+                {aiLoading
+                  ? "Generating Groq LLM Assessment..."
+                  : "Run Full Groq LLM Intelligence Assessment →"}
               </button>
 
               {/* Formatted Groq AI Full Report Cards */}
-              {aiReport && (
+              {aiReport?.report && (
                 <div>
-                  <div style={{ fontSize: "10px", fontWeight: 800, color: C.green, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "4px" }}>
+                  <div
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: 800,
+                      color: C.green,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.8px",
+                      marginBottom: "4px",
+                    }}
+                  >
                     Full AI Intelligence Assessment
                   </div>
                   {renderFormattedReport(aiReport.report)}

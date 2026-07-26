@@ -49,7 +49,7 @@ export interface ZoneData {
   risk_score: number;
   peak_time: string;
   common_weather: string;
-  crime_breakdown: CrimeBreakdown[];
+  crime_breakdown: CrimeBreakdownItem[];
 }
 
 export interface AIReport {
@@ -57,6 +57,7 @@ export interface AIReport {
   report: string;
 }
 
+export interface ZoneDetailReport{
   top_crime: string;
   crime_breakdown: CrimeBreakdownItem[];
   peak_time: string;

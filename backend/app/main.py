@@ -94,14 +94,9 @@ def login(req: LoginRequest):
 class ComplaintSubmit(BaseModel):
     citizen_username: str
     citizen_name: str
-<<<<<<< HEAD
     complainant_name: str = ""
     victim_name: str = ""
     mode: str 
-=======
-    mode: str
-
->>>>>>> backendfre
     incident_type: Optional[str] = None
     incident_date: Optional[str] = None
     incident_time: Optional[str] = None
@@ -120,11 +115,7 @@ class ComplaintSubmit(BaseModel):
 @app.post("/api/v1/complaints/submit")
 def submit_complaint(complaint: ComplaintSubmit):
     complaint_id = f"CMP-{str(uuid.uuid4())[:8].upper()}"
-<<<<<<< HEAD
     resolved_name = complaint.complainant_name or complaint.citizen_name or "Unknown"
-=======
-
->>>>>>> backendfre
     complaints[complaint_id] = {
         **complaint.dict(),
         "citizen_name": resolved_name,
@@ -193,16 +184,12 @@ class ChatRequest(BaseModel):
     message: str
     language: str = "en"
 
-<<<<<<< HEAD
 class LegalRecommendationRequest(BaseModel):
     incident_description: str
-=======
->>>>>>> backendfre
 
 @app.post("/api/v1/fir/chat")
 async def fir_chat(request: ChatRequest):
     async with httpx.AsyncClient() as client:
-<<<<<<< HEAD
         response = await client.post("http://127.0.0.1:8001/agent/fir/chat",json=request.dict(), timeout=30.0)
     return response.json()
 
@@ -254,12 +241,4 @@ async def legal_recommend(request: LegalRecommendRequest):
             json=request.dict(),
             timeout=30.0,
         )
-=======
-        response = await client.post(
-            "http://127.0.0.1:8001/agent/fir/chat",
-            json=request.dict(),
-            timeout=30.0,
-        )
-
->>>>>>> backendfre
     return response.json()

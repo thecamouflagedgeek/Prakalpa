@@ -56,11 +56,14 @@ const translations = {
 
     punishment: "Punishment",
     triableBy: "Triable By",
+    bailable: "Bailable",
 
     variesBySubsection: "Varies by subsection",
 
     unableToReach:
       "Unable to reach the legal recommendation service. Please try again.",
+
+    match: "match",
 
     language: "ಕನ್ನಡ",
   },
@@ -114,11 +117,14 @@ const translations = {
 
     punishment: "ಶಿಕ್ಷೆ",
     triableBy: "ವಿಚಾರಣೆ ನಡೆಸುವವರು",
+    bailable: "ಜಾಮೀನಿಗೆ ಅರ್ಹ",
 
     variesBySubsection: "ಉಪವಿಭಾಗದ ಪ್ರಕಾರ ಬದಲಾಗುತ್ತದೆ",
 
     unableToReach:
       "ಕಾನೂನು ಶಿಫಾರಸು ಸೇವೆಯನ್ನು ಸಂಪರ್ಕಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+
+    match: "ಹೊಂದಾಣಿಕೆ",
 
     language: "English",
   },
@@ -175,10 +181,13 @@ export default function BNSRecommendation() {
   const [result, setResult] = useState<RecommendResponse | null>(null);
   const [error, setError] = useState("");
   const [lang, setLang] = useState<"en" | "kn">("en");
+
   const t = translations[lang];
+
   const toggleLanguage = () => {
     setLang((previous) => (previous === "en" ? "kn" : "en"));
   };
+
   const officerName = user?.name || "Unknown Officer";
   const officerBadge = user?.badge || "";
 
@@ -224,9 +233,7 @@ export default function BNSRecommendation() {
       }
     } catch (err) {
       console.error("Legal recommendation error:", err);
-      setError(
-        "Unable to reach the legal recommendation service. Please try again.",
-      );
+      setError(t.unableToReach);
     } finally {
       setAnalyzing(false);
     }
@@ -244,7 +251,7 @@ export default function BNSRecommendation() {
           </div>
           <div>
             <div style={S.sidebarLogoTitle}>KAVACH</div>
-            <div style={S.sidebarLogoSub}>OFFICER PORTAL</div>
+            <div style={S.sidebarLogoSub}>{t.officerPortal}</div>
           </div>
         </div>
 
@@ -252,37 +259,37 @@ export default function BNSRecommendation() {
           {[
             {
               key: "dashboard",
-              label: "Dashboard",
+              label: t.dashboard,
               icon: "grid",
               path: "/officer/dashboard",
             },
             {
               key: "cases",
-              label: "BNS Sections",
+              label: t.bnsSections,
               icon: "case",
               path: "/bns-recommendation",
             },
             {
               key: "districts",
-              label: "Crime Hotspot",
+              label: t.crimeHotspot,
               icon: "map",
               path: "/dash",
             },
             {
               key: "analytics",
-              label: "Explainable AI",
+              label: t.explainableAI,
               icon: "chart",
               path: "/dash",
             },
             {
               key: "reports",
-              label: "Generate report",
+              label: t.generateReport,
               icon: "bolt",
               path: "/generate-report",
             },
             {
               key: "settings",
-              label: "Settings",
+              label: t.settings,
               icon: "gear",
               path: "/settings",
             },
@@ -323,7 +330,7 @@ export default function BNSRecommendation() {
             style={S.logoutBtn}
           >
             <NavIcon name="logout" color="rgba(255,255,255,0.7)" />
-            Sign out
+            {t.signOut}
           </button>
         </div>
       </aside>
@@ -332,12 +339,16 @@ export default function BNSRecommendation() {
       <div style={S.main}>
         <div style={S.topbar}>
           <div>
-            <div style={S.topbarTitle}>BNS Section Recommendation</div>
-            <div style={S.topbarSub}>
-              AI-assisted mapping to Bharatiya Nyaya Sanhita, 2023
-            </div>
+            <div style={S.topbarTitle}>{t.pageTitle}</div>
+            <div style={S.topbarSub}>{t.pageSubtitle}</div>
           </div>
           <div style={S.officerChipRow}>
+            {/* ---- Language Toggle Button ---- */}
+            <button onClick={toggleLanguage} type="button" style={S.langBtn}>
+              <GlobeIcon size={13} color={TEAL} />
+              {t.language}
+            </button>
+
             <span style={S.officerBadge}>{officerBadge}</span>
             <span style={S.officerName}>{officerName}</span>
           </div>
@@ -355,7 +366,7 @@ export default function BNSRecommendation() {
                   setError("");
                 }}
               >
-                Select existing case
+                {t.selectExistingCase}
               </button>
               <button
                 style={S.modeBtn(mode === "freetext")}
@@ -365,7 +376,7 @@ export default function BNSRecommendation() {
                   setError("");
                 }}
               >
-                Paste incident text
+                {t.pasteIncidentText}
               </button>
             </div>
 
@@ -373,15 +384,15 @@ export default function BNSRecommendation() {
               <>
                 <input
                   style={S.searchInput}
-                  placeholder="Search by Complaint ID, name, or incident type..."
+                  placeholder={t.searchPlaceholder}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
 
                 {loadingCases ? (
-                  <div style={S.emptyState}>Loading cases...</div>
+                  <div style={S.emptyState}>{t.loadingCases}</div>
                 ) : filteredComplaints.length === 0 ? (
-                  <div style={S.emptyState}>No matching cases found.</div>
+                  <div style={S.emptyState}>{t.noMatchingCases}</div>
                 ) : (
                   <div style={S.caseList}>
                     {filteredComplaints.map((c) => (
@@ -409,11 +420,10 @@ export default function BNSRecommendation() {
                 {selectedCase && (
                   <div style={S.previewBox}>
                     <div style={S.previewLabel}>
-                      Incident Description Preview
+                      {t.incidentDescriptionPreview}
                     </div>
                     <p style={S.previewText}>
-                      {selectedCase.incident_description ||
-                        "No description on file for this case."}
+                      {selectedCase.incident_description || t.noDescription}
                     </p>
                   </div>
                 )}
@@ -421,7 +431,7 @@ export default function BNSRecommendation() {
             ) : (
               <textarea
                 style={S.freeTextArea}
-                placeholder="Paste or type the incident description here..."
+                placeholder={t.pastePlaceholder}
                 value={freeText}
                 onChange={(e) => setFreeText(e.target.value)}
                 rows={10}
@@ -436,27 +446,23 @@ export default function BNSRecommendation() {
               disabled={!activeDescription.trim() || analyzing}
               onClick={handleAnalyze}
             >
-              {analyzing
-                ? "Analysing against BNS corpus..."
-                : "Analyze & Recommend Sections"}
+              {analyzing ? t.analysingBNS : t.analyzeRecommend}
             </button>
           </div>
 
           {/* ---------- Results panel ---------- */}
           <div style={S.resultsPanel}>
             <div style={S.resultsHeader}>
-              <div style={S.resultsTitle}>Suggested BNS Provisions</div>
+              <div style={S.resultsTitle}>{t.suggestedBNS}</div>
               <div style={S.aiBadge}>AI</div>
             </div>
 
-            <div style={S.disclaimer}>
-              Decision-support only · Officer verification required
-            </div>
+            <div style={S.disclaimer}>{t.decisionSupport}</div>
 
             {analyzing && (
               <div style={S.loadingState}>
                 <div style={S.spinner} />
-                Analysing FIR against BNS corpus…
+                {t.analysingFIR}
               </div>
             )}
 
@@ -464,25 +470,20 @@ export default function BNSRecommendation() {
               <div style={S.errorBox}>
                 {error}
                 <button style={S.retryBtn} onClick={handleAnalyze}>
-                  Retry
+                  {t.retry}
                 </button>
               </div>
             )}
 
             {!analyzing && !error && !result && (
-              <div style={S.emptyResultState}>
-                Select a case or paste an incident description, then run the
-                analysis to see recommended sections here.
-              </div>
+              <div style={S.emptyResultState}>{t.selectCaseInstruction}</div>
             )}
 
             {!analyzing &&
               !error &&
               result &&
               result.recommendations.length === 0 && (
-                <div style={S.emptyResultState}>
-                  No sufficiently relevant BNS provisions identified.
-                </div>
+                <div style={S.emptyResultState}>{t.noRelevantProvisions}</div>
               )}
 
             {!analyzing &&
@@ -500,11 +501,11 @@ export default function BNSRecommendation() {
                 const cognizable =
                   cognizableValues.length === 1
                     ? cognizableValues[0]
-                    : "Varies by subsection";
+                    : t.variesBySubsection;
                 const bailable =
                   bailableValues.length === 1
                     ? bailableValues[0]
-                    : "Varies by subsection";
+                    : t.variesBySubsection;
 
                 return (
                   <div key={`${rec.section}-${index}`} style={S.recCard}>
@@ -519,22 +520,22 @@ export default function BNSRecommendation() {
                         <span style={S.rankBadge}>#{index + 1}</span>
                         {typeof rec.retrieval_score === "number" && (
                           <span style={S.scoreBadge}>
-                            match {(rec.retrieval_score * 100).toFixed(0)}%
+                            {t.match} {(rec.retrieval_score * 100).toFixed(0)}%
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <div style={S.whyLabel}>WHY SUGGESTED</div>
+                    <div style={S.whyLabel}>{t.whySuggested}</div>
                     <p style={S.whyText}>{rec.why_it_applies}</p>
 
                     <div style={S.metaGrid}>
                       <div style={S.metaItem}>
-                        <span style={S.metaLabel}>COGNIZABLE</span>
+                        <span style={S.metaLabel}>{t.cognizable}</span>
                         <span style={S.metaValue}>{cognizable}</span>
                       </div>
                       <div style={S.metaItem}>
-                        <span style={S.metaLabel}>BAIL</span>
+                        <span style={S.metaLabel}>{t.bail}</span>
                         <span style={S.metaValue}>{bailable}</span>
                       </div>
                     </div>
@@ -542,9 +543,10 @@ export default function BNSRecommendation() {
                     {classifications.length > 0 && (
                       <details style={S.detailsBlock}>
                         <summary style={S.detailsSummary}>
-                          View full classification
-                          {classifications.length > 1 ? "s" : ""} (
-                          {classifications.length})
+                          {classifications.length > 1
+                            ? t.viewClassifications
+                            : t.viewClassification}{" "}
+                          ({classifications.length})
                         </summary>
                         <div style={S.classTable}>
                           {classifications.map((cl, ci) => (
@@ -554,25 +556,31 @@ export default function BNSRecommendation() {
                               </div>
                               <div style={S.classRowGrid}>
                                 <div>
-                                  <span style={S.classLabel}>Punishment</span>
+                                  <span style={S.classLabel}>
+                                    {t.punishment}
+                                  </span>
                                   <span style={S.classValue}>
                                     {cl.punishment}
                                   </span>
                                 </div>
                                 <div>
-                                  <span style={S.classLabel}>Cognizable</span>
+                                  <span style={S.classLabel}>
+                                    {t.cognizable}
+                                  </span>
                                   <span style={S.classValue}>
                                     {cl.cognizable}
                                   </span>
                                 </div>
                                 <div>
-                                  <span style={S.classLabel}>Bailable</span>
+                                  <span style={S.classLabel}>{t.bailable}</span>
                                   <span style={S.classValue}>
                                     {cl.bailable}
                                   </span>
                                 </div>
                                 <div>
-                                  <span style={S.classLabel}>Triable By</span>
+                                  <span style={S.classLabel}>
+                                    {t.triableBy}
+                                  </span>
                                   <span style={S.classValue}>
                                     {cl.triable_by}
                                   </span>
@@ -613,6 +621,26 @@ function ShieldIcon({
         stroke={color}
         strokeWidth="1.7"
         strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function GlobeIcon({
+  size = 13,
+  color = "#0E8C8C",
+}: {
+  size?: number;
+  color?: string;
+}) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2" />
+      <line x1="2" y1="12" x2="22" y2="12" stroke={color} strokeWidth="2" />
+      <path
+        d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+        stroke={color}
+        strokeWidth="2"
       />
     </svg>
   );
@@ -928,6 +956,22 @@ const styles = {
     alignItems: "center",
     gap: 12,
   } as React.CSSProperties,
+
+  langBtn: {
+    background: "transparent",
+    color: TEAL,
+    border: `1px solid ${TEAL}`,
+    borderRadius: 20,
+    padding: "5px 12px",
+    fontFamily: "'Inter', sans-serif",
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 5,
+  } as React.CSSProperties,
+
   officerBadge: {
     fontSize: 11,
     padding: "4px 9px",
@@ -951,8 +995,6 @@ const styles = {
     minHeight: 0,
     overflow: "hidden",
   } as React.CSSProperties,
-
-  // ---------- input panel ----------
 
   inputPanel: {
     background: "#FFFFFF",
@@ -1076,8 +1118,6 @@ const styles = {
     cursor: "pointer",
     fontFamily: "'Inter', sans-serif",
   } as React.CSSProperties,
-
-  // ---------- results panel ----------
 
   resultsPanel: {
     background: "#FFFFFF",

@@ -62,3 +62,57 @@ def analyze(data: dict):
         "analytics": data["analytics"]
 
     }
+
+def pattern_summary(data: dict):
+    """
+    Receives the payload from the backend.
+
+    Expected payload:
+    {
+        "station": "...",
+        "prompt": "...",
+        "analytics": {...}
+    }
+
+    Returns a short narrative summary (2-4 sentences) rather than
+    the full operational report `analyze()` produces.
+    """
+
+    prompt = data["prompt"]
+
+    response = client.chat.completions.create(
+
+        model="llama-3.3-70b-versatile",
+
+        temperature=0.2,
+
+        max_tokens=250,
+
+        messages=[
+
+            {
+                "role": "system",
+                "content":
+                (
+                    "You are a Senior Karnataka Police Intelligence Officer. "
+                    "Summarize the supplied crime intelligence into a single, "
+                    "clear narrative paragraph (2-4 sentences) explaining the "
+                    "key pattern, trend, or risk finding for this station. "
+                    "Never invent facts. Use ONLY the supplied intelligence. "
+                    "Do not use headings, bullet points, or markdown — plain "
+                    "prose only."
+                )
+            },
+
+            {
+                "role": "user",
+                "content": prompt
+            }
+
+        ]
+
+    )
+
+    return {
+        "summary": response.choices[0].message.content
+    }

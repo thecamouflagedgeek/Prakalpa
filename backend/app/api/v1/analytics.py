@@ -1,6 +1,4 @@
-from http.client import HTTPException
-
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 import requests
 
 from app.analytics.data_store import df
@@ -67,6 +65,41 @@ def anomalies(station: str):
         )
 
     return data
+
+@router.post("/pattern-summary/{station}")
+def pattern_summary(station: str):
+
+    payload = build_groq_input(
+        df=df,
+        station_name=station
+    )
+
+    if payload is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Police station not found"
+        )
+
+    try:
+        response = requests.post(
+            "http://localhost:8001/agent/crime/pattern-summary",
+            json=payload,
+            timeout=30
+        )
+        response.raise_for_status()
+    except requests.exceptions.ConnectionError:
+        raise HTTPException(
+            status_code=503,
+            detail="AI engine is not running"
+        )
+    except requests.exceptions.HTTPError as e:
+        raise HTTPException(
+            status_code=502,
+            detail=f"AI engine returned an error: {str(e)}"
+        )
+
+    data = response.json()
+    return {"summary": data.get("summary", "")}
 
 @router.post("/ai-summary/{station}")
 def ai_summary(station: str):
