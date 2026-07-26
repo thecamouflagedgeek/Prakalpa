@@ -6,7 +6,123 @@ import { useAuthStore } from "../store/authStore";
 
 const API_BASE = "http://localhost:8000/api/v1";
 
-// ---------- Types (mirrors backend response shape exactly) ----------
+const translations = {
+  en: {
+    officerPortal: "OFFICER PORTAL",
+    dashboard: "Dashboard",
+    bnsSections: "BNS Sections",
+    crimeHotspot: "Crime Hotspot",
+    explainableAI: "Explainable AI",
+    generateReport: "Generate report",
+    settings: "Settings",
+    signOut: "Sign out",
+
+    pageTitle: "BNS Section Recommendation",
+    pageSubtitle: "AI-assisted mapping to Bharatiya Nyaya Sanhita, 2023",
+
+    selectExistingCase: "Select existing case",
+    pasteIncidentText: "Paste incident text",
+
+    searchPlaceholder: "Search by Complaint ID, name, or incident type...",
+
+    loadingCases: "Loading cases...",
+    noMatchingCases: "No matching cases found.",
+    incidentDescriptionPreview: "Incident Description Preview",
+    noDescription: "No description on file for this case.",
+
+    pastePlaceholder: "Paste or type the incident description here...",
+
+    analysingBNS: "Analysing against BNS corpus...",
+    analyzeRecommend: "Analyze & Recommend Sections",
+
+    suggestedBNS: "Suggested BNS Provisions",
+    decisionSupport: "Decision-support only · Officer verification required",
+
+    analysingFIR: "Analysing FIR against BNS corpus…",
+
+    retry: "Retry",
+
+    selectCaseInstruction:
+      "Select a case or paste an incident description, then run the analysis to see recommended sections here.",
+
+    noRelevantProvisions: "No sufficiently relevant BNS provisions identified.",
+
+    whySuggested: "WHY SUGGESTED",
+    cognizable: "COGNIZABLE",
+    bail: "BAIL",
+
+    viewClassification: "View full classification",
+    viewClassifications: "View full classifications",
+
+    punishment: "Punishment",
+    triableBy: "Triable By",
+
+    variesBySubsection: "Varies by subsection",
+
+    unableToReach:
+      "Unable to reach the legal recommendation service. Please try again.",
+
+    language: "ಕನ್ನಡ",
+  },
+
+  kn: {
+    officerPortal: "ಅಧಿಕಾರಿ ಪೋರ್ಟಲ್",
+    dashboard: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+    bnsSections: "ಬಿಎನ್‌ಎಸ್ ವಿಭಾಗಗಳು",
+    crimeHotspot: "ಅಪರಾಧ ಹಾಟ್‌ಸ್ಪಾಟ್",
+    explainableAI: "ವಿವರಿಸಬಹುದಾದ ಎಐ",
+    generateReport: "ವರದಿ ರಚಿಸಿ",
+    settings: "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+    signOut: "ಸೈನ್ ಔಟ್",
+
+    pageTitle: "ಬಿಎನ್‌ಎಸ್ ವಿಭಾಗ ಶಿಫಾರಸು",
+    pageSubtitle: "ಭಾರತೀಯ ನ್ಯಾಯ ಸಂಹಿತೆ, 2023 ಗೆ ಎಐ ಸಹಾಯಿತ ಹೊಂದಾಣಿಕೆ",
+
+    selectExistingCase: "ಅಸ್ತಿತ್ವದಲ್ಲಿರುವ ಪ್ರಕರಣ ಆಯ್ಕೆಮಾಡಿ",
+    pasteIncidentText: "ಘಟನೆಯ ಪಠ್ಯವನ್ನು ಅಂಟಿಸಿ",
+
+    searchPlaceholder: "ದೂರು ಸಂಖ್ಯೆ, ಹೆಸರು ಅಥವಾ ಘಟನೆಯ ಮಾದರಿಯಿಂದ ಹುಡುಕಿ...",
+
+    loadingCases: "ಪ್ರಕರಣಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
+    noMatchingCases: "ಯಾವುದೇ ಹೊಂದಾಣಿಕೆಯ ಪ್ರಕರಣಗಳು ಕಂಡುಬಂದಿಲ್ಲ.",
+    incidentDescriptionPreview: "ಘಟನೆಯ ವಿವರಣೆ ಪೂರ್ವವೀಕ್ಷಣೆ",
+    noDescription: "ಈ ಪ್ರಕರಣಕ್ಕೆ ಯಾವುದೇ ವಿವರಣೆ ಲಭ್ಯವಿಲ್ಲ.",
+
+    pastePlaceholder: "ಘಟನೆಯ ವಿವರಣೆಯನ್ನು ಇಲ್ಲಿ ಬರೆಯಿರಿ ಅಥವಾ ಅಂಟಿಸಿ...",
+
+    analysingBNS: "ಬಿಎನ್‌ಎಸ್ ದಾಖಲೆಗಳ ವಿರುದ್ಧ ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ...",
+    analyzeRecommend: "ವಿಶ್ಲೇಷಿಸಿ ಮತ್ತು ವಿಭಾಗಗಳನ್ನು ಶಿಫಾರಸು ಮಾಡಿ",
+
+    suggestedBNS: "ಶಿಫಾರಸು ಮಾಡಲಾದ ಬಿಎನ್‌ಎಸ್ ವಿಧಿಗಳು",
+    decisionSupport: "ನಿರ್ಧಾರ ಸಹಾಯ ಮಾತ್ರ · ಅಧಿಕಾರಿಯ ಪರಿಶೀಲನೆ ಅಗತ್ಯ",
+
+    analysingFIR: "ಬಿಎನ್‌ಎಸ್ ದಾಖಲೆಗಳ ವಿರುದ್ಧ ಎಫ್‌ಐಆರ್ ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ…",
+
+    retry: "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
+
+    selectCaseInstruction:
+      "ಪ್ರಕರಣವನ್ನು ಆಯ್ಕೆಮಾಡಿ ಅಥವಾ ಘಟನೆಯ ವಿವರಣೆಯನ್ನು ನಮೂದಿಸಿ. ನಂತರ ವಿಶ್ಲೇಷಣೆ ನಡೆಸಿದಾಗ ಶಿಫಾರಸು ಮಾಡಲಾದ ವಿಭಾಗಗಳು ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತವೆ.",
+
+    noRelevantProvisions: "ಸಾಕಷ್ಟು ಸಂಬಂಧಿತ ಬಿಎನ್‌ಎಸ್ ವಿಧಿಗಳು ಕಂಡುಬಂದಿಲ್ಲ.",
+
+    whySuggested: "ಏಕೆ ಶಿಫಾರಸು ಮಾಡಲಾಗಿದೆ",
+    cognizable: "ಕಾಗ್ನಿಜಬಲ್",
+    bail: "ಜಾಮೀನು",
+
+    viewClassification: "ಸಂಪೂರ್ಣ ವರ್ಗೀಕರಣವನ್ನು ವೀಕ್ಷಿಸಿ",
+    viewClassifications: "ಸಂಪೂರ್ಣ ವರ್ಗೀಕರಣಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
+
+    punishment: "ಶಿಕ್ಷೆ",
+    triableBy: "ವಿಚಾರಣೆ ನಡೆಸುವವರು",
+
+    variesBySubsection: "ಉಪವಿಭಾಗದ ಪ್ರಕಾರ ಬದಲಾಗುತ್ತದೆ",
+
+    unableToReach:
+      "ಕಾನೂನು ಶಿಫಾರಸು ಸೇವೆಯನ್ನು ಸಂಪರ್ಕಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+
+    language: "English",
+  },
+} as const;
 
 interface LegalClassification {
   schedule_section: string;
@@ -58,7 +174,11 @@ export default function BNSRecommendation() {
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<RecommendResponse | null>(null);
   const [error, setError] = useState("");
-
+  const [lang, setLang] = useState<"en" | "kn">("en");
+  const t = translations[lang];
+  const toggleLanguage = () => {
+    setLang((previous) => (previous === "en" ? "kn" : "en"));
+  };
   const officerName = user?.name || "Unknown Officer";
   const officerBadge = user?.badge || "";
 
