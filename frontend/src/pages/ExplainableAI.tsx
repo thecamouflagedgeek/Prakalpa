@@ -341,7 +341,7 @@ export default function ExplainableAI() {
             {
               key: "analytics",
               label: t.navExplain,
-              path: "/officer/explain",
+              path: "/explain",
               icon: "chart",
             },
             {

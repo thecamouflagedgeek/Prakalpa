@@ -7,6 +7,76 @@ import { useAuthStore } from "../store/authStore";
 
 const API_BASE = "http://localhost:8000/api/v1";
 
+// ---------- i18n ----------
+
+const translations = {
+  en: {
+    officerPortal: "OFFICER PORTAL",
+    dashboard: "Dashboard",
+    bnsSections: "BNS Sections",
+    crimeHotspot: "Crime Hotspot",
+    explainableAI: "Explainable AI",
+    generateReport: "Generate report",
+    settings: "Settings",
+    signOut: "Sign out",
+
+    pageTitle: "Generate Report",
+    pageSubtitle: "Karnataka State Police · Standard Report Formats",
+
+    backToFormats: "← Back to formats",
+    backToCaseSelection: "← Back to case selection",
+    selectCasePrefix: "Select Case —",
+
+    searchPlaceholder: "Search by Complaint ID, name, or incident type...",
+    loadingCases: "Loading cases...",
+    noMatchingCases: "No matching cases found.",
+
+    approved: "Approved",
+    pendingReview: "Pending Review",
+
+    confirmReview:
+      "I have reviewed this report for accuracy and confirm there are no errors.",
+    approveReport: "Approve Report",
+    unlockForEditing: "Unlock for Editing",
+    downloadAsPDF: "Download as PDF",
+
+    language: "ಕನ್ನಡ",
+  },
+
+  kn: {
+    officerPortal: "ಅಧಿಕಾರಿ ಪೋರ್ಟಲ್",
+    dashboard: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+    bnsSections: "ಬಿಎನ್‌ಎಸ್ ವಿಭಾಗಗಳು",
+    crimeHotspot: "ಅಪರಾಧ ಹಾಟ್‌ಸ್ಪಾಟ್",
+    explainableAI: "ವಿವರಿಸಬಹುದಾದ ಎಐ",
+    generateReport: "ವರದಿ ರಚಿಸಿ",
+    settings: "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+    signOut: "ಸೈನ್ ಔಟ್",
+
+    pageTitle: "ವರದಿ ರಚಿಸಿ",
+    pageSubtitle: "ಕರ್ನಾಟಕ ರಾಜ್ಯ ಪೊಲೀಸ್ · ಪ್ರಮಾಣಿತ ವರದಿ ಸ್ವರೂಪಗಳು",
+
+    backToFormats: "← ಸ್ವರೂಪಗಳಿಗೆ ಹಿಂತಿರುಗಿ",
+    backToCaseSelection: "← ಪ್ರಕರಣ ಆಯ್ಕೆಗೆ ಹಿಂತಿರುಗಿ",
+    selectCasePrefix: "ಪ್ರಕರಣ ಆಯ್ಕೆಮಾಡಿ —",
+
+    searchPlaceholder: "ದೂರು ಸಂಖ್ಯೆ, ಹೆಸರು ಅಥವಾ ಘಟನೆಯ ಮಾದರಿಯಿಂದ ಹುಡುಕಿ...",
+    loadingCases: "ಪ್ರಕರಣಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
+    noMatchingCases: "ಯಾವುದೇ ಹೊಂದಾಣಿಕೆಯ ಪ್ರಕರಣಗಳು ಕಂಡುಬಂದಿಲ್ಲ.",
+
+    approved: "ಅನುಮೋದಿಸಲಾಗಿದೆ",
+    pendingReview: "ಪರಿಶೀಲನೆಗೆ ಬಾಕಿ",
+
+    confirmReview:
+      "ನಾನು ಈ ವರದಿಯನ್ನು ನಿಖರತೆಗಾಗಿ ಪರಿಶೀಲಿಸಿದ್ದೇನೆ ಮತ್ತು ಯಾವುದೇ ದೋಷಗಳಿಲ್ಲ ಎಂದು ದೃಢಪಡಿಸುತ್ತೇನೆ.",
+    approveReport: "ವರದಿಯನ್ನು ಅನುಮೋದಿಸಿ",
+    unlockForEditing: "ಸಂಪಾದನೆಗಾಗಿ ಅನ್‌ಲಾಕ್ ಮಾಡಿ",
+    downloadAsPDF: "PDF ಆಗಿ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ",
+
+    language: "English",
+  },
+} as const;
+
 // ---------- Types ----------
 
 interface Complaint {
@@ -243,6 +313,10 @@ export default function GenerateReport() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
+  const [lang, setLang] = useState<"en" | "kn">("en");
+  const t = translations[lang];
+  const toggleLanguage = () => setLang((prev) => (prev === "en" ? "kn" : "en"));
+
   const [step, setStep] = useState<Step>("select-format");
   const [selectedType, setSelectedType] = useState<ReportType | null>(null);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
@@ -410,18 +484,18 @@ export default function GenerateReport() {
           </div>
           <div>
             <div style={S.sidebarLogoTitle}>KAVACH</div>
-            <div style={S.sidebarLogoSub}>OFFICER PORTAL</div>
+            <div style={S.sidebarLogoSub}>{t.officerPortal}</div>
           </div>
         </div>
 
         <nav style={S.navList}>
           {[
-            { key: "dashboard", label: "Dashboard", icon: "grid" },
-            { key: "cases", label: "BNS Sections", icon: "case" },
-            { key: "districts", label: "Crime Hotspot", icon: "map" },
-            { key: "explain", label: "Explainable AI", icon: "chart" },
-            { key: "reports", label: "Generate report", icon: "bolt" },
-            { key: "settings", label: "Settings", icon: "gear" },
+            { key: "dashboard", label: t.dashboard, icon: "grid" },
+            { key: "cases", label: t.bnsSections, icon: "case" },
+            { key: "districts", label: t.crimeHotspot, icon: "map" },
+            { key: "explain", label: t.explainableAI, icon: "chart" },
+            { key: "reports", label: t.generateReport, icon: "bolt" },
+            { key: "settings", label: t.settings, icon: "gear" },
           ].map((item) => (
             <button
               key={item.key}
@@ -431,10 +505,9 @@ export default function GenerateReport() {
                   navigate("/dash");
                 else if (item.key === "explain") navigate("/explain");
                 else if (item.key === "reports") navigate("/generate-report");
-                else if (item.key === "settings") {
-                  navigate("/settings");
-                }
-                else if (item.key === "dashboard")
+                else if (item.key === "settings") navigate("/settings");
+                else if (item.key === "cases") navigate("/bns");
+                else if (item.key === "dashboard")  
                   navigate("/officer/dashboard");
               }}
               style={S.navItem(item.key === "reports")}
@@ -469,7 +542,7 @@ export default function GenerateReport() {
             style={S.logoutBtn}
           >
             <NavIcon name="logout" color="rgba(255,255,255,0.7)" />
-            Sign out
+            {t.signOut}
           </button>
         </div>
       </aside>
@@ -478,12 +551,16 @@ export default function GenerateReport() {
       <div style={S.main}>
         <div style={S.topbar}>
           <div>
-            <div style={S.topbarTitle}>Generate Report</div>
-            <div style={S.topbarSub}>
-              Karnataka State Police · Standard Report Formats
-            </div>
+            <div style={S.topbarTitle}>{t.pageTitle}</div>
+            <div style={S.topbarSub}>{t.pageSubtitle}</div>
           </div>
           <div style={S.officerChipRow}>
+            {/* ---- Language Toggle Button ---- */}
+            <button onClick={toggleLanguage} type="button" style={S.langBtn}>
+              <GlobeIcon size={13} color={TEAL} />
+              {t.language}
+            </button>
+
             <span style={S.officerBadge}>{officerBadge}</span>
             <span style={S.officerName}>{officerName}</span>
           </div>
@@ -515,21 +592,23 @@ export default function GenerateReport() {
           {step === "select-case" && selectedType && (
             <div style={S.panel}>
               <button style={S.backBtn} onClick={handleBackToFormats}>
-                ← Back to formats
+                {t.backToFormats}
               </button>
-              <div style={S.panelTitle}>Select Case — {selectedType.title}</div>
+              <div style={S.panelTitle}>
+                {t.selectCasePrefix} {selectedType.title}
+              </div>
 
               <input
                 style={S.searchInput}
-                placeholder="Search by Complaint ID, name, or incident type..."
+                placeholder={t.searchPlaceholder}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
 
               {loadingCases ? (
-                <div style={S.emptyState}>Loading cases...</div>
+                <div style={S.emptyState}>{t.loadingCases}</div>
               ) : filteredComplaints.length === 0 ? (
-                <div style={S.emptyState}>No matching cases found.</div>
+                <div style={S.emptyState}>{t.noMatchingCases}</div>
               ) : (
                 <div style={S.caseList}>
                   {filteredComplaints.map((c) => (
@@ -563,7 +642,7 @@ export default function GenerateReport() {
                   setConfirmChecked(false);
                 }}
               >
-                ← Back to case selection
+                {t.backToCaseSelection}
               </button>
 
               <div style={S.reviewHeader}>
@@ -581,7 +660,7 @@ export default function GenerateReport() {
                     background: approved ? "#E5F6EC" : "#FDEEE3",
                   }}
                 >
-                  {approved ? "Approved" : "Pending Review"}
+                  {approved ? t.approved : t.pendingReview}
                 </div>
               </div>
 
@@ -613,8 +692,7 @@ export default function GenerateReport() {
                       checked={confirmChecked}
                       onChange={(e) => setConfirmChecked(e.target.checked)}
                     />
-                    I have reviewed this report for accuracy and confirm there
-                    are no errors.
+                    {t.confirmReview}
                   </label>
                   <button
                     style={{
@@ -624,16 +702,16 @@ export default function GenerateReport() {
                     disabled={!confirmChecked}
                     onClick={handleApprove}
                   >
-                    Approve Report
+                    {t.approveReport}
                   </button>
                 </div>
               ) : (
                 <div style={S.approveBox}>
                   <button style={S.secondaryBtn} onClick={handleUnlock}>
-                    Unlock for Editing
+                    {t.unlockForEditing}
                   </button>
                   <button style={S.primaryBtn} onClick={handleDownloadPDF}>
-                    Download as PDF
+                    {t.downloadAsPDF}
                   </button>
                 </div>
               )}
@@ -661,6 +739,26 @@ function ShieldIcon({
         stroke={color}
         strokeWidth="1.7"
         strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function GlobeIcon({
+  size = 13,
+  color = "#0E8C8C",
+}: {
+  size?: number;
+  color?: string;
+}) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2" />
+      <line x1="2" y1="12" x2="22" y2="12" stroke={color} strokeWidth="2" />
+      <path
+        d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+        stroke={color}
+        strokeWidth="2"
       />
     </svg>
   );
@@ -822,11 +920,13 @@ function NavIcon({ name, color }: { name: string; color: string }) {
   }
 }
 
-// ---------- Styles (matched to OfficerDashboard palette) ----------
+// ---------- Styles ----------
 
 const NAVY = "#152A43";
 const NAVY_DEEP = "#0E2438";
 const TEAL = "#0E8C8C";
+const TEAL_DARK = "#0A6E6E";
+const TEAL_TINT = "#E1F5F5";
 const TEXT = "#5B6B7A";
 const BORDER = "#E3E9EC";
 const BG_SECTION = "#EAF2F5";
@@ -835,6 +935,7 @@ const styles = {
   page: {
     minHeight: "100vh",
     display: "flex",
+    alignItems: "stretch",
     background: BG_SECTION,
     fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
   } as React.CSSProperties,
@@ -842,13 +943,14 @@ const styles = {
   sidebar: {
     width: "236px",
     flexShrink: 0,
+    alignSelf: "stretch",
+    minHeight: "100%",
     background: `linear-gradient(180deg, ${NAVY} 0%, ${NAVY_DEEP} 100%)`,
     display: "flex",
     flexDirection: "column",
     padding: "24px 18px",
     position: "sticky" as const,
     top: 0,
-    height: "100vh",
   } as React.CSSProperties,
 
   sidebarLogoRow: {
@@ -989,11 +1091,27 @@ const styles = {
     alignItems: "center",
     gap: 12,
   } as React.CSSProperties,
+
+  langBtn: {
+    background: "transparent",
+    color: TEAL,
+    border: `1px solid ${TEAL}`,
+    borderRadius: 20,
+    padding: "5px 12px",
+    fontFamily: "'Inter', sans-serif",
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 5,
+  } as React.CSSProperties,
+
   officerBadge: {
     fontSize: 11,
     padding: "4px 9px",
-    background: "#E1F5F5",
-    color: "#0A6E6E",
+    background: TEAL_TINT,
+    color: TEAL_DARK,
     borderRadius: 5,
     fontWeight: 600,
   } as React.CSSProperties,
@@ -1027,7 +1145,7 @@ const styles = {
     width: 40,
     height: 40,
     borderRadius: 10,
-    background: "#E1F5F5",
+    background: TEAL_TINT,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -1129,8 +1247,8 @@ const styles = {
   caseStatus: {
     padding: "3px 9px",
     borderRadius: 20,
-    background: "#E1F5F5",
-    color: "#0A6E6E",
+    background: TEAL_TINT,
+    color: TEAL_DARK,
     fontWeight: 600,
     fontSize: 11,
   } as React.CSSProperties,
@@ -1219,8 +1337,8 @@ const styles = {
   idChip: {
     fontSize: 11,
     fontWeight: 700,
-    color: "#0A6E6E",
-    background: "#E1F5F5",
+    color: TEAL_DARK,
+    background: TEAL_TINT,
     padding: "3px 8px",
     borderRadius: 5,
     letterSpacing: "0.03em",
