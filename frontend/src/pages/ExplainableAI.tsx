@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuthStore } from "../store/authStore";
 
-const API_BASE = "http://localhost:8000/api/v1";
+const API_BASE = "https://prakalpa-backend.onrender.com/api/v1";
 
 // ---------- Types ----------
 

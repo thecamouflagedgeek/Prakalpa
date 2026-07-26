@@ -43,7 +43,7 @@ export function useVoice() {
     if (lang === "kn") {
       setSpeaking(true);
       try {
-        const res = await axios.post("http://localhost:8000/api/v1/fir/tts", {
+        const res = await axios.post("https://prakalpa-backend.onrender.com/api/v1/fir/tts", {
           text,
           language: "kn",
         });

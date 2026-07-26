@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const API_BASE = "http://localhost:8000/api/v1";
-const BASE = "http://localhost:8000/api/v1";
+const API_BASE = "https://prakalpa-backend.onrender.com/api/v1";
+const BASE = "https://prakalpa-backend.onrender.com/api/v1";
 
 /* -------------------------------------------------------
    EXISTING RESPONSE TYPES

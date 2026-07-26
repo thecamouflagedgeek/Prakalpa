@@ -94,7 +94,7 @@ export default function OfficerDashboard() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:8000/api/v1/complaints/all")
+      .get("https://prakalpa-backend.onrender.com/api/v1/complaints/all")
       .then((r) => setComplaints(r.data))
       .finally(() => setLoading(false));
   }, []);

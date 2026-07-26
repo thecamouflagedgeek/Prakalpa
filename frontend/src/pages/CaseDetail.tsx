@@ -149,7 +149,7 @@ export default function CaseDetail() {
 
     try {
       const res = await axios.post(
-        "http://localhost:8000/api/v1/legal/recommend",
+        "https://prakalpa-backend.onrender.com/api/v1/legal/recommend",
         {
           incident_description: incidentDescription,
         },
@@ -172,7 +172,7 @@ export default function CaseDetail() {
         setError("");
 
         const response = await axios.get(
-          `http://localhost:8000/api/v1/complaints/${id}`,
+          `https://prakalpa-backend.onrender.com/api/v1/complaints/${id}`,
         );
         setComplaint(response.data);
 
@@ -181,7 +181,7 @@ export default function CaseDetail() {
         if (user?.username) {
           try {
             await axios.patch(
-              `http://localhost:8000/api/v1/complaints/${id}/assign`,
+              `https://prakalpa-backend.onrender.com/api/v1/complaints/${id}/assign`,
               {
                 officer_username: user.username,
               },
@@ -251,7 +251,7 @@ Provide a precise, professional response. If applicable, suggest BNS sections, e
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/v1/fir/chat",
+        "https://prakalpa-backend.onrender.com/api/v1/fir/chat",
         {
           session_id: sessionId.current,
           message: contextPrompt,
@@ -319,7 +319,7 @@ Provide a precise, professional response. If applicable, suggest BNS sections, e
 
     try {
       await axios.patch(
-        `http://localhost:8000/api/v1/complaints/${id}/file-fir`,
+        `https://prakalpa-backend.onrender.com/api/v1/complaints/${id}/file-fir`,
       );
       setFiled(true);
     } catch {

@@ -338,7 +338,7 @@ function FIRLodgingContent() {
     setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:8000/api/v1/fir/chat", {
+      const res = await axios.post("https://prakalpa-backend.onrender.com/api/v1/fir/chat", {
         session_id: sessionId.current,
         message: currentInput,
         language,

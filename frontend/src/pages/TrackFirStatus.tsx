@@ -224,7 +224,7 @@ i18nInstance.use(initReactI18next).init({
    CONSTANTS
 ========================================================= */
 
-const API_BASE = "http://localhost:8000/api/v1";
+const API_BASE = "https://prakalpa-backend.onrender.com/api/v1";
 
 /* =========================================================
    TYPES

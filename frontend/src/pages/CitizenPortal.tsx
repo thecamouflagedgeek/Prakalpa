@@ -195,7 +195,7 @@ export default function CitizenPortal() {
     setLoading(true);
     try {
       const res = await axios.post(
-        "http://localhost:8000/api/v1/complaints/submit",
+        "https://prakalpa-backend.onrender.com/api/v1/complaints/submit",
         {
           citizen_username: user?.username,
           citizen_name: user?.name,

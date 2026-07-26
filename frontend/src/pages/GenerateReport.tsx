@@ -5,7 +5,7 @@ import axios from "axios";
 import jsPDF from "jspdf";
 import { useAuthStore } from "../store/authStore";
 
-const API_BASE = "http://localhost:8000/api/v1";
+const API_BASE = "https://prakalpa-backend.onrender.com/api/v1";
 
 // ---------- i18n ----------
 
