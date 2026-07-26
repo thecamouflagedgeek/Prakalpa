@@ -232,7 +232,7 @@ export default function CitizenPortal() {
       key: "track",
       label: t.navTrackStatus,
       icon: Search,
-      path: "/citizen/track",
+      path: "/track",
     },
     {
       key: "information",
