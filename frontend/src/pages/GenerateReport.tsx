@@ -431,6 +431,9 @@ export default function GenerateReport() {
                   navigate("/dash");
                 else if (item.key === "explain") navigate("/explain");
                 else if (item.key === "reports") navigate("/generate-report");
+                else if (item.key === "settings") {
+                  navigate("/settings");
+                }
                 else if (item.key === "dashboard")
                   navigate("/officer/dashboard");
               }}

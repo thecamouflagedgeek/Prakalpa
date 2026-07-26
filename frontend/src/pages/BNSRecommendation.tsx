@@ -267,7 +267,7 @@ export default function BNSRecommendation() {
               key: "cases",
               label: t.bnsSections,
               icon: "case",
-              path: "/bns-recommendation",
+              path: "/bns",
             },
             {
               key: "districts",
@@ -279,7 +279,7 @@ export default function BNSRecommendation() {
               key: "analytics",
               label: t.explainableAI,
               icon: "chart",
-              path: "/dash",
+              path: "/explain",
             },
             {
               key: "reports",

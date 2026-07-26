@@ -144,6 +144,9 @@ export default function OfficerDashboard() {
                 } else if (item.key === "cases") {
                   navigate("/bns");
                 } else if (item.key === "explain") navigate("/explain");
+                else if (item.key === "settings") {
+                  navigate("/settings");
+                }
                 else {
                   setActiveNav(item.key);
                 }
